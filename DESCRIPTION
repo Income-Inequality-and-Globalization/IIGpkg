@@ -12,5 +12,9 @@ LazyData: true
 Imports: 
     invgamma,
     LaplacesDemon,
-    RcppSMCkalman
+    RcppSMCkalman,
+    tmvnsim,
+    plyr,
+    tibble,
+    dplyr
 RoxygenNote: 7.2.3
