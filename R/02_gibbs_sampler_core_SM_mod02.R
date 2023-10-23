@@ -124,13 +124,14 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
   availableObs_crossSection <- t(apply(yObs[seq(1, N * npara, 3), ], 1, \(x) !is.na(x))) # Anzahl der Beobachtungen (ohne die NAs) fuer jedes Land
 
 
+  # storePath Anpassung
   if (storePath != "none" & !missing(storePath)) {
     if (VdiagEst) {
-      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", wRegSpec, "_B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmegaD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew)
+      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", wRegSpec, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew)
     } else if (sampleA) {
-      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", wRegSpec, "_B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmegaD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew)
+      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", wRegSpec, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew)
     } else {
-      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", wRegSpec, "_B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmegaD", OmegaD0, "_IO", incObsNew)
+      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", wRegSpec, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_IO", incObsNew)
     }
   }
 
@@ -139,8 +140,12 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
   ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
   iter <- 1 # aktuelle Gibbs-Iteration
 
+  
+  ## Gibbs Sampler Iterations
   while (iter <= itermax) {
     if (!ident_block) {
+      
+      # Erweiterung das Vhat Arrays um die Adjustmentmatrix A
       if (countryA) {
         VhatArray_A <- array(0, dim = c(npara, npara, N * TT))
 
@@ -152,11 +157,18 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
           X %*% A %*% t(X)
         }), c(npara, npara, N * TT))
       }
+      
+      # Vhat Array (mit Adjustmentmatrix A) bzgl. der Zeit sortiert
       VhatArrayBdiagByTime <- bdiagByTime(VhatArray_A = VhatArray_A, npara = npara, N = N, TT = TT, Nnpara = Nnpara)
+    
     }
 
+    
+    #### GIBBS PART: Sampling of the latent factors (FFBS)
     if (Simf) {
       if (!ident_block) {
+        
+        # Kalman-Filer
         invisible(capture.output(KF <- tryCatch(
           {
             RcppSMCkalman::kfMFPD(
@@ -181,7 +193,8 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
         #   break
         # }
       }
-
+      
+      # Speichert moegliche Fehlermeldung des Kalman-Filter und die Zwischenergebnisse zum Zeitpunkt des Fehlers zurueck
       if (is.character(KF)) {
         errorMsg <- KF
         if (storeCount == 0) {
@@ -202,26 +215,33 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
       filt_f <- KF$mfdEXP
       filt_P <- KF$mfdVAR
 
-      ident_block <- FALSE
-      # sample f given loadings and measurement error variance
+      ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
+      
+      # Backward Sampling
       fPost <- GibbsSSM_f(TT = TT, nfac = nfac, Phi = Phi, Q = Q, filt_f = filt_f, filt_P = filt_P)
     }
 
 
     fSTORE[, , iter] <- fPost
-    # sample loadings and measurement error variance given f
+    
 
+    ##### GIBBS PART: Sampling of loadings (on latent factors) and partial effects (on regressors)
+    # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
     Bjoint <- matrix(rep(0, Nnpara * njointfac), ncol = njointfac)
+    # Ergebnis-Matrix fuer die idiosynkratischen Ladungen (wird spaeter befuellt)
     Bidio <- matrix(rep(0, Nnpara), ncol = N)
 
     for (i in 1:N) {
+      # Vhat Array for cross-sectional unit (country) i
       Viarray <- VhatArray_A[, , (1 + (i - 1) * TT):(i * TT)]
+      # yObs for cross-sectional unit (country) i
       yiObs <- yObs[(1 + npara * (i - 1)):(npara * i), ]
       # availableObs <- which(!is.na(yObs[1 + npara * (i-1),]))
       availableObs <- which(availableObs_crossSection[i, ])
 
+      
+      ## Posterior Momente fuer die Ladungen und die partiellen Effekte
       invOmega0 <- solve(Omega0)
-
       invOmega1_part2 <- sumffkronV(availableObs, npara = npara, nreg = nreg, njointfac = njointfac, i = i, fPost = fPost, wReg = wReg, Viarray = Viarray, type = type)
       invOmega1 <- invOmega0 + invOmega1_part2
 
@@ -264,7 +284,8 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
       # ident_control <- 1
       # while(!valid){
       #   if(ident_control == identmax + 1){iter <- iter - 1; ident_block <- T; blockCount <- blockCount +1 ; break}
-
+      
+      ## Identifikationsrestriktionen fuer die Ladungen
       upper <- rep(Inf, 6)
       # Dselect <- diag(6)
       if (type == "allidio") {
@@ -308,9 +329,11 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
       Sigma <- 0.5 * Omega1 + 0.5 * t(Omega1)
       # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
       #                          lower = lower, upper = upper))
-
+       
       # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma )$samp
       # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma )$samp
+      
+      # Sampling der Ladungen bzw. partiellen Effekte
       BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
 
       Bvec <- BDsamp[1:((njointfac + 1) * npara)]
@@ -383,7 +406,8 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
         D <- DSTORE[, , iter]
       }
 
-
+      
+      #### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A
       if (VdiagEst) {
         u <- yObs - apply(fPost, 2, function(x) {
           B %*% x
@@ -455,15 +479,15 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
       }
       if (VdiagEst) {
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials),
-          file = paste0(storePath_adj, "/", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_D", initials$D[1, 1, 1], "_OmegaD", OmegaD0, "_V", Vstart, "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, ".rds")
+          file = paste0(storePath_adj, "/", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D[1, 1, 1], "_OmD", OmegaD0, "_V", Vstart, "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, ".rds")
         )
       } else if (sampleA) {
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials),
-          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmegaD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, ".rds")
+          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew, ".rds")
         )
       } else {
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials),
-          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmegaD", OmegaD0, "_IO", incObsNew, ".rds")
+          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_IO", incObsNew, ".rds")
         )
       }
     }
