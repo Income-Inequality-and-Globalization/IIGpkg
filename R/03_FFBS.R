@@ -1,11 +1,12 @@
-#' Title
-#'
+#' Backward Sampling based Kalman-Filter Output
+#' 
+#' @inheritParams GibbsSSM_2
 #' @param TT
-#' @param nfac
+#' @param nfac Number of factors
 #' @param Phi
 #' @param Q
-#' @param filt_f
-#' @param filt_P
+#' @param filt_f Means of filtering distribution from Kalman-Filter 
+#' @param filt_P Variances of filtering distribution from Kalman-Filter
 #'
 #' @return
 #' @export

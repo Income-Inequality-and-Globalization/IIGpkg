@@ -1,3 +1,20 @@
+#' Sum in the inverse of the posterior variance for loadings/partial effects
+#'
+#' @inheritParams GibbsSSM_2
+#' @param availableObs 
+#' @param npara 
+#' @param nreg 
+#' @param njointfac 
+#' @param i cross-sectional index
+#' @param fPost 
+#' @param wReg 
+#' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
+#' @param type 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 sumffkronV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, Viarray, type) {
   summ <- 0
   for (tt in availableObs) {
@@ -30,6 +47,24 @@ sumffkronV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, Via
 }
 
 
+#' Sum part of posterior mean for vectorized loadings/partial effects
+#'
+#' @inheritParams GibbsSSM_2
+#' @param availableObs 
+#' @param npara 
+#' @param nreg 
+#' @param njointfac 
+#' @param i cross-sectional index
+#' @param fPost 
+#' @param wReg 
+#' @param yiObs Matrix (npara x TT) of cross-sectional unit i
+#' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
+#' @param type 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, Viarray, type) {
   summ <- 0
   for (tt in availableObs) {
@@ -61,6 +96,14 @@ sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, 
   return(summ)
 }
 
+#' Matrix square root (by spectral decomposition)
+#'
+#' @param V Normal matrix
+#'
+#' @return
+#' @export
+#'
+#' @examples
 matSqrt <- function(V) {
   npara <- dim(V)[1]
   if (any(is.na(V))) {
@@ -74,6 +117,19 @@ matSqrt <- function(V) {
   }
 }
 
+#' Sorts VCOV array by time
+#'
+#' @inheritParams GibbsSSM_2
+#' @param VhatArray_A VCOV array sorted by cross-section.
+#' @param npara 
+#' @param N 
+#' @param TT 
+#' @param Nnpara N * npara
+#'
+#' @return
+#' @export
+#'
+#' @examples
 bdiagByTime <- function(VhatArray_A, npara, N, TT, Nnpara) {
   VhatList <- plyr::alply(VhatArray_A, 3)
   VhatList_split <- split(VhatList, rep(1:TT, N))
@@ -85,6 +141,19 @@ bdiagByTime <- function(VhatArray_A, npara, N, TT, Nnpara) {
 
 
 
+#' Sum of squared residuals (u * u') for VCOV/adjustemnt matrix sampling 
+#'
+#' @inheritParams GibbsSSM_2
+#' @param uSplit List (N elements) of resiudal matrices (npara x TT) for each cross-sectional unit
+#' @param VhatSqrt Array (npara x npara x N*TT) of square-root VCOVs (sorted by cross-sectional unit)
+#' @param TT 
+#' @param N 
+#' @param npara 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 utuSum <- function(uSplit, VhatSqrt, TT, N, npara) {
   sumUtu <- 0
   utildeSplit <- lapply(1:N, matrix, data = NA, nrow = npara, ncol = TT)
@@ -108,6 +177,21 @@ utuSum <- function(uSplit, VhatSqrt, TT, N, npara) {
 
 
 
+#' Loadings matrix and array
+#'
+#' @inheritParams Gibbs2_SM_SA_sampler
+#' @inheritParams GibbsSSM
+#' @param npara 
+#' @param N 
+#' @param p 
+#' @param p_joint 
+#' @param B_par 
+#' @param type 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeBstart <- function(npara, N, p, p_joint, B_par, type = "allidio") { # type = c("allidio","countryidio")
   
   # if(length(B_par) == 1){B_par <- rep(B_par,N*npara*(p_joint+1))}
@@ -130,6 +214,21 @@ makeBstart <- function(npara, N, p, p_joint, B_par, type = "allidio") { # type =
   return(list(B_stack = B_stack, B_i = B_i))
 }
 
+#' Loadings array
+#'
+#' @inheritParams Gibbs2_SM_SA_sampler
+#' @inheritParams GibbsSSM
+#' @param npara 
+#' @param N 
+#' @param p 
+#' @param p_joint 
+#' @param B_stack 
+#' @param type 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeBi <- function(npara, N, p, p_joint, B_stack, type = "allidio") { # type = c("allidio","countryidio")
   if (type == "allidio") {
     if (sum(B_stack) == 0) {
@@ -154,6 +253,17 @@ makeBi <- function(npara, N, p, p_joint, B_stack, type = "allidio") { # type = c
 }
 
 
+#' Partial effects matrix and array
+#'
+#' @param npara 
+#' @param N 
+#' @param nreg 
+#' @param D_par 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeDstart <- function(npara, N, nreg, D_par) {
   Dmat <- matrix(D_par, nrow = npara, ncol = nreg)
   Dstack <- kronecker(diag(N), Dmat)
