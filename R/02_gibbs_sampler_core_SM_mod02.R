@@ -79,6 +79,7 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
   fSTORE <- array(0, dim = c(nfac, TT, itermax)) # speichert den Output von FFBS
   # cSTORE <- matrix(rep(0,Nnpara*itermax), ncol = itermax)
   BSTORE <- array(0, dim = c(Nnpara, nfac, itermax)) # speichert die Gibbs-Zuege der Ladungen auf die latenten Faktoren
+  # uSTORE <- array(0, dim = c(Nnpara, TT, itermax) )
   if (nreg != 0) {
     DSTORE <- array(0, dim = c(Nnpara, N * nreg, itermax)) # speichert die Koeffizienten der Makroregressor-Koeffizienten
     dimOmega0 <- dim(Omega0)[1]
@@ -404,14 +405,19 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
 
       if (nreg != 0) {
         D <- DSTORE[, , iter]
+      } else{
+        D <- matrix(0, nrow = Nnpara)
+        wReg <- matrix(0, ncol = TT )
       }
 
       
       #### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A
+      u <- yObs - B %*% fPost - D %*% wReg
+      # uSTORE[,, iter] <- u
       if (VdiagEst) {
-        u <- yObs - apply(fPost, 2, function(x) {
-          B %*% x
-        })
+        # u <- yObs - apply(fPost, 2, function(x) {
+        #   B %*% x
+        # })
         if (VhatDiagScale) {
           u <- sapply(1:TT, \(x) (1 / sqrt(diag(VhatArrayBdiagByTimeFix[, , x]))) * u[, x])
         }
@@ -430,9 +436,9 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
       }
 
       if (sampleA) {
-        u <- yObs - apply(fPost, 2, function(x) {
-          B %*% x
-        })
+        # u <- yObs - apply(fPost, 2, function(x) {
+        #   B %*% x
+        # })
         uSplit <- lapply(split(u, matrix(rep(1:N, each = npara * TT), ncol = TT, byrow = T)), matrix, ncol = TT)
 
         if (countryA) {
@@ -480,6 +486,9 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
       if (VdiagEst) {
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials),
           file = paste0(storePath_adj, "/", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D[1, 1, 1], "_OmD", OmegaD0, "_V", Vstart, "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, ".rds")
+          # STORE WITH uSTORE:
+          # saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, blockCount = blockCount,  errorMsg = errorMsg, initials = initials)
+          #         , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",OmegaD0,"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
         )
       } else if (sampleA) {
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials),
@@ -497,4 +506,6 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
 
   # close(pb)
   return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials))
+  # RETURN WITH uSTOREÖ
+  # return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, u = uSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials))
 }
