@@ -1,11 +1,12 @@
 #' Title
 #'
-#' @param p_joint
-#' @param B_par
-#' @param D_par
-#' @param nreg
-#' @param OmegaLoad0Scale
-#' @param OmegaReg0Scale
+#' @inheritParams GibbsSSM_2
+#' @param p_joint Anzahl gmeinsamer Faktoren (njointfac in FFBS und den helpers)
+#' @param B_par Vektor der Prior-Erwartungswerte fuer die Ladungen auf die latenten Faktoren (Wenn B_par ein Skalar ist, wird dieser Wert fuer alle Ladungen genutzt)
+#' @param D_par Vektor der Prior-Erwartungswerte fuer die partiellen Effekte der Regressoren (Wenn B_par ein Skalar ist, wird dieser Wert fuer alle Ladungen genutzt)
+#' @param nreg Anzahl der Regressor-Variablen
+#' @param OmegaLoad0Scale Vektor der Prior-Varianzen der Ladungen (der latenten Fakotren) (wenn OmegaLoad0Scale ein Skalar ist, wird dieser Wert fuer jede Varianz genutzt)
+#' @param OmegaReg0Scale Vektor der Prior-Varianzen der partiellen Effekte (der Regressoren) (wenn OmegaReg0Scale ein Skalar ist, wird dieser Wert fuer jede Varianz genutzt)
 #' @param countryA
 #' @param A_diag
 #' @param nu0
@@ -24,8 +25,8 @@
 #' @param VdiagEst
 #' @param alpha0
 #' @param beta0
-#' @param N
-#' @param TT
+#' @param N Cross-sectional dimension (number of countries)
+#' @param TT Time dimension (number of points in time)
 #' @param storePath
 #' @param itermax
 #' @param scaleA
@@ -70,7 +71,10 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
                                  sampleA,
                                  identification,
                                  type = "allidio") {
+  
+  ## Number of parameters from GMM estimation: a, q, mu
   npara <- 3
+  
   if (type == "allidio") {
     p <- npara * N + p_joint
     # Selection matrices
@@ -100,14 +104,14 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
   Omega0 <- as.matrix(Matrix::bdiag(OmegaLoad0, OmegaReg0))
   const <- rep(0, npara * N)
   # B_par <- B_par
-  B_par <- apply(yObs, 1, \(x) sd(diff(x[!is.na(x)]), na.rm = T))
+  # B_par <- apply(yObs, 1, \(x) sd(diff(x[!is.na(x)]), na.rm = T))
   B_start <- makeBstart(npara = npara, N = N, p = p, p_joint = p_joint, B_par = B_par, type = type)
-  B_start_stack <- B_start$B_stack
-  B_prior_i <- B_start$B_i
-  A <- A_diag * diag(npara)
+  B_start_stack <- B_start$B_stack # weiterbenutzen
+  B_prior_i <- B_start$B_i # weiterbenutzen
+  A <- A_diag * diag(npara) # weiterbenutzen
 
   if (nreg == 0) {
-    wReg <- t(as.matrix(rep(1, TT)))
+    wReg <- t(as.matrix(rep(1, TT))) # regressoren festsetzen
     D_start_stack <- NULL
     D_prior_i <- NULL
   } else {
@@ -123,6 +127,7 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
 
   initf <- rep(0, p)
   initP <- diag(0, p)
+  initU <- 0
   # VDiag_start <- rep(1,npara * N)
 
   Q <- diag(p)
@@ -138,8 +143,8 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
   storePath <- storePath
   storeUnit <- 10000
 
-  set.seed(123)
   start <- Sys.time()
+  set.seed(123)
   Gibbs2_SM_SA <- GibbsSSM_2(
     itermax = itermax,
     identmax = identmax,
@@ -156,7 +161,7 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
     Q = Q,
     initX = initf,
     initP = initP,
-    initU = 0,
+    initU = initU,
     wRegSpec = wRegSpec,
     wReg = wReg,
     B0 = B_prior_i,
@@ -193,6 +198,17 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
   return(list(time_diff = end - start, Gibbs2_SM_SA = Gibbs2_SM_SA))
 }
 
+
+
+#' Covariance/Corrleation scale
+#'
+#' @param scale Scaling factor
+#' @param Var VCOV matrix
+#'
+#' @return
+#' @export
+#'
+#' @examples
 covarianceScale <- function(scale, Var) {
   if (scale == 1) {
     return(Var)
