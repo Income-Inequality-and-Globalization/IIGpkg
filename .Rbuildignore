@@ -6,6 +6,7 @@
 ^IIGpkg\.qmd$
 ^quartoWebsiteBlueprint\.pdf$
 ^_quarto\.yml
+^IIGpkg.pdf
 
 ^\.nojekyll$
 ^include/
@@ -14,3 +15,4 @@
 ^figures/
 ^tmp-dir/
 ^data/
+^LICENSE\.md$

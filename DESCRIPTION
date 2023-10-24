@@ -6,7 +6,7 @@ Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
@@ -15,6 +15,11 @@ Imports:
     RcppSMCkalman,
     tmvnsim,
     plyr,
-    tibble,
-    dplyr
+    MASS,
+    Matrix,
+    changer,
+    crayon,
+    gert,
+    quarto,
+    rstudioapi
 RoxygenNote: 7.2.3
