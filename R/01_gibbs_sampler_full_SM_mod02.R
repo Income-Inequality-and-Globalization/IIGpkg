@@ -1,4 +1,4 @@
-#' Title
+#' Wrapper over the full Gibbs sampler
 #'
 #' @inheritParams GibbsSSM_2
 #' @param p_joint Anzahl gmeinsamer Faktoren (njointfac in FFBS und den helpers)
@@ -7,38 +7,36 @@
 #' @param nreg Anzahl der Regressor-Variablen
 #' @param OmegaLoad0Scale Vektor der Prior-Varianzen der Ladungen (der latenten Fakotren) (wenn OmegaLoad0Scale ein Skalar ist, wird dieser Wert fuer jede Varianz genutzt)
 #' @param OmegaReg0Scale Vektor der Prior-Varianzen der partiellen Effekte (der Regressoren) (wenn OmegaReg0Scale ein Skalar ist, wird dieser Wert fuer jede Varianz genutzt)
-#' @param countryA
-#' @param A_diag
-#' @param nu0
-#' @param Psi0
-#' @param shape0
-#' @param rate0
-#' @param yObs
-#' @param wRegSpec
-#' @param wReg
-#' @param Vhat
-#' @param incObsOld
-#' @param incObsNew
-#' @param covScale
-#' @param VhatDiagScale
-#' @param VhatDiagScale_start
-#' @param VdiagEst
-#' @param alpha0
-#' @param beta0
-#' @param N Cross-sectional dimension (number of countries)
-#' @param TT Time dimension (number of points in time)
-#' @param storePath
-#' @param itermax
-#' @param scaleA
-#' @param diagA
-#' @param sampleA
-#' @param identification
-#' @param type
+# @param countryA MISSING DESCRIPTION TO ADD LATER
+# @param A_diag MISSING DESCRIPTION TO ADD LATER
+# @param nu0 MISSING DESCRIPTION TO ADD LATER
+# @param Psi0 MISSING DESCRIPTION TO ADD LATER
+# @param shape0 MISSING DESCRIPTION TO ADD LATER
+# @param rate0 MISSING DESCRIPTION TO ADD LATER
+# @param yObs MISSING DESCRIPTION TO ADD LATER
+# @param wRegSpec MISSING DESCRIPTION TO ADD LATER
+# @param wReg MISSING DESCRIPTION TO ADD LATER
+# @param Vhat MISSING DESCRIPTION TO ADD LATER
+# @param incObsOld MISSING DESCRIPTION TO ADD LATER
+# @param incObsNew MISSING DESCRIPTION TO ADD LATER
+# @param covScale MISSING DESCRIPTION TO ADD LATER
+# @param VhatDiagScale MISSING DESCRIPTION TO ADD LATER
+# @param VhatDiagScale_start MISSING DESCRIPTION TO ADD LATER
+# @param VdiagEst MISSING DESCRIPTION TO ADD LATER
+# @param alpha0 MISSING DESCRIPTION TO ADD LATER
+# @param beta0 MISSING DESCRIPTION TO ADD LATER
+# @param N Cross-sectional dimension (number of countries)
+# @param TT Time dimension (number of points in time)
+# @param storePath MISSING DESCRIPTION TO ADD LATER
+# @param itermax MISSING DESCRIPTION TO ADD LATER
+# @param scaleA MISSING DESCRIPTION TO ADD LATER
+# @param diagA MISSING DESCRIPTION TO ADD LATER
+# @param sampleA MISSING DESCRIPTION TO ADD LATER
+# @param identification MISSING DESCRIPTION TO ADD LATER
+# @param type MISSING DESCRIPTION TO ADD LATER
 #'
-#' @return
+#' @return Gibbs sampler output
 #' @export
-#'
-#' @examples
 Gibbs2_SM_SA_sampler <- function(p_joint,
                                  B_par,
                                  D_par,
@@ -205,10 +203,8 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
 #' @param scale Scaling factor
 #' @param Var VCOV matrix
 #'
-#' @return
+#' @return returns covariance/correlation scale
 #' @export
-#'
-#' @examples
 covarianceScale <- function(scale, Var) {
   if (scale == 1) {
     return(Var)
