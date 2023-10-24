@@ -143,6 +143,9 @@ GibbsSSM_2(
 
 \item{storeUnit}{Zahl. Alle storeUnit-Iterationen werden die Zwischenergebnisse gespeichert.}
 }
+\value{
+core Gibbs sampler output
+}
 \description{
 Title
 }

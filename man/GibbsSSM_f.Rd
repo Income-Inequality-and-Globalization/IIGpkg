@@ -2,13 +2,26 @@
 % Please edit documentation in R/03_FFBS.R
 \name{GibbsSSM_f}
 \alias{GibbsSSM_f}
-\title{Title}
+\title{Backward Sampling based Kalman-Filter Output}
 \usage{
 GibbsSSM_f(TT, nfac, Phi, Q, filt_f, filt_P)
 }
 \arguments{
-\item{filt_P}{}
+\item{TT}{time}
+
+\item{nfac}{Number of factors}
+
+\item{Phi}{phi param}
+
+\item{Q}{VCM part}
+
+\item{filt_f}{Means of filtering distribution from Kalman-Filter}
+
+\item{filt_P}{Variances of filtering distribution from Kalman-Filter}
+}
+\value{
+posterior filtered states
 }
 \description{
-Title
+Backward Sampling based Kalman-Filter Output
 }

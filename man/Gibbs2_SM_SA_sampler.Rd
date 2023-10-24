@@ -2,7 +2,7 @@
 % Please edit documentation in R/01_gibbs_sampler_full_SM_mod02.R
 \name{Gibbs2_SM_SA_sampler}
 \alias{Gibbs2_SM_SA_sampler}
-\title{Title}
+\title{Wrapper over the full Gibbs sampler}
 \usage{
 Gibbs2_SM_SA_sampler(
   p_joint,
@@ -41,8 +41,69 @@ Gibbs2_SM_SA_sampler(
 )
 }
 \arguments{
-\item{type}{}
+\item{p_joint}{Anzahl gmeinsamer Faktoren (njointfac in FFBS und den helpers)}
+
+\item{B_par}{Vektor der Prior-Erwartungswerte fuer die Ladungen auf die latenten Faktoren (Wenn B_par ein Skalar ist, wird dieser Wert fuer alle Ladungen genutzt)}
+
+\item{D_par}{Vektor der Prior-Erwartungswerte fuer die partiellen Effekte der Regressoren (Wenn B_par ein Skalar ist, wird dieser Wert fuer alle Ladungen genutzt)}
+
+\item{nreg}{Anzahl der Regressor-Variablen}
+
+\item{OmegaLoad0Scale}{Vektor der Prior-Varianzen der Ladungen (der latenten Fakotren) (wenn OmegaLoad0Scale ein Skalar ist, wird dieser Wert fuer jede Varianz genutzt)}
+
+\item{OmegaReg0Scale}{Vektor der Prior-Varianzen der partiellen Effekte (der Regressoren) (wenn OmegaReg0Scale ein Skalar ist, wird dieser Wert fuer jede Varianz genutzt)}
+
+\item{countryA}{= TRUE, wenn fuer jedes Land eine eigene Adjustmentmatrix (der GMM-Varianz) A geschaetzt werden soll}
+
+\item{nu0}{Prior-Paramter der Inverse-Wishart (wenn A eine vollbesetzte Matrix ist)}
+
+\item{Psi0}{Prior-Paramter der Inverse-Wishart (wenn A eine vollbesetzte Matrix ist)}
+
+\item{shape0}{Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn diagA = TRUE oder scaleA = TRUE}
+
+\item{rate0}{Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn diagA = TRUE oder scaleA = TRUE}
+
+\item{yObs}{Daten (a, q, mu)}
+
+\item{wRegSpec}{Ein Skalar, der angibt, welche Regressoren hinzugefuegt werden. Bei drei Regressoren gibt es 7 Möglichkeiten, also ist wRegSpec eine Zahl von 1-7. Die Moeglichkeiten werden in Gibbs2_SM_SA_cluster berechnet. Es gilt: 1 = "cpi_change", 2 = "unemployment", 3 = "gdp_ppp", 4 = "cpi_change" + "unemployment", 5 = "cpi_change" + "gdp_ppp", 6 = "unemployment" + "gdp_ppp", 7 = "cpi_change" +"unemployment" +"gdp_ppp"}
+
+\item{wReg}{Regressoren für die Messgleichung, also die Makros: nreg * N x T (muss natuerlich zu wRegSpec passen)}
+
+\item{Vhat}{QML(bzw. GMM) geschaetzte Fehlervarianz der Vorschaetzung. Ein npara x npara x N * T Array. Die ersten Elemente [1:npara, 1:npara, 1:T] sind die Varianzen des ersten Landes ueber die Zeit, [1:npara, 1:npara, (T+1):(2T)] sind die Varianzen des zweiten Landes ueber die Zeit, usw.}
+
+\item{incObsOld}{Anzahl der Beobachtungen (der Rohdaten, also individuelle Einkommen), die wir in der GMM-Schaetzung angenommen haben. Bei mir 100000. Das ist zu viel. Daher incObsNew.}
+
+\item{incObsNew}{Gewuenschte / Korrigierte Anzahl der Beochbachtungen in der GMM-Schaetzung. Setze bspw. gleich 5000 oder 10000. Das ist realistischer als 100000.}
+
+\item{covScale}{Damit kann man die Kovarianzen aus Vhat skalieren. covScale = 0.5 heißt, dass die die Korrelationen(!) halbiert werden. War mal ein Experiment. covscale muss letztlich = 1 sein.}
+
+\item{VhatDiagScale}{(wahrscheinlich irrelevant) = TRUE, wenn fuer jedes Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden soll. In Gibb2_SM_SA_cluster muss dann Diag_VCOV = TRUE gesetzt werden, damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn VDiagScale = TRUE sein soll, muss auch VDiagEst = TRUE sein.}
+
+\item{VhatDiagScale_start}{Startwert fuer die Skalierungsfaktoren}
+
+\item{VdiagEst}{(wahrscheinlich irrelevant) = TRUE, wenn die diagonale Messfehlervarianz geschaetzt werden soll. (Fuer uns irrelevant, wir wollen die GMM-Varianz nutzen)}
+
+\item{alpha0}{Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE}
+
+\item{beta0}{Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE}
+
+\item{storePath}{Speicherpfad des .rds Outputs. Muss nur der Oberordner sein. Es werden automatisch Unterordner mit entpsrechenden Ordnernamen angelegt. Setze = "none", wenn nichts gespeichert werden soll.}
+
+\item{itermax}{Number of Gibbs iterations}
+
+\item{scaleA}{=TRUE, wenn die Matrix A nur ein Skalar sein soll.}
+
+\item{diagA}{= TRUE, wenn die Matrix A eine Diagonalmatrix sein soll}
+
+\item{sampleA}{= TRUE, wenn A gesamplet werden soll (bei uns immer der Fall). Bei sampleA = FALSE, muss trotzdem das A Argument = diag(npara) gesetzt werden.}
+
+\item{identification}{(Kann ignoriert werden) Boolscher Wert der dazu diente, um identifizierende Restriktionen zu ignorieren. Jetzt werde diese immer eingehalten.}
+
+\item{type}{Modelltyp: Auswahls aus "allidio","countryidio", "countryidio_nomu". Bei uns immer "allidio", d.h. jeder Paramter (jeden Landes) bekommt eigenen idiosynkr. Faktor. Hatte auch mal ausprobiert, dass z.B. nur jedes Land einen bekommt.}
+}
+\value{
+Gibbs sampler output
 }
 \description{
-Title
+Wrapper over the full Gibbs sampler
 }
