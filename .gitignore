@@ -2,7 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+.quarto
+
 rIncome.Rproj
-docs
 tests
 data
+figures
