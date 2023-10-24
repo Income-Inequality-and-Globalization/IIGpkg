@@ -1,20 +1,17 @@
 #' Sum in the inverse of the posterior variance for loadings/partial effects
 #'
-#' @inheritParams GibbsSSM_2
-#' @param availableObs 
-#' @param npara 
-#' @param nreg 
-#' @param njointfac 
+#' @param availableObs available observations
+#' @param npara number of params (usually 3)
+#' @param nreg  number of regressors
+#' @param njointfac number of joint factors
 #' @param i cross-sectional index
-#' @param fPost 
-#' @param wReg 
+#' @param fPost backward sampled states (FFBS output)
+#' @param wReg regressors
 #' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
-#' @param type 
+#' @param type either of "allidio", "countryidio" or "countryidio_nomu"
 #'
-#' @return
+#' @return  cronecker summation part
 #' @export
-#'
-#' @examples
 sumffkronV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, Viarray, type) {
   summ <- 0
   for (tt in availableObs) {
@@ -50,21 +47,12 @@ sumffkronV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, Via
 #' Sum part of posterior mean for vectorized loadings/partial effects
 #'
 #' @inheritParams GibbsSSM_2
-#' @param availableObs 
-#' @param npara 
-#' @param nreg 
-#' @param njointfac 
-#' @param i cross-sectional index
-#' @param fPost 
-#' @param wReg 
+#' @inheritParams sumffkronV
 #' @param yiObs Matrix (npara x TT) of cross-sectional unit i
 #' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
-#' @param type 
 #'
-#' @return
+#' @return summation part
 #' @export
-#'
-#' @examples
 sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, Viarray, type) {
   summ <- 0
   for (tt in availableObs) {
@@ -100,10 +88,8 @@ sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, 
 #'
 #' @param V Normal matrix
 #'
-#' @return
+#' @return matrix square root of V
 #' @export
-#'
-#' @examples
 matSqrt <- function(V) {
   npara <- dim(V)[1]
   if (any(is.na(V))) {
@@ -116,20 +102,17 @@ matSqrt <- function(V) {
     vec %*% diag(sqrt(val))
   }
 }
-
 #' Sorts VCOV array by time
 #'
 #' @inheritParams GibbsSSM_2
+#' @inheritParams sumffkronV
 #' @param VhatArray_A VCOV array sorted by cross-section.
-#' @param npara 
-#' @param N 
-#' @param TT 
+#' @param N cross sectional dimension
+#' @param TT time series length
 #' @param Nnpara N * npara
 #'
-#' @return
+#' @return Sorted VCOV array by time
 #' @export
-#'
-#' @examples
 bdiagByTime <- function(VhatArray_A, npara, N, TT, Nnpara) {
   VhatList <- plyr::alply(VhatArray_A, 3)
   VhatList_split <- split(VhatList, rep(1:TT, N))
@@ -138,22 +121,15 @@ bdiagByTime <- function(VhatArray_A, npara, N, TT, Nnpara) {
   
   return(VhatArray_bdiag)
 }
-
-
-
-#' Sum of squared residuals (u * u') for VCOV/adjustemnt matrix sampling 
+#' Sum of squared residuals (u * u') for VCOV/adjustment matrix sampling 
 #'
 #' @inheritParams GibbsSSM_2
+#' @inheritParams bdiagByTime
 #' @param uSplit List (N elements) of resiudal matrices (npara x TT) for each cross-sectional unit
 #' @param VhatSqrt Array (npara x npara x N*TT) of square-root VCOVs (sorted by cross-sectional unit)
-#' @param TT 
-#' @param N 
-#' @param npara 
 #'
-#' @return
+#' @return sum of squared residuals
 #' @export
-#'
-#' @examples
 utuSum <- function(uSplit, VhatSqrt, TT, N, npara) {
   sumUtu <- 0
   utildeSplit <- lapply(1:N, matrix, data = NA, nrow = npara, ncol = TT)
@@ -173,25 +149,17 @@ utuSum <- function(uSplit, VhatSqrt, TT, N, npara) {
   }
   return(list(sumUtu_total = matrix(sumUtu, ncol = npara), sumUtu_individ = sumUtu_individ))
 }
-
-
-
-
-#' Loadings matrix and array
+#' Loading matrix and array
 #'
 #' @inheritParams Gibbs2_SM_SA_sampler
-#' @inheritParams GibbsSSM
-#' @param npara 
-#' @param N 
-#' @param p 
-#' @param p_joint 
-#' @param B_par 
-#' @param type 
+#' @inheritParams sumffkronV
+#' @inheritParams bdiagByTime
+#' @param p describe later
+#' @param p_joint describe later 
+#' @param B_par describe later
 #'
-#' @return
+#' @return Loading matrix and B for start
 #' @export
-#'
-#' @examples
 makeBstart <- function(npara, N, p, p_joint, B_par, type = "allidio") { # type = c("allidio","countryidio")
   
   # if(length(B_par) == 1){B_par <- rep(B_par,N*npara*(p_joint+1))}
@@ -213,22 +181,16 @@ makeBstart <- function(npara, N, p, p_joint, B_par, type = "allidio") { # type =
   
   return(list(B_stack = B_stack, B_i = B_i))
 }
-
 #' Loadings array
 #'
 #' @inheritParams Gibbs2_SM_SA_sampler
-#' @inheritParams GibbsSSM
-#' @param npara 
-#' @param N 
-#' @param p 
-#' @param p_joint 
-#' @param B_stack 
-#' @param type 
+#' @inheritParams sumffkronV
+#' @inheritParams bdiagByTime
+#' @inheritParams makeBstart
+#' @param B_stack describe later
 #'
-#' @return
+#' @return array of loadings
 #' @export
-#'
-#' @examples
 makeBi <- function(npara, N, p, p_joint, B_stack, type = "allidio") { # type = c("allidio","countryidio")
   if (type == "allidio") {
     if (sum(B_stack) == 0) {
@@ -251,19 +213,14 @@ makeBi <- function(npara, N, p, p_joint, B_stack, type = "allidio") { # type = c
   }
   return(B_i = B_i)
 }
-
-
 #' Partial effects matrix and array
 #'
-#' @param npara 
-#' @param N 
-#' @param nreg 
-#' @param D_par 
+#' @inheritParams sumffkronV
+#' @inheritParams bdiagByTime
+#' @param D_par number of D parameters
 #'
-#' @return
+#' @return partial effects matrix and array for starting
 #' @export
-#'
-#' @examples
 makeDstart <- function(npara, N, nreg, D_par) {
   Dmat <- matrix(D_par, nrow = npara, ncol = nreg)
   Dstack <- kronecker(diag(N), Dmat)
