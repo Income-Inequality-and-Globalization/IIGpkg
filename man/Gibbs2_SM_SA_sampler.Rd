@@ -55,6 +55,8 @@ Gibbs2_SM_SA_sampler(
 
 \item{countryA}{= TRUE, wenn fuer jedes Land eine eigene Adjustmentmatrix (der GMM-Varianz) A geschaetzt werden soll}
 
+\item{A_diag}{MISSING DESCRIPTION TO ADD LATER}
+
 \item{nu0}{Prior-Paramter der Inverse-Wishart (wenn A eine vollbesetzte Matrix ist)}
 
 \item{Psi0}{Prior-Paramter der Inverse-Wishart (wenn A eine vollbesetzte Matrix ist)}
@@ -86,6 +88,10 @@ Gibbs2_SM_SA_sampler(
 \item{alpha0}{Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE}
 
 \item{beta0}{Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE}
+
+\item{N}{Cross-sectional dimension (number of countries)}
+
+\item{TT}{Time dimension (number of points in time)}
 
 \item{storePath}{Speicherpfad des .rds Outputs. Muss nur der Oberordner sein. Es werden automatisch Unterordner mit entpsrechenden Ordnernamen angelegt. Setze = "none", wenn nichts gespeichert werden soll.}
 
