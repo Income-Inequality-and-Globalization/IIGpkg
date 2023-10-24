@@ -46,15 +46,14 @@
 #' @param identification (Kann ignoriert werden) Boolscher Wert der dazu diente, um identifizierende Restriktionen zu ignorieren. Jetzt werde diese immer eingehalten.
 #' @param storeUnit Zahl. Alle storeUnit-Iterationen werden die Zwischenergebnisse gespeichert.
 #'
-#' @return
+#' @return core Gibbs sampler output
 #' @export
-
 GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac, yObs, c_, D, D0, B, Phi, Q, type = "allidio", initX, initP, initU, wRegSpec, wReg, uReg = NULL,
                        B0, Omega0, selectR, selectC, Vhat, incObsOld = 100000, incObsNew = 100000, covScale, VhatDiagScale, VhatDiagScale_start = NULL, VdiagEst, alpha0, beta0, countryA, A, scaleA, diagA, Psi0, nu0, shape0, rate0, storePath = "none", fPost, sampleA, identification = T, storeUnit = 10000) {
   # Vhat muss (npara, npara, N * T) Array sein. Start: Alle Zeitpunkte fuer das erste Land.
   # Funktioniert noch nicht fuer npara < njointfac (Geweke)
   # Modell ohne Konstante
-  initials <- c(as.list(environment()), list()) # speichert die Initialisierung
+  initials <- as.list(environment()) # speichert die Initialisierung
 
   storeCount <- 0 # zaehlt wie oft bereits zwischengespeichert wurde
   Vhat <- incObsOld / incObsNew * Vhat
@@ -138,18 +137,17 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
 
   # pb <- winProgressBar(title="Progress", label="0% done", min=0, max=100, initial=0)
   blockCount <- 0 # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
-  ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
+  # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
   iter <- 1 # aktuelle Gibbs-Iteration
 
   
-  ## Gibbs Sampler Iterations
+  ############################################################################
+  ## GIBBS sampler Iteration START
+  ############################################################################
   while (iter <= itermax) {
-    if (!ident_block) {
-      
       # Erweiterung das Vhat Arrays um die Adjustmentmatrix A
       if (countryA) {
         VhatArray_A <- array(0, dim = c(npara, npara, N * TT))
-
         for (i in 1:N) {
           VhatArray_A[, , (TT * (i - 1) + 1):(i * TT)] <- array(apply(VhatSqrt[, , (TT * (i - 1) + 1):(i * TT)], 3, \(x) x %*% A_countryArray[, , i] %*% t(x)), c(npara, npara, TT))
         }
@@ -158,16 +156,14 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
           X %*% A %*% t(X)
         }), c(npara, npara, N * TT))
       }
-      
+
       # Vhat Array (mit Adjustmentmatrix A) bzgl. der Zeit sortiert
       VhatArrayBdiagByTime <- bdiagByTime(VhatArray_A = VhatArray_A, npara = npara, N = N, TT = TT, Nnpara = Nnpara)
-    
-    }
 
     
     #### GIBBS PART: Sampling of the latent factors (FFBS)
     if (Simf) {
-      if (!ident_block) {
+      # if (!ident_block) {
         
         # Kalman-Filer
         invisible(capture.output(KF <- tryCatch(
@@ -193,7 +189,7 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
         #   print("Fehler")
         #   break
         # }
-      }
+      # }
       
       # Speichert moegliche Fehlermeldung des Kalman-Filter und die Zwischenergebnisse zum Zeitpunkt des Fehlers zurueck
       if (is.character(KF)) {
@@ -216,7 +212,7 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
       filt_f <- KF$mfdEXP
       filt_P <- KF$mfdVAR
 
-      ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
+      # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
       
       # Backward Sampling
       fPost <- GibbsSSM_f(TT = TT, nfac = nfac, Phi = Phi, Q = Q, filt_f = filt_f, filt_P = filt_P)
@@ -382,9 +378,10 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
         DSTORE[(1 + npara * (i - 1)):(i * npara), (1 + nreg * (i - 1)):(i * nreg), iter] <- D_i
       }
     }
+    # browser()
 
 
-    if (!ident_block) {
+    # if (!ident_block) {
       if (type == "allidio") {
         if (njointfac != 0) {
           B <- cbind(Bjoint, diag(c(Bidio)))
@@ -471,14 +468,17 @@ GibbsSSM_2 <- function(itermax = 15000, identmax = 5000, npara, nreg, njointfac,
           ASTORE[, , iter] <- A
         }
       }
-    }
-
+    # }
+    ############################################################################
+    ## GIBBS sampler Iteration ENDE
+    ############################################################################
     # info <- sprintf("%d%% done", round((iter/itermax)*100))
-    #
     # setWinProgressBar(pb, iter/itermax*100, label=info)
-
+    ############################################################################
+    ## GIBBS sampler SPEICHERN
+    ############################################################################
     # if(iter %% 10000 == 0){print(iter)}
-    if ((iter == 100 & storePath != "none") | (iter == itermax & storePath != "none") | (storePath != "none" & iter %% storeUnit == 0 & !ident_block)) {
+    if ((iter == 100 & storePath != "none") | (iter == itermax & storePath != "none") | (storePath != "none" & iter %% storeUnit == 0)) {
       storeCount <- storeCount + 1
       if (storeCount == 1) {
         dir.create(storePath_adj, recursive = T)
