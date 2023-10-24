@@ -1,0 +1,22 @@
+\subsection{Kalman Filter Recursion}
+\begin{align*}
+ f_t |\mathcal{I}_{t-1} \sim N(f_{t|t-1}, P_{t|t-1})
+\end{align*}
+Initialization: Choose $f_{1|0}$ and $P_{1|0}$.
+
+%Case1 1:
+
+For $t=1,\dots,T$:
+\begin{align*}
+{\color{red}W_t}v_t &= {\color{red}W_t}(\hat{y}_t -\hat{y}_{t|t-1}) = {\color{red}W_t}(\hat{y}_t-c-Bf_{t|t-1}),\\
+{\color{red}W_t}F_t{\color{red}W_t'} &= \text{Var}({\color{red}W_t}v_t|\mathcal{I}_{t-1}) ={\color{red}W_t}(BP_{t|t-1}B'+ \underbrace{\text{Var}(u_t)}_{=V}){\color{red}W_t'},\\
+f_{t|t}&=f_{t|t-1}+P_{t|t-1}({\color{red}W_t}B)'{(\color{red}W_t}F_t{\color{red}W_t'})^{-1}{\color{red}W_t}v_t,\\
+P_{t|t} & = P_{t|t-1} - P_{t|t-1}({\color{red}W_t}B)'({\color{red}W_t}F_t{\color{red}W_t'})^{-1}{\color{red}W_t}BP_{t|t-1},\\
+(K_t{\color{red}W_t^{-1}} & = \Phi P_{t|t-1}({\color{red}W_t}B)'({\color{red}W_t}F_t{\color{red}W_t'})^{-1}),\\
+(L_t & = \Phi-K_t{\color{red}W_t^{-1}}{\color{red}W_t}B),\\
+f_{t+1|t}&=\Phi f_{t|t}=\Phi f_{t|t-1}+K_t{\color{red}W_t^{-1}}{\color{red}W_t}v_t,\\
+P_{t+1|t}&=\Phi P_{t|t}\Phi'+I_p =\Phi P_{t|t-1}L_t' + I_p \\&= 
+\Phi P_{t|t-1}\left(\Phi-\Phi P_{t|t-1}({\color{red}W_t}B)'{\color{red}(W_t')^{-1}}(BP_{t|t-1}B'+V)^{-1}{\color{red}W_t^{-1}}{\color{red}W_t}B\right)' + I_p
+\end{align*}
+
+\newpage

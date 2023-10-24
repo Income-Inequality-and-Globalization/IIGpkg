@@ -1,0 +1,29 @@
+\newpage
+\section{Factor Model (with idiosyncratic factor)}
+
+We consider a $p$-factor model for the 3 parameters of the Singh-Maddala distribution. $N=10$ countries; $T=21$ years. Macro regressors: gdp, cpi change, unemployment.
+
+Let $y_{it}=(\ln a_{i,t}, \ln q_{i,t}, \ln \mu_{it})'$, $i=1,\dots,N$, $t=1,\dots,T$ and let $\hat{y}_{it}$ denote the `realized' counterpart of $y_{it}$ with asymptotic QML covariance matrix $\widehat{V}_{it}$.
+
+We impose the following model structure
+\begin{eqnarray}
+\hat{y}_{it} &=& y_{it} + u_{it},\qquad u_{it}\sim N(0,\underbrace{\widehat{V}_{it}^{1/2}A\widehat{V}_{it}^{1/2'}}_{=\tilde{V}_{it}})\\
+y_{it}       &=& c_i + B^{(c)}_if^{(c)}_t + B_i^{(i)}f_t^{(i)}+ B_i^{(m)}X_{i,t}\\
+\nonumber\\
+f^{(c)}_t          &=& f^{(c)}_{t-1} + \eta_{t}^{(c)},\qquad \eta_{t}^{(c)}\sim N\left(0,I_p\right)\\
+f^{(i)}_t          &=& f^{(i)}_{t-1} + \eta_{t}^{(i)},\qquad \eta_{t}^{(i)}\sim N\left(0,I_3\right)
+\end{eqnarray}
+with diagonal idiosyncratic loading matrix $B_i^{(i)}$ and p.d. bias adjustment matrix $A$. Let $B^{(c)}=[B^{(c)'}_1,\dots,B^{(c)'}_N]'$ with the upper triangular $p\times p$ submatrix of $B^{(c)}$ restricted to be lower triangular with positive diagonal elements. The diagonal elements of $B_i^{(i)}$ are also restricted to be nonnegative. We impose conjugate Gaussian and Wishart priors on all model parameters and simulate the common and idiosyncratic factors via FFBS with initial factor value for $t=0$ set to zero.
+
+Problems:
+\begin{itemize}
+	\item The Gibbs draws of some of the common loadings show very strong serial correlation: converged?
+	\item $\hookrightarrow$ possible reasons: 
+	\begin{itemize}
+		\item (Weak) identification problem due to sum of two random walk factors for each parameter. 
+		\item Very low measurement error covariance induced by $\widehat{V}_{it}$. 
+		\item Sorting of assets?
+	\end{itemize}
+\end{itemize}
+
+\newpage

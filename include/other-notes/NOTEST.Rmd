@@ -1,0 +1,16 @@
+General notes:
+# from type: allidio means every cross section and parameter gets an idiosyncratic factor
+# 
+
+Notes on prios settings:
+# cs1 = covariance scale; bei uns immer 1
+# pj0 = p_joint; 0 heisst keine gemeinsamen Faktoren
+# Reg4-> die vierte aus wRegCombsList, in wRegSpec gespeichert
+# B1 -> erwartungswertpriori (idR aller FAKTOR) Ladungen B(i), B(c)
+# D0.001 -> erwartungswertpriori Makro Ladungen / partielle Effekte B(m)
+# Om -> prior Varianz Teil siehe S.7
+# OmD -> prior Varianz Teil siehe S.7
+# A -> startwert fuer A matrix Einheitsmatrix waere zB "A1"; (oder diagonal matrix mit entpsrechendem Eintrag zB 5 waere A5)
+# Psi -> priori fuer A matrix wishart scale matrix (Psi1 ist einheitsmatrix; Psi1000 ist diag(1000))
+# nu -> priori fuer A matrix wishart dof
+# IO -> income observations der GMM schaetzungen; default auf 100000 aber adjustierbar

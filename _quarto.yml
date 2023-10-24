@@ -1,0 +1,10 @@
+execute:
+  echo: true
+  eval: false
+# project:
+#   type: website
+#   output-dir: docs
+#   render:
+#     - "*.qmd"
+#     - "*.png"
+#     # - "!linux-workbench-original/"

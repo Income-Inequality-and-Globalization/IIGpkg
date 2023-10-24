@@ -1,0 +1,22 @@
+\subsection{State-Space Representation (with missing data $\color{red}W_t$, Durbin and Koopman, 2012) } 
+
+\begin{align*}
+{\color{red}W_t}\hat{y}_t= {\color{red}W_t}c + {\color{red}W_t}B f_t +{\color{red}W_t}u_t, \qquad \text{(measurement equation)}
+\end{align*}
+with 
+$\underset{3N \times 1}{\hat{y}_t}=(\hat{y}'_{1t},\dots,\hat{y}'_{Nt} )'$,
+$\underset{3N \times 1}{c}=(c_1',\dots,c_N')'$,
+$\underset{3N \times p}{B}=[B_1'\cdots B_N']'$,\\
+$\underset{3N \times 1}{u_t}=(u'_{1t},\dots,u'_{Nt})'$,
+and  ${\color{red}W_t}u_t\overset{iid}{\sim}N(0,{\color{red}W_t}\underbrace{\text{diag}\{V_i\}}_{:=V}{\color{red}W_t'} )$,\\
+$\underset{3N_t^* \times 3N}{{\color{red}W_t}}$ is a known matrix whose rows are a subset of the rows of the identity matrix ($N_t^*$: \# non-missing countries at time $t$).
+\begin{align*}
+f_t=  \Phi f_{t-1} +\eta_t, \qquad \text{(transition equation)}
+\end{align*}
+
+Number of parameters to be estimated: 
+\begin{align*}
+\underset{(c)}{3N} + \underset{(B)}{N\cdot 3p-\frac{p(p-1)}{2}}+\underset{(V)}{3N}
+\end{align*}
+
+\newpage

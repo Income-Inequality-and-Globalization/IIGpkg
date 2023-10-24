@@ -1,0 +1,40 @@
+---
+title: "Summary - income project"
+author: "I.Z"
+date: "June 27, 2023"
+format:
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{exscale,amssymb}
+          \usepackage{ulem}
+          \usepackage{rawfonts}
+          \usepackage{latexsym}
+          \usepackage{lscape}
+          \usepackage{epsfig}
+          \usepackage{multirow}
+          \usepackage{lscape}
+          \usepackage{graphics}
+          \usepackage{bm}
+          \usepackage{bbm,times,soul}
+      - file: ./include/_00_newcommands.tex
+    toc: true
+    number-sections: true
+    colorlinks: true
+    documentclass: scrartcl
+  # html:
+  #   toc-location: left
+  #   toc-depth: 3
+  #   toc-expand: 1
+engine: knitr
+  # pdf:
+  #   toc: true
+  #   toc-depth: 2
+  #   number-sections: true
+    # colorlinks: true
+---
+
+{{< include ./include/_01_factor_model_intro.qmd >}}
+{{< include ./include/_02_ssm_missing_data.qmd >}}
+{{< include ./include/_03_kalman_filter.qmd >}}
+{{< include ./include/_04_gibbs_sampler.qmd >}}

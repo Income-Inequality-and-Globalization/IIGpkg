@@ -1,0 +1,42 @@
+\subsection{Gibbs-Sampler}
+\underline{\textbf{Step 1:}} Simulate $f$ conditional on $\hat{y}$, $B$ and $A$. (FFBS).
+
+\underline{1.1} Generate $f_T$ from $f_T|\hat{y},B,A \sim N(f_{T|T}, P_{T|T})$
+
+\underline{1.2} For $t = T-1, T-2, \dots, 1$. Generate $f_t$ from $$f_t|\tilde{y}_t, f_{t+1},B,A \sim N\left(\mu_{f_{t+1}}, \Sigma_{f_{t+1}}\right),$$
+where 
+\begin{align*}
+\mu_{f_{t+1}} &= f_{t|t} + P_{t|t} \Phi'(\Phi P_{t|t} \Phi'+ I_p)^{-1}(f_{t+1}-\Phi f_{t|t}),
+\\
+\Sigma_{f_{t+1}} &= P_{t|t} - P_{t|t} \Phi'(\Phi P_{t|t} \Phi'+ I_p)^{-1}\Phi P_{t|t},\\
+\tilde{y}_t&=(\hat{y}_1,\dots,\hat{y}_t)'.
+\end{align*}
+
+\underline{\textbf{Step 2:}} Simulate $B$ conditional on $f, \hat{y}$ and $A$.\\
+For $i = 1,\dots,N$:
+
+Cond. posterior:
+\begin{align*}
+\vect(B_i) | A,f,\hat{y} &\sim N\left(\vect(B_1), \Omega_1 \right),\\
+\Omega_1^{-1} &= \Omega_0^{-1} + \sum_{t=1}^T\left(f_tf_t' \otimes \tilde{V}_{it}^{-1}\ \right), \\
+\vect(B_1) &= \Omega_1 \left\{\vect\left(\sum_{t=1}^{T}\tilde{V}_{it}^{-1}y_{it}f_t' \right) + \Omega_0^{-1}\vect(B_0)\right\},\\
+\Rightarrow R\vect(B_i) | A,f,\hat{y} &\sim N\left(R\vect(B_1), R\Omega_1R' \right),
+\end{align*}
+
+{\color{blue}
+\begin{align*}
+\vect(B_i) | A,f,\hat{y} &\sim N\left(\vect(B_1), \Omega_1 \right),\\
+\Omega_1^{-1} &= \Omega_0^{-1} + R\sum_{t=1}^T\left(f_tf_t' \otimes \tilde{V}_{it}^{-1}\ \right)R', \\
+\vect(B_1) &= \Omega_1 R\left\{\vect\left(\sum_{t=1}^{T}\tilde{V}_{it}^{-1}y_{it}f_t' \right) + \Omega_0^{-1}\vect(B_0)\right\},\\
+\Rightarrow R\vect(B_i) | A,f,\hat{y} &\sim N\left(R\vect(B_1), \Omega_1 \right),
+\end{align*}
+}
+where $R$ is a $3p \times 3p$ matrix whose rows are a subset of the rows of the identity matrix. $R\vect(B_i)$ retains only the non-zero elements of $\vect(B_i)$ to fulfill the zero-restrictions.
+For each $i$ sampling is repeated until the sign restrictions for identification are satisfied.
+
+\underline{\textbf{Step 3:}} Simulate $A$ conditional on $f, \hat{y}$ and $B$.
+\begin{align}
+\widehat{V}_{it}^{-1/2'}\hat{y}_{it} &= \widehat{V}_{it}^{-1/2'}y_{it} + \underbrace{\widehat{V}_{it}^{-1/2'}u_{it}}_{\tilde{u}_{it}}, \qquad  \tilde{u}_{it} \overset{iid}{\sim} N(0,A).
+\end{align}
+Cond. posterior:
+$$ A|B,f,\hat{y} \sim W^{-1}\left(\Psi_0 + \sum_{t=1}^T\sum_{i=1}^{N}\hat{\tilde{u}}_{it}\hat{\tilde{u}}_{it}', TN + \nu_0\right).  $$
