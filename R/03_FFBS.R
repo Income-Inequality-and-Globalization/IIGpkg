@@ -1,17 +1,14 @@
 #' Backward Sampling based Kalman-Filter Output
 #' 
-#' @inheritParams GibbsSSM_2
-#' @param TT
+#' @param TT time
 #' @param nfac Number of factors
-#' @param Phi
-#' @param Q
+#' @param Phi phi param 
+#' @param Q VCM part
 #' @param filt_f Means of filtering distribution from Kalman-Filter 
 #' @param filt_P Variances of filtering distribution from Kalman-Filter
 #'
-#' @return
+#' @return posterior filtered states
 #' @export
-#'
-#' @examples
 GibbsSSM_f <- function(TT, nfac, Phi, Q, filt_f, filt_P) {
   fTT <- filt_f[, TT]
   PTT <- filt_P[, , TT]
