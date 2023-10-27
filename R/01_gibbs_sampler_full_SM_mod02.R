@@ -7,8 +7,10 @@
 #' @param nreg Anzahl der Regressor-Variablen
 #' @param OmegaLoad0Scale Vektor der Prior-Varianzen der Ladungen (der latenten Fakotren) (wenn OmegaLoad0Scale ein Skalar ist, wird dieser Wert fuer jede Varianz genutzt)
 #' @param OmegaReg0Scale Vektor der Prior-Varianzen der partiellen Effekte (der Regressoren) (wenn OmegaReg0Scale ein Skalar ist, wird dieser Wert fuer jede Varianz genutzt)
+#' @param A_diag MISSING DESCRIPTION TO ADD LATER
+#' @param TT Time dimension (number of points in time)
+#' @param N Cross-sectional dimension (number of countries)
 # @param countryA MISSING DESCRIPTION TO ADD LATER
-# @param A_diag MISSING DESCRIPTION TO ADD LATER
 # @param nu0 MISSING DESCRIPTION TO ADD LATER
 # @param Psi0 MISSING DESCRIPTION TO ADD LATER
 # @param shape0 MISSING DESCRIPTION TO ADD LATER
@@ -25,8 +27,6 @@
 # @param VdiagEst MISSING DESCRIPTION TO ADD LATER
 # @param alpha0 MISSING DESCRIPTION TO ADD LATER
 # @param beta0 MISSING DESCRIPTION TO ADD LATER
-# @param N Cross-sectional dimension (number of countries)
-# @param TT Time dimension (number of points in time)
 # @param storePath MISSING DESCRIPTION TO ADD LATER
 # @param itermax MISSING DESCRIPTION TO ADD LATER
 # @param scaleA MISSING DESCRIPTION TO ADD LATER
