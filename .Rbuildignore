@@ -3,6 +3,10 @@
 
 ^run_cluster\.R
 ^plot_functions_ACF\.R
+^data_sim\.R
+^data_sim_helpers\.R
+^data_simulation\.R
+
 ^IIGpkg\.qmd$
 ^quartoWebsiteBlueprint\.pdf$
 ^_quarto\.yml
