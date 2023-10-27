@@ -4,6 +4,12 @@
 .Ruserdata
 .quarto
 
+run_cluster.R
+data_sim.R
+data_sim_helpers.R
+data_simulation.R
+plot_functions_ACF.R
+
 IIGpkg.Rproj
 tests
 data
