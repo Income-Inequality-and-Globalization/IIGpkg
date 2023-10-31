@@ -1,6 +1,6 @@
 #' IIGpkg: Package for replicating the IIG project results
 #'
-#' This package provides facilities for replicating analysis of the IIG 
+#' This package provides facilities for replicating analysis of the IIG
 #' project. Regarding the compilation of docs, see `Startup`.
 #'
 #' @section Startup:
