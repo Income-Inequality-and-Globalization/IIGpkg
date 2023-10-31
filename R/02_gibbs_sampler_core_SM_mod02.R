@@ -98,9 +98,9 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Modell ohne Konstante
   initials <- as.list(environment()) # speichert die Initialisierung
 
-  Vhat <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
-  store_count <- 0 # zaehlt wie oft bereits zwischengespeichert wurde
-  SIMULATE_FACTORS <- set_simulate_factors(fPost) 
+  Vhat             <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
+  store_count      <- 0 # zaehlt wie oft bereits zwischengespeichert wurde
+  SIMULATE_FACTORS <- set_simulate_factors(fPost)
   w_reg_spec       <- set_reg_specification(wRegSpec)
   msg_error_kf     <- NULL
 
@@ -109,9 +109,9 @@ GibbsSSM_2 <- function(itermax = 15000,
   N_num_y <- dim(B)[1] # N * number of components in y
   num_fac <- dim(B)[2] # number of factors
 
-  NN <- N_num_y / num_y  # Anzahl der Laender
-  TT <- dim(yObs)[2]     # Anzahl der Zeitpunkte
-  NN_TT  <- NN * TT      # Laender mal Zeitpunkte
+  NN       <- N_num_y / num_y # Anzahl der Laender
+  TT       <- dim(yObs)[2] # Anzahl der Zeitpunkte
+  NN_TT    <- NN * TT # Laender mal Zeitpunkte
   TT_num_y <- TT * num_y # Zeitpunkte mal y-measurement components
 
   fSTORE <- set_f_out(num_fac, TT, itermax)
@@ -120,10 +120,12 @@ GibbsSSM_2 <- function(itermax = 15000,
   if (nreg == 0) D0 <- NULL
 
   # storePath Anpassung
-  storePath_adj <- set_store_path_subdir(storePath, VdiagEst, sampleA,
-                                         initials, covScale, njointfac,
-                                         w_reg_spec, Omega0, incObsNew)
-  
+  storePath_adj <- set_store_path_subdir(
+    storePath, VdiagEst, sampleA,
+    initials, covScale, njointfac,
+    w_reg_spec, Omega0, incObsNew
+  )
+
   if (countryA) {
     ASTORE <- array(0, dim = c(num_y, num_y, itermax, NN)) # speichert die Gibbs-Zuege der Adjustmentmatrix
   } else {
@@ -163,58 +165,58 @@ GibbsSSM_2 <- function(itermax = 15000,
   # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
   iter <- 1 # aktuelle Gibbs-Iteration
 
-  
+
   ############################################################################
   ## GIBBS sampler Iteration START
   ############################################################################
   while (iter <= itermax) {
     # if (iter == 5) browser()
-      # Erweiterung das Vhat Arrays um die Adjustmentmatrix A
-      if (countryA) {
-        VhatArray_A <- array(0, dim = c(num_y, num_y, NN_TT))
-        for (i in 1:NN) {
-          VhatArray_A[, , (TT * (i - 1) + 1):(i * TT)] <- array(apply(VhatSqrt[, , (TT * (i - 1) + 1):(i * TT)], 3, \(x) x %*% A_countryArray[, , i] %*% t(x)), c(num_y, num_y, TT))
-        }
-      } else {
-        VhatArray_A <- array(apply(VhatSqrt, 3, function(X) {
-          X %*% A %*% t(X)
-        }), c(num_y, num_y, NN_TT))
+    # Erweiterung das Vhat Arrays um die Adjustmentmatrix A
+    if (countryA) {
+      VhatArray_A <- array(0, dim = c(num_y, num_y, NN_TT))
+      for (i in 1:NN) {
+        VhatArray_A[, , (TT * (i - 1) + 1):(i * TT)] <- array(apply(VhatSqrt[, , (TT * (i - 1) + 1):(i * TT)], 3, \(x) x %*% A_countryArray[, , i] %*% t(x)), c(num_y, num_y, TT))
       }
+    } else {
+      VhatArray_A <- array(apply(VhatSqrt, 3, function(X) {
+        X %*% A %*% t(X)
+      }), c(num_y, num_y, NN_TT))
+    }
 
-      # Vhat Array (mit Adjustmentmatrix A) bzgl. der Zeit sortiert
-      VhatArrayBdiagByTime <- bdiagByTime(VhatArray_A = VhatArray_A, npara = num_y, N = NN, TT = TT, Nnpara = N_num_y)
+    # Vhat Array (mit Adjustmentmatrix A) bzgl. der Zeit sortiert
+    VhatArrayBdiagByTime <- bdiagByTime(VhatArray_A = VhatArray_A, npara = num_y, N = NN, TT = TT, Nnpara = N_num_y)
 
-    
+
     #### GIBBS PART: Sampling of the latent factors (FFBS)
     if (SIMULATE_FACTORS) {
       # if (!ident_block) {
-        
-        # Kalman-Filer
-        invisible(capture.output(KF <- tryCatch(
-          {
-            RcppSMCkalman::kfMFPD(
-              yObs = yObs, uReg = uReg, wReg = wReg,
-              dimX = num_fac, dimY = N_num_y, TT = TT,
-              A = Phi, B = NULL, C = B, D = D,
-              Q = Q, R = VhatArrayBdiagByTime, x00 = initX,
-              u00 = initU, P00 = initP, PDSTORE = F
-            )
-          },
-          error = function(e) {
-            e$message
-          }
-        )))
-        # try({KF <-RcppSMCkalman::kfMFPD(yObs = yObs, uReg = uReg, wReg = wReg,
-        #                                                      dimX = num_fac, dimY = Nnpara, TT = TT,
-        #                                                      A = Phi, B = NULL, C = B, D = c_,
-        #                                                      Q = Q, R = VhatArrayBdiagByTime, x00 = initX,
-        #                                                     u00 = initU, P00 = initP, PDSTORE = F)})
-        # if(inherits(KF, "try-error")){
-        #   print("Fehler")
-        #   break
-        # }
+
+      # Kalman-Filer
+      invisible(capture.output(KF <- tryCatch(
+        {
+          RcppSMCkalman::kfMFPD(
+            yObs = yObs, uReg = uReg, wReg = wReg,
+            dimX = num_fac, dimY = N_num_y, TT = TT,
+            A = Phi, B = NULL, C = B, D = D,
+            Q = Q, R = VhatArrayBdiagByTime, x00 = initX,
+            u00 = initU, P00 = initP, PDSTORE = F
+          )
+        },
+        error = function(e) {
+          e$message
+        }
+      )))
+      # try({KF <-RcppSMCkalman::kfMFPD(yObs = yObs, uReg = uReg, wReg = wReg,
+      #                                                      dimX = num_fac, dimY = Nnpara, TT = TT,
+      #                                                      A = Phi, B = NULL, C = B, D = c_,
+      #                                                      Q = Q, R = VhatArrayBdiagByTime, x00 = initX,
+      #                                                     u00 = initU, P00 = initP, PDSTORE = F)})
+      # if(inherits(KF, "try-error")){
+      #   print("Fehler")
+      #   break
       # }
-      
+      # }
+
       # Speichert moegliche Fehlermeldung des Kalman-Filter und die Zwischenergebnisse zum Zeitpunkt des Fehlers zurueck
       if (is.character(KF)) {
         msg_error_kf <- KF
@@ -224,25 +226,33 @@ GibbsSSM_2 <- function(itermax = 15000,
         }
         if (VdiagEst) {
           saveRDS(
-            list(f = fSTORE,
-                 B = BSTORE,
-                 V = VSTORE,
-                 blockCount = blockCount,
-                 errorMsg = msg_error_kf,
-                 initials = initials),
-            file = paste0(storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
-                          "_V", initials$Vhat[1, 1, 1], "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, "_error", iter, ".rds")
+            list(
+              f = fSTORE,
+              B = BSTORE,
+              V = VSTORE,
+              blockCount = blockCount,
+              errorMsg = msg_error_kf,
+              initials = initials
+            ),
+            file = paste0(
+              storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
+              "_V", initials$Vhat[1, 1, 1], "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, "_error", iter, ".rds"
+            )
           )
         } else {
           saveRDS(
-            list(f = fSTORE,
-                 B = BSTORE,
-                 A = ASTORE,
-                 blockCount = blockCount,
-                 errorMsg = msg_error_kf,
-                 initials = initials),
-            file = paste0(storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
-                          "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, "_error", iter, ".rds")
+            list(
+              f = fSTORE,
+              B = BSTORE,
+              A = ASTORE,
+              blockCount = blockCount,
+              errorMsg = msg_error_kf,
+              initials = initials
+            ),
+            file = paste0(
+              storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
+              "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, "_error", iter, ".rds"
+            )
           )
         }
         return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = msg_error_kf))
@@ -251,14 +261,14 @@ GibbsSSM_2 <- function(itermax = 15000,
       filt_P <- KF$mfdVAR
 
       # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
-      
+
       # Backward Sampling
       fPost <- GibbsSSM_f(TT = TT, nfac = num_fac, Phi = Phi, Q = Q, filt_f = filt_f, filt_P = filt_P)
     }
 
 
     fSTORE[, , iter] <- fPost
-    
+
 
     ##### GIBBS PART: Sampling of loadings (on latent factors) and partial effects (on regressors)
     # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
@@ -274,7 +284,7 @@ GibbsSSM_2 <- function(itermax = 15000,
       # availableObs <- which(!is.na(yObs[1 + num_y * (i-1),]))
       availableObs <- which(availableObs_crossSection[i, ])
 
-      
+
       ## Posterior Momente fuer die Ladungen und die partiellen Effekte
       invOmega0 <- solve(Omega0)
       invOmega1_part2 <- sumffkronV(availableObs, npara = num_y, nreg = nreg, njointfac = njointfac, i = i, fPost = fPost, wReg = wReg, Viarray = Viarray, type = type)
@@ -319,7 +329,7 @@ GibbsSSM_2 <- function(itermax = 15000,
       # ident_control <- 1
       # while(!valid){
       #   if(ident_control == identmax + 1){iter <- iter - 1; ident_block <- T; blockCount <- blockCount +1 ; break}
-      
+
       ## Identifikationsrestriktionen fuer die Ladungen
       upper <- rep(Inf, 6)
       # Dselect <- diag(6)
@@ -364,10 +374,10 @@ GibbsSSM_2 <- function(itermax = 15000,
       Sigma <- 0.5 * Omega1 + 0.5 * t(Omega1)
       # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
       #                          lower = lower, upper = upper))
-       
+
       # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma )$samp
       # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma )$samp
-      
+
       # Sampling der Ladungen bzw. partiellen Effekte
       BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
 
@@ -420,92 +430,92 @@ GibbsSSM_2 <- function(itermax = 15000,
 
 
     # if (!ident_block) {
-      if (type == "allidio") {
-        if (njointfac != 0) {
-          B <- cbind(Bjoint, diag(c(Bidio)))
+    if (type == "allidio") {
+      if (njointfac != 0) {
+        B <- cbind(Bjoint, diag(c(Bidio)))
+      } else {
+        B <- diag(c(Bidio))
+      }
+    } else if (type == "countryidio" | type == "countryidio_nomu") {
+      BidioMat <- as.matrix(Matrix::bdiag(plyr::alply(array(Bidio, c(num_y, 1, NN)), 3)))
+      if (njointfac != 0) {
+        B <- cbind(Bjoint, BidioMat)
+      } else {
+        B <- BidioMat
+      }
+    }
+
+
+    BSTORE[, , iter] <- B
+
+    if (nreg != 0) {
+      D <- DSTORE[, , iter]
+    } else {
+      D <- matrix(0, nrow = N_num_y)
+      wReg <- matrix(0, ncol = TT)
+    }
+
+
+    #### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A
+    u <- yObs - B %*% fPost - D %*% wReg
+    # uSTORE[,, iter] <- u
+    if (VdiagEst) {
+      # u <- yObs - apply(fPost, 2, function(x) {
+      #   B %*% x
+      # })
+      if (VhatDiagScale) {
+        u <- sapply(1:TT, \(x) (1 / sqrt(diag(VhatArrayBdiagByTimeFix[, , x]))) * u[, x])
+      }
+      ssu <- apply(u, 1, \(x) sum(x^2, na.rm = TRUE))
+      TT_available <- rep(apply(availableObs_crossSection, 1, sum), each = num_y)
+      ssu_TT <- cbind(ssu, TT_available)
+      Vdiag <- apply(ssu_TT, 1, \(x) LaplacesDemon::rinvgamma(1, shape = alpha0 + x[2] / 2, scale = beta0 + x[1] / 2))
+      VdiagMat <- matrix(Vdiag, ncol = num_y, byrow = T)
+      VdiagMat_extend <- VdiagMat[rep(1:nrow(VdiagMat), each = TT), ]
+      VdiagArray <- array(apply(VdiagMat_extend, 1, diag), dim = c(num_y, num_y, NN_TT))
+      if (VhatDiagScale) {
+        VdiagArray <- array(sapply(1:(NN_TT), \(x) VdiagArray[, , x] %*% VhatFix[, , x]), dim = c(num_y, num_y, NN_TT))
+      }
+      VhatSqrt <- array(apply(VdiagArray, 3, matSqrt), c(num_y, num_y, NN_TT))
+      VSTORE[, iter] <- Vdiag
+    }
+
+    if (sampleA) {
+      # u <- yObs - apply(fPost, 2, function(x) {
+      #   B %*% x
+      # })
+      uSplit <- lapply(split(u, matrix(rep(1:NN, each = TT_num_y), ncol = TT, byrow = T)), matrix, ncol = TT)
+
+      if (countryA) {
+        utu_country <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_individ
+        if (diagA) {
+          uSum_country <- lapply(utu_country, diag)
+          Adiag_country <- lapply(1:NN, \(xx)  sapply(uSum_country[[xx]], \(x) LaplacesDemon::rinvgamma(n = 1, shape = shape0 + 0.5 * sum(availableObs_crossSection[xx, ]), scale = rate0 + 0.5 * x)))
+          A_countryArray <- array(unlist(lapply(Adiag_country, diag)), c(num_y, num_y, NN))
         } else {
-          B <- diag(c(Bidio))
+          A_country <- lapply(1:NN, \(x) LaplacesDemon::rinvwishart(nu = sum(availableObs_crossSection[x, ]) + nu0, S = Psi0 + utu_country[[x]]))
+          A_countryArray <- array(unlist(A_country), c(num_y, num_y, NN))
         }
-      } else if (type == "countryidio" | type == "countryidio_nomu") {
-        BidioMat <- as.matrix(Matrix::bdiag(plyr::alply(array(Bidio, c(num_y, 1, NN)), 3)))
-        if (njointfac != 0) {
-          B <- cbind(Bjoint, BidioMat)
+        ASTORE[, , iter, ] <- A_countryArray
+      } else {
+        utu <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_total
+        utu <- (utu + t(utu)) / 2
+        if (diagA) {
+          # uSplitSqrt <- lapply(uSplit,\(x) x^2)
+          # uSum <- apply(sapply(uSplitSqrt, \(x) apply(x,1,sum)),1,sum)
+          uSum <- diag(utu)
+          A_diag <- sapply(uSum, \(x) invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (NN_TT_avail), rate = rate0 + 0.5 * x))
+          A <- diag(A_diag)
+        } else if (scaleA) {
+          uSum <- sum(diag(utu))
+          A_scale <- invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (num_y * NN_TT_avail), rate = rate0 + 0.5 * uSum)
+          A <- diag(rep(A_scale, num_y))
         } else {
-          B <- BidioMat
+          A <- LaplacesDemon::rinvwishart(nu = NN_TT_avail + nu0, S = Psi0 + utu)
         }
+        ASTORE[, , iter] <- A
       }
-
-
-      BSTORE[, , iter] <- B
-
-      if (nreg != 0) {
-        D <- DSTORE[, , iter]
-      } else{
-        D <- matrix(0, nrow = N_num_y)
-        wReg <- matrix(0, ncol = TT )
-      }
-
-      
-      #### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A
-      u <- yObs - B %*% fPost - D %*% wReg
-      # uSTORE[,, iter] <- u
-      if (VdiagEst) {
-        # u <- yObs - apply(fPost, 2, function(x) {
-        #   B %*% x
-        # })
-        if (VhatDiagScale) {
-          u <- sapply(1:TT, \(x) (1 / sqrt(diag(VhatArrayBdiagByTimeFix[, , x]))) * u[, x])
-        }
-        ssu <- apply(u, 1, \(x) sum(x^2, na.rm = TRUE))
-        TT_available <- rep(apply(availableObs_crossSection, 1, sum), each = num_y)
-        ssu_TT <- cbind(ssu, TT_available)
-        Vdiag <- apply(ssu_TT, 1, \(x) LaplacesDemon::rinvgamma(1, shape = alpha0 + x[2] / 2, scale = beta0 + x[1] / 2))
-        VdiagMat <- matrix(Vdiag, ncol = num_y, byrow = T)
-        VdiagMat_extend <- VdiagMat[rep(1:nrow(VdiagMat), each = TT), ]
-        VdiagArray <- array(apply(VdiagMat_extend, 1, diag), dim = c(num_y, num_y, NN_TT))
-        if (VhatDiagScale) {
-          VdiagArray <- array(sapply(1:(NN_TT), \(x) VdiagArray[, , x] %*% VhatFix[, , x]), dim = c(num_y, num_y, NN_TT))
-        }
-        VhatSqrt <- array(apply(VdiagArray, 3, matSqrt), c(num_y, num_y, NN_TT))
-        VSTORE[, iter] <- Vdiag
-      }
-
-      if (sampleA) {
-        # u <- yObs - apply(fPost, 2, function(x) {
-        #   B %*% x
-        # })
-        uSplit <- lapply(split(u, matrix(rep(1:NN, each = TT_num_y), ncol = TT, byrow = T)), matrix, ncol = TT)
-
-        if (countryA) {
-          utu_country <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_individ
-          if (diagA) {
-            uSum_country <- lapply(utu_country, diag)
-            Adiag_country <- lapply(1:NN, \(xx)  sapply(uSum_country[[xx]], \(x) LaplacesDemon::rinvgamma(n = 1, shape = shape0 + 0.5 * sum(availableObs_crossSection[xx, ]), scale = rate0 + 0.5 * x)))
-            A_countryArray <- array(unlist(lapply(Adiag_country, diag)), c(num_y, num_y, NN))
-          } else {
-            A_country <- lapply(1:NN, \(x) LaplacesDemon::rinvwishart(nu = sum(availableObs_crossSection[x, ]) + nu0, S = Psi0 + utu_country[[x]]))
-            A_countryArray <- array(unlist(A_country), c(num_y, num_y, NN))
-          }
-          ASTORE[, , iter, ] <- A_countryArray
-        } else {
-          utu <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_total
-          utu <- (utu + t(utu)) / 2
-          if (diagA) {
-            # uSplitSqrt <- lapply(uSplit,\(x) x^2)
-            # uSum <- apply(sapply(uSplitSqrt, \(x) apply(x,1,sum)),1,sum)
-            uSum <- diag(utu)
-            A_diag <- sapply(uSum, \(x) invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (NN_TT_avail), rate = rate0 + 0.5 * x))
-            A <- diag(A_diag)
-          } else if (scaleA) {
-            uSum <- sum(diag(utu))
-            A_scale <- invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (num_y * NN_TT_avail), rate = rate0 + 0.5 * uSum)
-            A <- diag(rep(A_scale, num_y))
-          } else {
-            A <- LaplacesDemon::rinvwishart(nu = NN_TT_avail + nu0, S = Psi0 + utu)
-          }
-          ASTORE[, , iter] <- A
-        }
-      }
+    }
     # }
     ############################################################################
     ## GIBBS sampler Iteration ENDE
