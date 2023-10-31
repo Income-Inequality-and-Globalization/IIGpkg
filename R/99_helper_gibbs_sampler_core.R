@@ -230,3 +230,21 @@ makeDstart <- function(npara, N, nreg, D_par) {
 set_scale_Vhat <- function(Vhat, inc_obs_old, inc_obs_new) {
   inc_obs_old / inc_obs_new * Vhat
 }
+set_f_out <- function(num_fac, TT, itermax) {
+  array(0, dim = c(num_fac, TT, itermax))
+}
+# speichert den Output von FFBS
+# cSTORE <- matrix(rep(0,N_num_y * itermax), ncol = itermax)
+set_B_out <- function(N_num_y, num_fac, itermax) {
+  array(0, dim = c(N_num_y, num_fac, itermax))
+}
+# speichert die Gibbs-Zuege der Ladungen auf die latenten Faktoren
+# uSTORE <- array(0, dim = c(N_num_y, TT, itermax) )
+set_D_out <- function(N_num_y, NN, nreg, itermax) {
+  if (nreg != 0) {
+    # speichert die Koeffizienten der Makroregressor-Koeffizienten
+    return(array(0, dim = c(N_num_y, NN * nreg, itermax)))
+  } else {
+    return(NULL)
+  }
+}
