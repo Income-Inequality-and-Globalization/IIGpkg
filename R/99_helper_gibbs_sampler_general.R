@@ -51,3 +51,18 @@ set_store_path_subdir <- function(store_path, V_DIAG_EST, SAMPLE_A,
   if (is.null(store_path_adj)) stop("HIT ME IN MY FACE")
   return(store_path_adj)
 }
+get_fails <- function(out_gibbs, iter_fail) {
+  iter_fail_before <- iter_fail - 1
+  
+  f_prior_to_fai <- out_gibbs$Gibbs2_SM_SA$f[, , iter_fail_before]
+  B_prior_to_fai <- out_gibbs$Gibbs2_SM_SA$B[, , iter_fail_before]
+  D_prior_to_fai <- out_gibbs$Gibbs2_SM_SA$D[, , iter_fail_before]
+  A_prior_to_fai <- out_gibbs$Gibbs2_SM_SA$A[, , iter_fail_before]
+  V_prior_to_fai <- out_gibbs$Gibbs2_SM_SA$V[, iter_fail_before]
+  
+  return(list(f_prior_to_fai = f_prior_to_fai,
+              B_prior_to_fai = B_prior_to_fai,
+              D_prior_to_fai = D_prior_to_fai,
+              A_prior_to_fai = A_prior_to_fai,
+              V_prior_to_fai = V_prior_to_fai))
+}
