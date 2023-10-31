@@ -109,27 +109,25 @@ GibbsSSM_2 <- function(itermax = 15000,
   N_num_y <- dim(B)[1] # N * number of components in y
   num_fac <- dim(B)[2] # number of factors
 
-  NN <- N_num_y / num_y # Anzahl der Laender
-  TT <- dim(yObs)[2] # Anzahl der Zeitpunkte
-  NN_TT  <- NN * TT
-  fSTORE <- array(0, dim = c(num_fac, TT, itermax)) # speichert den Output von FFBS
-  # cSTORE <- matrix(rep(0,N_num_y * itermax), ncol = itermax)
-  BSTORE <- array(0, dim = c(N_num_y, num_fac, itermax)) # speichert die Gibbs-Zuege der Ladungen auf die latenten Faktoren
-  # uSTORE <- array(0, dim = c(N_num_y, TT, itermax) )
-  if (nreg != 0) {
-    DSTORE <- array(0, dim = c(N_num_y, NN * nreg, itermax)) # speichert die Koeffizienten der Makroregressor-Koeffizienten
-    dimOmega0 <- dim(Omega0)[1]
-    OmegaD0 <- Omega0[dimOmega0, dimOmega0] # speichert Startwert der Priorvarianz fuer die Makroregressor-Koeffizienten. Da ich Omega0 immer diagonal waehle und fuer jeden Makroregressor-Koeffizienten die gleiche Varianz waehle, reicht es hier einen Parameter zu speichern.
-  } else {
-    DSTORE <- NULL
-    D0 <- NULL
-    OmegaD0 <- NULL
-  }
+  NN <- N_num_y / num_y  # Anzahl der Laender
+  TT <- dim(yObs)[2]     # Anzahl der Zeitpunkte
+  NN_TT  <- NN * TT      # Laender mal Zeitpunkte
+  TT_num_y <- TT * num_y # Zeitpunkte mal y-measurement components
 
+  fSTORE <- set_f_out(num_fac, TT, itermax)
+  BSTORE <- set_B_out(N_num_y, num_fac, itermax)
+  DSTORE <- set_D_out(N_num_y, NN, nreg, itermax)
+  if (nreg == 0) D0 <- NULL
+
+  # storePath Anpassung
+  storePath_adj <- set_store_path_subdir(storePath, VdiagEst, sampleA,
+                                         initials, covScale, njointfac,
+                                         w_reg_spec, Omega0, incObsNew)
+  
   if (countryA) {
-    ASTORE <- array(0, dim = c(npara, npara, itermax, NN)) # speichert die Gibbs-Zuege der Adjustmentmatrix
+    ASTORE <- array(0, dim = c(num_y, num_y, itermax, NN)) # speichert die Gibbs-Zuege der Adjustmentmatrix
   } else {
-    ASTORE <- array(0, dim = c(npara, npara, itermax))
+    ASTORE <- array(0, dim = c(num_y, num_y, itermax))
   }
   VSTORE <- matrix(0, nrow = N_num_y, ncol = itermax) # speichert Gibbs-Zuege für die Messfehlervarianzen, wenn diese geschaetzt werden (VDiagEst = TRUE) (wahrscheinlich fuer uns irrelevant)
 
@@ -139,10 +137,10 @@ GibbsSSM_2 <- function(itermax = 15000,
 
   if (VhatDiagScale) {
     VhatFix <- Vhat # speichert Vhat Initialisierung
-    VhatArrayBdiagByTimeFix <- bdiagByTime(VhatFix, npara = npara, N = NN, TT = TT, Nnpara = N_num_y) # Sortiert Vhat nach der Zeit: wie Vhat eine npara x npara x N*TT Array, aber die Elemente [1:npara, 1:npara, 1:N] sind nun die Messfehlervarianzen aller Laender zum ersten Zeitpunkt, [1:npara, 1:npara, (N+1):(2N)] alle Laender zum zweiten Zeitpunkt, usw.
+    VhatArrayBdiagByTimeFix <- bdiagByTime(VhatFix, npara = num_y, N = NN, TT = TT, Nnpara = N_num_y) # Sortiert Vhat nach der Zeit: wie Vhat eine num_y x num_y x N*TT Array, aber die Elemente [1:num_y, 1:num_y, 1:N] sind nun die Messfehlervarianzen aller Laender zum ersten Zeitpunkt, [1:num_y, 1:num_y, (N+1):(2N)] alle Laender zum zweiten Zeitpunkt, usw.
 
     if (!missing(VhatDiagScale_start) & !is.null(VhatDiagScale_start)) {
-      Vhat <- array(sapply(1:(NN_TT), \(x) VhatDiagScale_start[, , x] %*% Vhat[, , x]), dim = c(npara, npara, NN_TT)) # setzt Vhat im Fall VhatDiagScale = TRUE
+      Vhat <- array(sapply(1:(NN_TT), \(x) VhatDiagScale_start[, , x] %*% Vhat[, , x]), dim = c(num_y, num_y, NN_TT)) # setzt Vhat im Fall VhatDiagScale = TRUE
       Vstart <- VhatDiagScale_start[1, 1, 1]
     } else {
       Vstart <- 1
@@ -150,27 +148,15 @@ GibbsSSM_2 <- function(itermax = 15000,
   }
   if (countryA) {
     A_country <- plyr::alply(replicate(NN, A), 3) # Liste: enthaelt fuer jedes Land eine eigene A Matrix nach dem Vorbild des uebergebenen A's.
-    A_countryArray <- array(unlist(A_country), c(npara, npara, NN)) # macht aus der Liste ein Array
+    A_countryArray <- array(unlist(A_country), c(num_y, num_y, NN)) # macht aus der Liste ein Array
   }
 
 
 
-  VhatSqrt <- array(apply(Vhat, 3, matSqrt), c(npara, npara, NN_TT)) # Array mit Matrixwurzeln der Vhat-Matrizen
+  VhatSqrt <- array(apply(Vhat, 3, matSqrt), c(num_y, num_y, NN_TT)) # Array mit Matrixwurzeln der Vhat-Matrizen
 
-  NTT_available <- sum(!is.na(yObs)) / npara # N *TT ohne die fehlenden Beobachtungen
+  NN_TT_avail <- sum(!is.na(yObs)) / num_y # N *TT ohne die fehlenden Beobachtungen
   availableObs_crossSection <- t(apply(yObs[seq(1, N_num_y, 3), ], 1, \(x) !is.na(x))) # Anzahl der Beobachtungen (ohne die NAs) fuer jedes Land
-
-
-  # storePath Anpassung
-  if (storePath != "none" & !missing(storePath)) {
-    if (VdiagEst) {
-      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", w_reg_spec, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew)
-    } else if (sampleA) {
-      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", w_reg_spec, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew)
-    } else {
-      storePath_adj <- paste0(storePath, "/", "cs", covScale, "_pj", njointfac, "_Reg", w_reg_spec, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_IO", incObsNew)
-    }
-  }
 
   # pb <- winProgressBar(title="Progress", label="0% done", min=0, max=100, initial=0)
   blockCount <- 0 # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
@@ -185,18 +171,18 @@ GibbsSSM_2 <- function(itermax = 15000,
     # if (iter == 5) browser()
       # Erweiterung das Vhat Arrays um die Adjustmentmatrix A
       if (countryA) {
-        VhatArray_A <- array(0, dim = c(npara, npara, NN_TT))
+        VhatArray_A <- array(0, dim = c(num_y, num_y, NN_TT))
         for (i in 1:NN) {
-          VhatArray_A[, , (TT * (i - 1) + 1):(i * TT)] <- array(apply(VhatSqrt[, , (TT * (i - 1) + 1):(i * TT)], 3, \(x) x %*% A_countryArray[, , i] %*% t(x)), c(npara, npara, TT))
+          VhatArray_A[, , (TT * (i - 1) + 1):(i * TT)] <- array(apply(VhatSqrt[, , (TT * (i - 1) + 1):(i * TT)], 3, \(x) x %*% A_countryArray[, , i] %*% t(x)), c(num_y, num_y, TT))
         }
       } else {
         VhatArray_A <- array(apply(VhatSqrt, 3, function(X) {
           X %*% A %*% t(X)
-        }), c(npara, npara, NN_TT))
+        }), c(num_y, num_y, NN_TT))
       }
 
       # Vhat Array (mit Adjustmentmatrix A) bzgl. der Zeit sortiert
-      VhatArrayBdiagByTime <- bdiagByTime(VhatArray_A = VhatArray_A, npara = npara, N = NN, TT = TT, Nnpara = N_num_y)
+      VhatArrayBdiagByTime <- bdiagByTime(VhatArray_A = VhatArray_A, npara = num_y, N = NN, TT = TT, Nnpara = N_num_y)
 
     
     #### GIBBS PART: Sampling of the latent factors (FFBS)
@@ -237,12 +223,26 @@ GibbsSSM_2 <- function(itermax = 15000,
           store_count <- store_count + 1
         }
         if (VdiagEst) {
-          saveRDS(list(f = fSTORE, B = BSTORE, V = VSTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials),
-            file = paste0(storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_V", initials$Vhat[1, 1, 1], "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, "_error", iter, ".rds")
+          saveRDS(
+            list(f = fSTORE,
+                 B = BSTORE,
+                 V = VSTORE,
+                 blockCount = blockCount,
+                 errorMsg = msg_error_kf,
+                 initials = initials),
+            file = paste0(storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
+                          "_V", initials$Vhat[1, 1, 1], "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, "_error", iter, ".rds")
           )
         } else {
-          saveRDS(list(f = fSTORE, B = BSTORE, A = ASTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials),
-            file = paste0(storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, "_error", iter, ".rds")
+          saveRDS(
+            list(f = fSTORE,
+                 B = BSTORE,
+                 A = ASTORE,
+                 blockCount = blockCount,
+                 errorMsg = msg_error_kf,
+                 initials = initials),
+            file = paste0(storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
+                          "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, "_error", iter, ".rds")
           )
         }
         return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = msg_error_kf))
@@ -270,17 +270,17 @@ GibbsSSM_2 <- function(itermax = 15000,
       # Vhat Array for cross-sectional unit (country) i
       Viarray <- VhatArray_A[, , (1 + (i - 1) * TT):(i * TT)]
       # yObs for cross-sectional unit (country) i
-      yiObs <- yObs[(1 + npara * (i - 1)):(npara * i), ]
-      # availableObs <- which(!is.na(yObs[1 + npara * (i-1),]))
+      yiObs <- yObs[(1 + num_y * (i - 1)):(num_y * i), ]
+      # availableObs <- which(!is.na(yObs[1 + num_y * (i-1),]))
       availableObs <- which(availableObs_crossSection[i, ])
 
       
       ## Posterior Momente fuer die Ladungen und die partiellen Effekte
       invOmega0 <- solve(Omega0)
-      invOmega1_part2 <- sumffkronV(availableObs, npara = npara, nreg = nreg, njointfac = njointfac, i = i, fPost = fPost, wReg = wReg, Viarray = Viarray, type = type)
+      invOmega1_part2 <- sumffkronV(availableObs, npara = num_y, nreg = nreg, njointfac = njointfac, i = i, fPost = fPost, wReg = wReg, Viarray = Viarray, type = type)
       invOmega1 <- invOmega0 + invOmega1_part2
 
-      beta1_mid <- sumfyV(availableObs, npara = npara, nreg = nreg, njointfac = njointfac, i = i, fPost = fPost, wReg = wReg, yiObs = yiObs, Viarray = Viarray, type = type)
+      beta1_mid <- sumfyV(availableObs, npara = num_y, nreg = nreg, njointfac = njointfac, i = i, fPost = fPost, wReg = wReg, yiObs = yiObs, Viarray = Viarray, type = type)
 
       # Omega1 <-  tryCatch({solve(invOmega1)},
       #          error = function(e){
@@ -325,8 +325,8 @@ GibbsSSM_2 <- function(itermax = 15000,
       # Dselect <- diag(6)
       if (type == "allidio") {
         if (njointfac == 0) {
-          lower <- c(rep(0, npara), rep(-Inf, npara * nreg)) # muss fuer gemeinsamen faktor angepasst werden
-          upper <- rep(Inf, npara + npara * nreg) # muss fuer gemeinsamen faktor angepasst werden
+          lower <- c(rep(0, num_y), rep(-Inf, num_y * nreg)) # muss fuer gemeinsamen faktor angepasst werden
+          upper <- rep(Inf, num_y + num_y * nreg) # muss fuer gemeinsamen faktor angepasst werden
         } else {
           if (i == 1) {
             lower <- c(0, rep(-Inf, 2), rep(0, 3))
@@ -356,7 +356,7 @@ GibbsSSM_2 <- function(itermax = 15000,
       } else {
         stop("No valid model type selected.")
       }
-      # muss verallgemeinert werden fuer npara < njointfac (fuer uns nicht noetig)
+      # muss verallgemeinert werden fuer num_y < njointfac (fuer uns nicht noetig)
 
 
       # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
@@ -371,20 +371,20 @@ GibbsSSM_2 <- function(itermax = 15000,
       # Sampling der Ladungen bzw. partiellen Effekte
       BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
 
-      Bvec <- BDsamp[1:((njointfac + 1) * npara)]
-      Dvec <- BDsamp[-(1:((njointfac + 1) * npara))]
-      D_i <- matrix(Dvec, nrow = npara, ncol = nreg)
+      Bvec <- BDsamp[1:((njointfac + 1) * num_y)]
+      Dvec <- BDsamp[-(1:((njointfac + 1) * num_y))]
+      D_i <- matrix(Dvec, nrow = num_y, ncol = nreg)
 
       if (njointfac != 0) {
-        idioFac <- Bvec[-(1:(npara * njointfac))]
+        idioFac <- Bvec[-(1:(num_y * njointfac))]
         if (type == "countryidio_nomu") {
           idioFac <- c(idioFac, 0)
         }
         # idioPos <- TRUE
-        jointFac <- matrix(Bvec[1:(npara * njointfac)], ncol = njointfac)
+        jointFac <- matrix(Bvec[1:(num_y * njointfac)], ncol = njointfac)
         # neu
         # Unterscheidung i =1 und sonst
-        # jointFac <- matrix(0, nrow = npara, ncol = njointfac)
+        # jointFac <- matrix(0, nrow = num_y, ncol = njointfac)
         # jointFac_select <- lower.tri(jointFac, diag = T)
         # jointFac[jointFac_select] <- Bvec[1:sum(jointFac_select)]
         # idioFac <- Bvec[-(1:sum(jointFac_select))]
@@ -395,8 +395,8 @@ GibbsSSM_2 <- function(itermax = 15000,
       # gewekePos <- TRUE
 
       # if(i == 1 & njointfac != 0){
-      #   gewekeMatrix <- jointFac[1:njointfac, 1:njointfac] # muss verallgemeinert werden fuer npara < njointfac
-      #   gewekePos <- all(diag(gewekeMatrix, njointfac) > 0) # muss verallgemeinert werden fuer npara < njointfac
+      #   gewekeMatrix <- jointFac[1:njointfac, 1:njointfac] # muss verallgemeinert werden fuer num_y < njointfac
+      #   gewekePos <- all(diag(gewekeMatrix, njointfac) > 0) # muss verallgemeinert werden fuer num_y < njointfac
       #   #gewekePos <- TRUE
       # }
       # if(gewekePos & idioPos){valid <- TRUE}
@@ -407,13 +407,13 @@ GibbsSSM_2 <- function(itermax = 15000,
 
       # if(ident_block){break}
       if (njointfac != 0) {
-        Bjoint[((i - 1) * npara + 1):(i * npara), ] <- jointFac
+        Bjoint[((i - 1) * num_y + 1):(i * num_y), ] <- jointFac
       }
       Bidio[, i] <- idioFac
 
 
       if (nreg != 0) {
-        DSTORE[(1 + npara * (i - 1)):(i * npara), (1 + nreg * (i - 1)):(i * nreg), iter] <- D_i
+        DSTORE[(1 + num_y * (i - 1)):(i * num_y), (1 + nreg * (i - 1)):(i * nreg), iter] <- D_i
       }
     }
     # browser()
@@ -427,7 +427,7 @@ GibbsSSM_2 <- function(itermax = 15000,
           B <- diag(c(Bidio))
         }
       } else if (type == "countryidio" | type == "countryidio_nomu") {
-        BidioMat <- as.matrix(Matrix::bdiag(plyr::alply(array(Bidio, c(npara, 1, NN)), 3)))
+        BidioMat <- as.matrix(Matrix::bdiag(plyr::alply(array(Bidio, c(num_y, 1, NN)), 3)))
         if (njointfac != 0) {
           B <- cbind(Bjoint, BidioMat)
         } else {
@@ -457,16 +457,16 @@ GibbsSSM_2 <- function(itermax = 15000,
           u <- sapply(1:TT, \(x) (1 / sqrt(diag(VhatArrayBdiagByTimeFix[, , x]))) * u[, x])
         }
         ssu <- apply(u, 1, \(x) sum(x^2, na.rm = TRUE))
-        TT_available <- rep(apply(availableObs_crossSection, 1, sum), each = npara)
+        TT_available <- rep(apply(availableObs_crossSection, 1, sum), each = num_y)
         ssu_TT <- cbind(ssu, TT_available)
         Vdiag <- apply(ssu_TT, 1, \(x) LaplacesDemon::rinvgamma(1, shape = alpha0 + x[2] / 2, scale = beta0 + x[1] / 2))
-        VdiagMat <- matrix(Vdiag, ncol = npara, byrow = T)
+        VdiagMat <- matrix(Vdiag, ncol = num_y, byrow = T)
         VdiagMat_extend <- VdiagMat[rep(1:nrow(VdiagMat), each = TT), ]
-        VdiagArray <- array(apply(VdiagMat_extend, 1, diag), dim = c(npara, npara, NN_TT))
+        VdiagArray <- array(apply(VdiagMat_extend, 1, diag), dim = c(num_y, num_y, NN_TT))
         if (VhatDiagScale) {
-          VdiagArray <- array(sapply(1:(NN_TT), \(x) VdiagArray[, , x] %*% VhatFix[, , x]), dim = c(npara, npara, NN_TT))
+          VdiagArray <- array(sapply(1:(NN_TT), \(x) VdiagArray[, , x] %*% VhatFix[, , x]), dim = c(num_y, num_y, NN_TT))
         }
-        VhatSqrt <- array(apply(VdiagArray, 3, matSqrt), c(npara, npara, NN_TT))
+        VhatSqrt <- array(apply(VdiagArray, 3, matSqrt), c(num_y, num_y, NN_TT))
         VSTORE[, iter] <- Vdiag
       }
 
@@ -474,34 +474,34 @@ GibbsSSM_2 <- function(itermax = 15000,
         # u <- yObs - apply(fPost, 2, function(x) {
         #   B %*% x
         # })
-        uSplit <- lapply(split(u, matrix(rep(1:NN, each = npara * TT), ncol = TT, byrow = T)), matrix, ncol = TT)
+        uSplit <- lapply(split(u, matrix(rep(1:NN, each = TT_num_y), ncol = TT, byrow = T)), matrix, ncol = TT)
 
         if (countryA) {
-          utu_country <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = npara)$sumUtu_individ
+          utu_country <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_individ
           if (diagA) {
             uSum_country <- lapply(utu_country, diag)
             Adiag_country <- lapply(1:NN, \(xx)  sapply(uSum_country[[xx]], \(x) LaplacesDemon::rinvgamma(n = 1, shape = shape0 + 0.5 * sum(availableObs_crossSection[xx, ]), scale = rate0 + 0.5 * x)))
-            A_countryArray <- array(unlist(lapply(Adiag_country, diag)), c(npara, npara, NN))
+            A_countryArray <- array(unlist(lapply(Adiag_country, diag)), c(num_y, num_y, NN))
           } else {
             A_country <- lapply(1:NN, \(x) LaplacesDemon::rinvwishart(nu = sum(availableObs_crossSection[x, ]) + nu0, S = Psi0 + utu_country[[x]]))
-            A_countryArray <- array(unlist(A_country), c(npara, npara, NN))
+            A_countryArray <- array(unlist(A_country), c(num_y, num_y, NN))
           }
           ASTORE[, , iter, ] <- A_countryArray
         } else {
-          utu <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = npara)$sumUtu_total
+          utu <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_total
           utu <- (utu + t(utu)) / 2
           if (diagA) {
             # uSplitSqrt <- lapply(uSplit,\(x) x^2)
             # uSum <- apply(sapply(uSplitSqrt, \(x) apply(x,1,sum)),1,sum)
             uSum <- diag(utu)
-            A_diag <- sapply(uSum, \(x) invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (NTT_available), rate = rate0 + 0.5 * x))
+            A_diag <- sapply(uSum, \(x) invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (NN_TT_avail), rate = rate0 + 0.5 * x))
             A <- diag(A_diag)
           } else if (scaleA) {
             uSum <- sum(diag(utu))
-            A_scale <- invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (npara * NTT_available), rate = rate0 + 0.5 * uSum)
-            A <- diag(rep(A_scale, npara))
+            A_scale <- invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (num_y * NN_TT_avail), rate = rate0 + 0.5 * uSum)
+            A <- diag(rep(A_scale, num_y))
           } else {
-            A <- LaplacesDemon::rinvwishart(nu = NTT_available + nu0, S = Psi0 + utu)
+            A <- LaplacesDemon::rinvwishart(nu = NN_TT_avail + nu0, S = Psi0 + utu)
           }
           ASTORE[, , iter] <- A
         }
@@ -523,18 +523,18 @@ GibbsSSM_2 <- function(itermax = 15000,
       }
       if (VdiagEst) {
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials),
-          file = paste0(storePath_adj, "/", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D[1, 1, 1], "_OmD", OmegaD0, "_V", Vstart, "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, ".rds")
+          file = paste0(storePath_adj, "/", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_V", Vstart, "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, ".rds")
           # STORE WITH uSTORE:
           # saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, blockCount = blockCount,  errorMsg = errorMsg, initials = initials)
-          #         , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",OmegaD0,"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
+          #         , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",Omega0[dim(Omega0)[1], dim(Omega0)[1]],"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
         )
       } else if (sampleA) {
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials),
-          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew, ".rds")
+          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew, ".rds")
         )
       } else {
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials),
-          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", OmegaD0, "_IO", incObsNew, ".rds")
+          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_IO", incObsNew, ".rds")
         )
       }
     }
