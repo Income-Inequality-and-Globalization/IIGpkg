@@ -1,10 +1,10 @@
 #' Backward Sampling based Kalman-Filter Output
-#' 
+#'
 #' @param TT time
 #' @param nfac Number of factors
-#' @param Phi phi param 
+#' @param Phi phi param
 #' @param Q VCM part
-#' @param filt_f Means of filtering distribution from Kalman-Filter 
+#' @param filt_f Means of filtering distribution from Kalman-Filter
 #' @param filt_P Variances of filtering distribution from Kalman-Filter
 #'
 #' @return posterior filtered states
