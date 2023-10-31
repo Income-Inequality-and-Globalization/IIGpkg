@@ -69,10 +69,9 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
                                  sampleA,
                                  identification,
                                  type = "allidio") {
-  
   ## Number of parameters from GMM estimation: a, q, mu
   npara <- 3
-  
+
   if (type == "allidio") {
     p <- npara * N + p_joint
     # Selection matrices
@@ -134,7 +133,7 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
     VhatDiagScale_start <- NULL
   }
 
-  Vhat <- array(apply(VCOV_array_country_pd, 3, covarianceScale, scale = covScale), c(npara, npara, N * TT))
+  Vhat <- array(apply(Vhat, 3, covarianceScale, scale = covScale), c(npara, npara, N * TT))
 
   identmax <- 1000
   itermax <- itermax
