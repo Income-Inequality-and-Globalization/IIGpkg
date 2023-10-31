@@ -227,3 +227,6 @@ makeDstart <- function(npara, N, nreg, D_par) {
   D_i <- array(D_par, c(npara, nreg, N))
   return(list(Dstack = Dstack, D_i = D_i))
 }
+set_scale_Vhat <- function(Vhat, inc_obs_old, inc_obs_new) {
+  inc_obs_old / inc_obs_new * Vhat
+}
