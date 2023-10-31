@@ -30,13 +30,13 @@ sumffkronV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, Via
     } else {
       stop("No valid model type selected.")
     }
-    
+
     if (nreg != 0) {
       wReg_it <- wReg[(1 + nreg * (i - 1)):(i * nreg), tt]
       f <- c(f, wReg_it)
     }
-    
-    
+
+
     V <- Viarray[, , tt]
     summ <- summ + kronecker(f %*% t(f), solve(V))
   }
@@ -71,12 +71,12 @@ sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, 
     } else {
       stop("No valid model type selected.")
     }
-    
+
     if (nreg != 0) {
       wReg_it <- wReg[(1 + nreg * (i - 1)):(i * nreg), tt]
       f <- c(f, wReg_it)
     }
-    
+
     y <- yiObs[, tt]
     V <- Viarray[, , tt]
     summ <- summ + solve(V) %*% y %*% t(f)
@@ -118,10 +118,10 @@ bdiagByTime <- function(VhatArray_A, npara, N, TT, Nnpara) {
   VhatList_split <- split(VhatList, rep(1:TT, N))
   VhatList_bdiag <- lapply(VhatList_split, Matrix::bdiag)
   VhatArray_bdiag <- array(unlist(lapply((VhatList_bdiag), as.matrix)), c(Nnpara, Nnpara, TT))
-  
+
   return(VhatArray_bdiag)
 }
-#' Sum of squared residuals (u * u') for VCOV/adjustment matrix sampling 
+#' Sum of squared residuals (u * u') for VCOV/adjustment matrix sampling
 #'
 #' @inheritParams GibbsSSM_2
 #' @inheritParams bdiagByTime
@@ -138,7 +138,7 @@ utuSum <- function(uSplit, VhatSqrt, TT, N, npara) {
     for (t in 1:TT) {
       utildeSplit[[i]][, t] <- solve(VhatSqrt[, , (i - 1) * TT + t]) %*% uSplit[[i]][, t]
     }
-    
+
     utu <- apply(utildeSplit[[i]], 2, function(x) {
       x %*% t(x)
     })
@@ -155,16 +155,16 @@ utuSum <- function(uSplit, VhatSqrt, TT, N, npara) {
 #' @inheritParams sumffkronV
 #' @inheritParams bdiagByTime
 #' @param p describe later
-#' @param p_joint describe later 
+#' @param p_joint describe later
 #' @param B_par describe later
 #'
 #' @return Loading matrix and B for start
 #' @export
 makeBstart <- function(npara, N, p, p_joint, B_par, type = "allidio") { # type = c("allidio","countryidio")
-  
+
   # if(length(B_par) == 1){B_par <- rep(B_par,N*npara*(p_joint+1))}
   B_stack <- matrix(rep(0, N * npara * p), ncol = p)
-  
+
   if (type == "allidio") {
     non_zeros <- cbind(matrix(TRUE, ncol = p_joint, nrow = N * npara), diag(rep(TRUE, N * npara)))
     B_stack[non_zeros] <- B_par
@@ -178,7 +178,7 @@ makeBstart <- function(npara, N, p, p_joint, B_par, type = "allidio") { # type =
     stop("No valid model type selected.")
   }
   B_i <- makeBi(npara, N, p, p_joint, B_stack, type = type)
-  
+
   return(list(B_stack = B_stack, B_i = B_i))
 }
 #' Loadings array
