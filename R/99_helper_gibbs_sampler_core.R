@@ -83,14 +83,13 @@ sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, 
   }
   return(summ)
 }
-
 #' Matrix square root (by spectral decomposition)
 #'
 #' @param V Normal matrix
 #'
 #' @return matrix square root of V
 #' @export
-matSqrt <- function(V) {
+mat_sqrt <- function(V) {
   if (any(is.na(V))) {
     dim_V <- dim(V)[1]
     matrix(NA, nrow = dim_V, ncol = dim_V)
