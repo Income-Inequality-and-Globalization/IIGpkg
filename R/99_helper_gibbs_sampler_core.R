@@ -91,9 +91,9 @@ sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, 
 #' @return matrix square root of V
 #' @export
 matSqrt <- function(V) {
-  npara <- dim(V)[1]
   if (any(is.na(V))) {
-    matrix(NA, nrow = npara, ncol = npara)
+    dim_V <- dim(V)[1]
+    matrix(NA, nrow = dim_V, ncol = dim_V)
   } else {
     eig <- eigen(V)
     val <- eig$values
