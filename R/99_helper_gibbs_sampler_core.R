@@ -101,6 +101,20 @@ mat_sqrt <- function(V) {
     vec %*% diag(sqrt(val))
   }
 }
+#' Matrix square root of V-matrix
+#' 
+#' Via helper [mat_sqrt()] using  spectral decomposition
+#'
+#' @param v_mat V-matrix
+#' @param dim_v dimension of V-matrix
+#' @param NN_times_TT number of cross sectional units (`NN`) multiplied by time 
+#'    periods (`TT`)
+#'
+#' @return matrix square root of V
+#' @export
+compute_mat_square_root_V <- function(v_mat, dim_v, NN_times_TT) {
+  array(apply(v_mat, 3, mat_sqrt), c(dim_v, dim_v, NN_times_TT))
+}
 #' Sorts VCOV array by time
 #'
 #' @inheritParams GibbsSSM_2
