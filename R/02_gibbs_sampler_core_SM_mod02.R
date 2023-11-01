@@ -234,7 +234,7 @@ GibbsSSM_2 <- function(itermax = 15000,
               f = fSTORE,
               B = BSTORE,
               V = VSTORE,
-              blockCount = blockCount,
+              blockCount = block_count,
               errorMsg = msg_error_kf,
               initials = initials
             ),
@@ -249,7 +249,7 @@ GibbsSSM_2 <- function(itermax = 15000,
               f = fSTORE,
               B = BSTORE,
               A = ASTORE,
-              blockCount = blockCount,
+              blockCount = block_count,
               errorMsg = msg_error_kf,
               initials = initials
             ),
@@ -259,7 +259,7 @@ GibbsSSM_2 <- function(itermax = 15000,
             )
           )
         }
-        return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = msg_error_kf))
+        return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = block_count, errorMsg = msg_error_kf))
       }
       filt_f <- KF$mfdEXP
       filt_P <- KF$mfdVAR
@@ -480,7 +480,8 @@ GibbsSSM_2 <- function(itermax = 15000,
       if (VhatDiagScale) {
         VdiagArray <- array(sapply(1:(NN_TT), \(x) VdiagArray[, , x] %*% VhatFix[, , x]), dim = c(num_y, num_y, NN_TT))
       }
-      VhatSqrt <- array(apply(VdiagArray, 3, matSqrt), c(num_y, num_y, NN_TT))
+      VhatSqrt <- compute_mat_square_root_V(VdiagArray, num_y, NN_TT)
+      
       VSTORE[, iter] <- Vdiag
     }
 
@@ -536,18 +537,18 @@ GibbsSSM_2 <- function(itermax = 15000,
         dir.create(storePath_adj, recursive = T)
       }
       if (VdiagEst) {
-        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials),
+        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, blockCount = block_count, errorMsg = msg_error_kf, initials = initials),
           file = paste0(storePath_adj, "/", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_V", Vstart, "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, ".rds")
           # STORE WITH uSTORE:
-          # saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, blockCount = blockCount,  errorMsg = errorMsg, initials = initials)
+          # saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, blockCount = block_count,  errorMsg = errorMsg, initials = initials)
           #         , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",Omega0[dim(Omega0)[1], dim(Omega0)[1]],"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
         )
       } else if (sampleA) {
-        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials),
+        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = block_count, errorMsg = msg_error_kf, initials = initials),
           file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew, ".rds")
         )
       } else {
-        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials),
+        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = block_count, errorMsg = msg_error_kf, initials = initials),
           file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_IO", incObsNew, ".rds")
         )
       }
@@ -558,7 +559,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   }
 
   # close(pb)
-  return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, blockCount = blockCount, errorMsg = msg_error_kf, initials = initials))
+  return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, blockCount = block_count, errorMsg = msg_error_kf, initials = initials))
   # RETURN WITH uSTOREÖ
   # return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, u = uSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials))
 }
