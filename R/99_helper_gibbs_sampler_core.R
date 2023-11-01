@@ -268,3 +268,51 @@ set_A_out <- function(countryA, num_y, itermax, NN){
     array(0, dim = c(num_y, num_y, itermax))
   }
 }
+set_V_out <- function(n_num_y, num_mcmc) {
+  matrix(0, nrow = n_num_y, ncol = num_mcmc)
+}
+set_V_tmp <- function(V_DIAG_EST, V_HAT_DIAG_SCALE,
+                      Vhat, VhatDiagScale_start,
+                      NN, TT, NN_TT, N_num_y, num_y) {
+  out_list <- list(
+    Vstart = NULL,
+    Vhat = Vhat,
+    VhatFix = NULL,
+    VhatArrayBdiagByTimeFix = NULL
+  )
+  if (isFALSE(V_DIAG_EST)) return(out_list)
+  if (isTRUE(V_DIAG_EST)) {
+    # Vstart <- initials$Vhat[1, 1, 1]
+    out_list$Vstart <- Vhat[1, 1, 1]
+    if (V_HAT_DIAG_SCALE) {
+      # speichert Vhat Initialisierung
+      out_list$VhatFix <- Vhat 
+      # Sortiert Vhat nach der Zeit: wie Vhat eine num_y x num_y x N*TT Array,
+      # aber die Elemente [1:num_y, 1:num_y, 1:N] sind nun die
+      # Messfehlervarianzen aller Laender zum ersten Zeitpunkt,
+      #[1:num_y, 1:num_y, (N+1):(2N)] alle Laender zum zweiten Zeitpunkt, usw.
+      out_list$VhatArrayBdiagByTimeFix <- bdiagByTime(out_list$VhatFix,
+                                                      npara = num_y,
+                                                      N = NN, TT = TT,
+                                                      Nnpara = N_num_y) 
+      if (!missing(VhatDiagScale_start) && !is.null(VhatDiagScale_start)) {
+        out_list$Vhat <- array(
+          sapply(1:(NN_TT), \(x) VhatDiagScale_start[, , x] %*% Vhat[, , x]),
+          dim = c(num_y, num_y, NN_TT)
+        ) # setzt Vhat im Fall VhatDiagScale = TRUE
+        out_list$Vstart <- VhatDiagScale_start[1, 1, 1]
+      } else {
+        out_list$Vstart <- 1
+      }
+    }
+  }
+  return(out_list)
+}
+set_A_country_array <- function(countryA, A, NN, num_y) {
+  if (isTRUE(countryA)) {
+    A_country <- plyr::alply(replicate(NN, A), 3) # Liste: enthaelt fuer jedes Land eine eigene A Matrix nach dem Vorbild des uebergebenen A's.
+    array(unlist(A_country), c(num_y, num_y, NN)) # macht aus der Liste ein Array
+  } else if (isFALSE(countryA)) {
+    NULL
+  }
+}
