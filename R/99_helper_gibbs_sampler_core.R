@@ -248,3 +248,10 @@ set_D_out <- function(N_num_y, NN, nreg, itermax) {
     return(NULL)
   }
 }
+set_A_out <- function(countryA, num_y, itermax, NN){
+  if (countryA) {
+    array(0, dim = c(num_y, num_y, itermax, NN)) 
+  } else {
+    array(0, dim = c(num_y, num_y, itermax))
+  }
+}
