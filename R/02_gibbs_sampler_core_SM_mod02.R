@@ -27,7 +27,11 @@
 #' @param incObsOld Anzahl der Beobachtungen (der Rohdaten, also individuelle Einkommen), die wir in der GMM-Schaetzung angenommen haben. Bei mir 100000. Das ist zu viel. Daher incObsNew.
 #' @param incObsNew Gewuenschte / Korrigierte Anzahl der Beochbachtungen in der GMM-Schaetzung. Setze bspw. gleich 5000 oder 10000. Das ist realistischer als 100000.
 #' @param covScale Damit kann man die Kovarianzen aus Vhat skalieren. covScale = 0.5 heißt, dass die die Korrelationen(!) halbiert werden. War mal ein Experiment. covscale muss letztlich = 1 sein.
-#' @param VhatDiagScale (wahrscheinlich irrelevant) = TRUE, wenn fuer jedes Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden soll. In Gibb2_SM_SA_cluster muss dann Diag_VCOV = TRUE gesetzt werden, damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn VDiagScale = TRUE sein soll, muss auch VDiagEst = TRUE sein.
+#' @param VhatDiagScale (wahrscheinlich irrelevant) `= TRUE`, wenn fuer jedes
+#'    Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden 
+#'    soll. `Diag_VCOV = TRUE` muss in der top-level Function gesetzt werden,
+#'    damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn
+#'    `VhatDiagScale = TRUE` ist muss auch `VdiagEst = TRUE` sein.
 #' @param VhatDiagScale_start Startwert fuer die Skalierungsfaktoren
 #' @param VdiagEst (wahrscheinlich irrelevant) = TRUE, wenn die diagonale Messfehlervarianz geschaetzt werden soll. (Fuer uns irrelevant, wir wollen die GMM-Varianz nutzen)
 #' @param alpha0 Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE

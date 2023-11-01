@@ -48,7 +48,7 @@ GibbsSSM_2(
   storePath = "none",
   fPost,
   sampleA,
-  identification = T,
+  identification = TRUE,
   storeUnit = 10000
 )
 }
@@ -67,7 +67,7 @@ GibbsSSM_2(
 
 \item{c_}{Konstante der Transition-equation (keine Konstante im Modell - daher nicht relevant)}
 
-\item{D}{Startwert fuer die Koeffizienten der Regressorn (stacked: npara*N x nreg*N), N = Anzahl Laender}
+\item{D}{Startwert fuer die Koeffizienten der Regressorn (stacked: npara*N x nreg*NN), N = Anzahl Laender}
 
 \item{D0}{Prior Erwwartungswert fuer die Koeffizienten der Makro- Regressoren (bei mir immer gleich dem Starwert, da ich beides mit makeDstart erzeuge. Aber nicht stacked, sondern npara x nreg x N Array)}
 
