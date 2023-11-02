@@ -181,7 +181,8 @@ GibbsSSM_2 <- function(itermax = 15000,
                             B = NULL, C = B, D = D, Q = Q,
                             initX = initX, initU = initU, initP = initP,
                             PDSTORE = FALSE,
-                            storePath_adj = storePath_adj, store_count = store_count)
+                            storePath_adj = storePath_adj,
+                            store_count = store_count)
       fSTORE[, , iter] <- fPost
     } else {
       fSTORE[, , iter] <- fPost
@@ -371,8 +372,7 @@ GibbsSSM_2 <- function(itermax = 15000,
     ############################################################################
     ######### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A ##########
     ############################################################################
-    u <- compute_residuals(yObs, fPost, B, D, wReg)
-    # uSTORE[,, iter] <- u
+    u <- compute_residuals(yObs, fPost, B, D, wReg) # uSTORE[,, iter] <- u
     if (VdiagEst) {
       tmp_V <- sample_V(VhatDiagScale, VhatArrayBdiagByTimeFix, VhatFix, u,
                         TT, NN_TT, num_y, availableObs_crossSection,
@@ -397,15 +397,6 @@ GibbsSSM_2 <- function(itermax = 15000,
         ASTORE[, , iter] <- A
       }
     }
-    ############################################################################
-    ## GIBBS sampler Iteration ENDE
-    ############################################################################
-    # info <- sprintf("%d%% done", round((iter/itermax)*100))
-    # setWinProgressBar(pb, iter/itermax*100, label=info)
-    ############################################################################
-    ## GIBBS sampler SPEICHERN
-    ############################################################################
-    # if(iter %% 10000 == 0){print(iter)}
     CHECK_STORE <- get_check_store(store_path = storePath,
                                    mcmc_iter = iter,
                                    mcmc_itermax = itermax,
@@ -420,9 +411,20 @@ GibbsSSM_2 <- function(itermax = 15000,
     }
     print(iter)
   }
-
-  # close(pb)
-  return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, blockCount = block_count, errorMsg = msg_error_kf, initials = initials))
-  # RETURN WITH uSTOREÖ
-  # return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, u = uSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials))
+  return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, 
+              blockCount = block_count, errorMsg = msg_error_kf,
+              initials = initials))
 }
+############################################################################
+## GIBBS sampler Iteration ENDE
+############################################################################
+# info <- sprintf("%d%% done", round((iter/itermax)*100))
+# setWinProgressBar(pb, iter/itermax*100, label=info)
+############################################################################
+## GIBBS sampler SPEICHERN
+############################################################################
+# if(iter %% 10000 == 0){print(iter)}
+# close(pb)
+# RETURN WITH uSTOREÖ
+# return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE,
+# u = uSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials))
