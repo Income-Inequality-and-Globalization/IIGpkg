@@ -316,3 +316,23 @@ set_A_country_array <- function(countryA, A, NN, num_y) {
     NULL
   }
 }
+compute_V_hat_array_A <- function(VhatSqrt, A,
+                                  countryA, A_countryArray,
+                                  NN, TT, NN_TT, num_y) {
+  if (countryA) {
+    VhatArray_A <- array(0, dim = c(num_y, num_y, NN_TT))
+    for (i in 1:NN) {
+      VhatArray_A[, , (TT * (i - 1) + 1):(i * TT)] <- array(
+        apply(VhatSqrt[, , (TT * (i - 1) + 1):(i * TT)],
+              3, \(x) x %*% A_countryArray[, , i] %*% t(x)),
+        c(num_y, num_y, TT)
+      )
+    }
+    return(VhatArray_A)
+  } else {
+    array(
+      apply(VhatSqrt, 3, function(X) {X %*% A %*% t(X)}),
+      c(num_y, num_y, NN_TT)
+    )
+  }
+}
