@@ -405,7 +405,11 @@ GibbsSSM_2 <- function(itermax = 15000,
     ## GIBBS sampler SPEICHERN
     ############################################################################
     # if(iter %% 10000 == 0){print(iter)}
-    if ((iter == 100 & storePath != "none") | (iter == itermax & storePath != "none") | (storePath != "none" & iter %% storeUnit == 0)) {
+    CHECK_STORE <- get_check_store(store_path = storePath,
+                                   mcmc_iter = iter,
+                                   mcmc_itermax = itermax,
+                                   store_unit = storeUnit)
+    if (CHECK_STORE) {
       store_count <- store_count + 1
       if (store_count == 1) {
         dir.create(storePath_adj, recursive = T)

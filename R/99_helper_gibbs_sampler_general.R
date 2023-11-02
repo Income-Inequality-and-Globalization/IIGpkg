@@ -51,6 +51,13 @@ set_store_path_subdir <- function(store_path, V_DIAG_EST, SAMPLE_A,
   if (is.null(store_path_adj)) stop("HIT ME IN MY FACE")
   return(store_path_adj)
 }
+get_check_store <- function(store_path, mcmc_iter, mcmc_itermax, store_unit) {
+  if (store_path == "none") return(FALSE)
+  CHECK_ITER_REACH <- (mcmc_iter == 100)
+  CHECK_ITER_MAX   <- (mcmc_iter == mcmc_itermax)
+  CHECK_STORE_UNIT <- (mcmc_iter %% store_unit == 0)
+  return(CHECK_ITER_REACH || CHECK_ITER_MAX || CHECK_STORE_UNIT)
+}
 get_fails <- function(out_gibbs, iter_fail) {
   iter_fail_before <- iter_fail - 1
   
