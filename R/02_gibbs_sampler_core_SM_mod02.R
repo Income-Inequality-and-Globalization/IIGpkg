@@ -112,168 +112,77 @@ GibbsSSM_2 <- function(itermax = 15000,
   num_y   <- npara
   N_num_y <- dim(B)[1] # N * number of components in y
   num_fac <- dim(B)[2] # number of factors
+  # Anzahl der Laender:
+  NN       <- N_num_y / num_y
+  # Anzahl der Zeitpunkte:
+  TT       <- dim(yObs)[2]
+  # Laender mal Zeitpunkte
+  NN_TT    <- NN * TT
+  # Zeitpunkte mal y-measurement components:
+  TT_num_y <- TT * num_y 
+  # N *TT ohne die fehlenden Beobachtungen:
+  NN_TT_avail <- sum(!is.na(yObs)) / num_y
+  # Anzahl der Beobachtungen (ohne die NAs) fuer jedes Land:
+  availableObs_crossSection <- t(
+    apply(yObs[seq(1, N_num_y, 3), ],  1, \(x) !is.na(x))
+  ) 
 
-  NN       <- N_num_y / num_y # Anzahl der Laender
-  TT       <- dim(yObs)[2] # Anzahl der Zeitpunkte
-  NN_TT    <- NN * TT # Laender mal Zeitpunkte
-  TT_num_y <- TT * num_y # Zeitpunkte mal y-measurement components
-
+  # Container fuer Gibbs-Zuege fuer f, B, D, A, V
   fSTORE <- set_f_out(num_fac, TT, itermax)
   BSTORE <- set_B_out(N_num_y, num_fac, itermax)
   DSTORE <- set_D_out(N_num_y, NN, nreg, itermax)
   if (nreg == 0) D0 <- NULL
+  ASTORE <- set_A_out(countryA, num_y, itermax, NN) 
+  VSTORE <- set_V_out(N_num_y, itermax)
+  V_tmp  <- set_V_tmp(VdiagEst, VhatDiagScale,
+                      Vhat, VhatDiagScale_start,
+                      NN, TT, NN_TT, N_num_y, num_y)
+  VhatArrayBdiagByTimeFix <- V_tmp$VhatArrayBdiagByTimeFix
+  VhatFix                 <- V_tmp$VhatFix
+  Vstart                  <- V_tmp$Vstart
+  Vhat                    <- V_tmp$Vhat
 
+  VhatSqrt <- compute_mat_square_root_V(Vhat, num_y, NN_TT)
+  A_countryArray <- set_A_country_array(countryA, A, NN, num_y)
+  # pb <- winProgressBar(title="Progress", label="0% done", min=0, max=100, initial=0)
+  # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da
+  # es unten auch noch drin steht. War vom alten Sampler, um die
+  # identifizierenden Restriktionen einzuhalten.
   # storePath Anpassung
   storePath_adj <- set_store_path_subdir(
     storePath, VdiagEst, sampleA,
     initials, covScale, njointfac,
     w_reg_spec, Omega0, incObsNew
   )
-
-  if (countryA) {
-    ASTORE <- array(0, dim = c(num_y, num_y, itermax, NN)) # speichert die Gibbs-Zuege der Adjustmentmatrix
-  } else {
-    ASTORE <- array(0, dim = c(num_y, num_y, itermax))
-  }
-  VSTORE <- matrix(0, nrow = N_num_y, ncol = itermax) # speichert Gibbs-Zuege für die Messfehlervarianzen, wenn diese geschaetzt werden (VDiagEst = TRUE) (wahrscheinlich fuer uns irrelevant)
-
-  if (VdiagEst) {
-    Vstart <- initials$Vhat[1, 1, 1]
-  }
-
-  if (VhatDiagScale) {
-    VhatFix <- Vhat # speichert Vhat Initialisierung
-    VhatArrayBdiagByTimeFix <- bdiagByTime(VhatFix, npara = num_y, N = NN, TT = TT, Nnpara = N_num_y) # Sortiert Vhat nach der Zeit: wie Vhat eine num_y x num_y x N*TT Array, aber die Elemente [1:num_y, 1:num_y, 1:N] sind nun die Messfehlervarianzen aller Laender zum ersten Zeitpunkt, [1:num_y, 1:num_y, (N+1):(2N)] alle Laender zum zweiten Zeitpunkt, usw.
-
-    if (!missing(VhatDiagScale_start) & !is.null(VhatDiagScale_start)) {
-      Vhat <- array(sapply(1:(NN_TT), \(x) VhatDiagScale_start[, , x] %*% Vhat[, , x]), dim = c(num_y, num_y, NN_TT)) # setzt Vhat im Fall VhatDiagScale = TRUE
-      Vstart <- VhatDiagScale_start[1, 1, 1]
-    } else {
-      Vstart <- 1
-    }
-  }
-  if (countryA) {
-    A_country <- plyr::alply(replicate(NN, A), 3) # Liste: enthaelt fuer jedes Land eine eigene A Matrix nach dem Vorbild des uebergebenen A's.
-    A_countryArray <- array(unlist(A_country), c(num_y, num_y, NN)) # macht aus der Liste ein Array
-  }
-
-
-
-  VhatSqrt <- array(apply(Vhat, 3, matSqrt), c(num_y, num_y, NN_TT)) # Array mit Matrixwurzeln der Vhat-Matrizen
-
-  NN_TT_avail <- sum(!is.na(yObs)) / num_y # N *TT ohne die fehlenden Beobachtungen
-  availableObs_crossSection <- t(apply(yObs[seq(1, N_num_y, 3), ], 1, \(x) !is.na(x))) # Anzahl der Beobachtungen (ohne die NAs) fuer jedes Land
-
-  # pb <- winProgressBar(title="Progress", label="0% done", min=0, max=100, initial=0)
-  blockCount <- 0 # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
-  # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
-  iter <- 1 # aktuelle Gibbs-Iteration
-
-
-  ############################################################################
-  ## GIBBS sampler Iteration START
-  ############################################################################
+  ##############################################################################
+  ####################### GIBBS sampler Iteration START ########################
+  ##############################################################################
+  # Wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin
+  # steht. War vom alten Sampler, um die identifizierenden Restriktionen
+  # einzuhalten:
+  block_count <- 0 
+  # Gibbs-Iteration:
+  iter <- 1
   while (iter <= itermax) {
     # if (iter == 5) browser()
-    # Erweiterung das Vhat Arrays um die Adjustmentmatrix A
-    if (countryA) {
-      VhatArray_A <- array(0, dim = c(num_y, num_y, NN_TT))
-      for (i in 1:NN) {
-        VhatArray_A[, , (TT * (i - 1) + 1):(i * TT)] <- array(apply(VhatSqrt[, , (TT * (i - 1) + 1):(i * TT)], 3, \(x) x %*% A_countryArray[, , i] %*% t(x)), c(num_y, num_y, TT))
-      }
-    } else {
-      VhatArray_A <- array(apply(VhatSqrt, 3, function(X) {
-        X %*% A %*% t(X)
-      }), c(num_y, num_y, NN_TT))
-    }
-
-    # Vhat Array (mit Adjustmentmatrix A) bzgl. der Zeit sortiert
-    VhatArrayBdiagByTime <- bdiagByTime(VhatArray_A = VhatArray_A, npara = num_y, N = NN, TT = TT, Nnpara = N_num_y)
-
-
+    # Erweiterung das Vhat-Arrays um die Adjustmentmatrix A
+    VhatArray_A <- compute_V_hat_array_A(VhatSqrt, A,
+                                         countryA, A_countryArray,
+                                         NN, TT, NN_TT, num_y)
     #### GIBBS PART: Sampling of the latent factors (FFBS)
     if (SIMULATE_FACTORS) {
-      # if (!ident_block) {
-
-      # Kalman-Filer
-      invisible(capture.output(KF <- tryCatch(
-        {
-          RcppSMCkalman::kfMFPD(
-            yObs = yObs, uReg = uReg, wReg = wReg,
-            dimX = num_fac, dimY = N_num_y, TT = TT,
-            A = Phi, B = NULL, C = B, D = D,
-            Q = Q, R = VhatArrayBdiagByTime, x00 = initX,
-            u00 = initU, P00 = initP, PDSTORE = F
-          )
-        },
-        error = function(e) {
-          e$message
-        }
-      )))
-      # try({KF <-RcppSMCkalman::kfMFPD(yObs = yObs, uReg = uReg, wReg = wReg,
-      #                                                      dimX = num_fac, dimY = Nnpara, TT = TT,
-      #                                                      A = Phi, B = NULL, C = B, D = c_,
-      #                                                      Q = Q, R = VhatArrayBdiagByTime, x00 = initX,
-      #                                                     u00 = initU, P00 = initP, PDSTORE = F)})
-      # if(inherits(KF, "try-error")){
-      #   print("Fehler")
-      #   break
-      # }
-      # }
-
-      # Speichert moegliche Fehlermeldung des Kalman-Filter und die Zwischenergebnisse zum Zeitpunkt des Fehlers zurueck
-      if (is.character(KF)) {
-        msg_error_kf <- KF
-        if (store_count == 0) {
-          dir.create(storePath_adj, recursive = T)
-          store_count <- store_count + 1
-        }
-        if (VdiagEst) {
-          saveRDS(
-            list(
-              f = fSTORE,
-              B = BSTORE,
-              V = VSTORE,
-              blockCount = block_count,
-              errorMsg = msg_error_kf,
-              initials = initials
-            ),
-            file = paste0(
-              storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
-              "_V", initials$Vhat[1, 1, 1], "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, "_error", iter, ".rds"
-            )
-          )
-        } else {
-          saveRDS(
-            list(
-              f = fSTORE,
-              B = BSTORE,
-              A = ASTORE,
-              blockCount = block_count,
-              errorMsg = msg_error_kf,
-              initials = initials
-            ),
-            file = paste0(
-              storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
-              "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, "_error", iter, ".rds"
-            )
-          )
-        }
-        return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = block_count, errorMsg = msg_error_kf))
-      }
-      filt_f <- KF$mfdEXP
-      filt_P <- KF$mfdVAR
-
-      # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
-
-      # Backward Sampling
-      fPost <- GibbsSSM_f(TT = TT, nfac = num_fac, Phi = Phi, Q = Q, filt_f = filt_f, filt_P = filt_P)
+      fPost <- compute_FFBS(yObs = yObs, uReg = uReg, wReg = wReg,
+                            num_fac = num_fac, num_y = num_y, N_num_y = N_num_y,
+                            TT = TT, NN = NN,
+                            VhatArray_A = VhatArray_A, Phi = Phi,
+                            B = NULL, C = B, D = D, Q = Q,
+                            initX = initX, initU = initU, initP = initP,
+                            PDSTORE = FALSE,
+                            storePath_adj = storePath_adj, store_count = store_count)
+      fSTORE[, , iter] <- fPost
+    } else {
+      fSTORE[, , iter] <- fPost
     }
-
-
-    fSTORE[, , iter] <- fPost
-
-
     ##### GIBBS PART: Sampling of loadings (on latent factors) and partial effects (on regressors)
     # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
     Bjoint <- matrix(rep(0, N_num_y * njointfac), ncol = njointfac)
