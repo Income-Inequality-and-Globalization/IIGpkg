@@ -357,4 +357,40 @@ sample_V <- function(VhatDiagScale, VhatArrayBdiagByTimeFix, VhatFix, u,
 }
 compute_residuals <- function(y, f, B, D, regs) {
   y - B %*% f - D %*% regs
-} 
+}
+sample_A <- function(countryA, diagA, scaleA,
+                     u, VhatSqrt,
+                     NN, TT, num_y, TT_num_y,
+                     NN_TT_avail, availableObs_crossSection,
+                     shape0, rate0, Psi0, nu0) {
+  uSplit <- lapply(split(u, matrix(rep(1:NN, each = TT_num_y), ncol = TT, byrow = T)), matrix, ncol = TT)
+  if (countryA) {
+    utu_country <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_individ
+    if (diagA) {
+      uSum_country <- lapply(utu_country, diag)
+      Adiag_country <- lapply(1:NN, \(xx)  sapply(uSum_country[[xx]], \(x) LaplacesDemon::rinvgamma(n = 1, shape = shape0 + 0.5 * sum(availableObs_crossSection[xx, ]), scale = rate0 + 0.5 * x)))
+      A_countryArray <- array(unlist(lapply(Adiag_country, diag)), c(num_y, num_y, NN))
+    } else {
+      A_country <- lapply(1:NN, \(x) LaplacesDemon::rinvwishart(nu = sum(availableObs_crossSection[x, ]) + nu0, S = Psi0 + utu_country[[x]]))
+      A_countryArray <- array(unlist(A_country), c(num_y, num_y, NN))
+    }
+    return(A_countryArray)
+  } else {
+    utu <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_total
+    utu <- (utu + t(utu)) / 2
+    if (diagA) {
+      # uSplitSqrt <- lapply(uSplit,\(x) x^2)
+      # uSum <- apply(sapply(uSplitSqrt, \(x) apply(x,1,sum)),1,sum)
+      uSum <- diag(utu)
+      A_diag <- sapply(uSum, \(x) invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (NN_TT_avail), rate = rate0 + 0.5 * x))
+      A <- diag(A_diag)
+    } else if (scaleA) {
+      uSum <- sum(diag(utu))
+      A_scale <- invgamma::rinvgamma(n = 1, shape = shape0 + 0.5 * (num_y * NN_TT_avail), rate = rate0 + 0.5 * uSum)
+      A <- diag(rep(A_scale, num_y))
+    } else {
+      A <- LaplacesDemon::rinvwishart(nu = NN_TT_avail + nu0, S = Psi0 + utu)
+    }
+    return(A)
+  }
+}
