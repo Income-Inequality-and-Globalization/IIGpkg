@@ -163,7 +163,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   block_count <- 0 
   # Gibbs-Iteration:
   iter <- 1
-  while (iter <= itermax) {
+  for (iter in seq_len(itermax)) {
     # if (iter == 5) browser()
     # Erweiterung das Vhat-Arrays um die Adjustmentmatrix A
     VhatArray_A <- compute_V_hat_array_A(VhatSqrt, A,
@@ -463,7 +463,6 @@ GibbsSSM_2 <- function(itermax = 15000,
       }
     }
 
-    iter <- iter + 1
     print(iter)
   }
 
