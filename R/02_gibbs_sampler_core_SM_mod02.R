@@ -181,8 +181,17 @@ GibbsSSM_2 <- function(itermax = 15000,
                             B = NULL, C = B, D = D, Q = Q,
                             initX = initX, initU = initU, initP = initP,
                             PDSTORE = FALSE,
-                            storePath_adj = storePath_adj,
-                            store_count = store_count)
+                            try_catch_errors = NULL) #,
+                            # try_catch_errors =
+                            #   list(storePath_adj = storePath_adj,
+                            #        store_count = store_count,
+                            #        fSTORE = fSTORE, 
+                            #        BSTORE = BSTORE,
+                            #        ASTORE = ASTORE,
+                            #        block_count = block_count, 
+                            #        initials = initials,
+                            #        incObsNew = incObsNew,
+                            #        iter = iter))
       fSTORE[, , iter] <- fPost
     } else {
       fSTORE[, , iter] <- fPost

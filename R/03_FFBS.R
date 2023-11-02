@@ -4,8 +4,7 @@ compute_FFBS <- function(yObs, uReg, wReg,
                          VhatArray_A, Phi,
                          B, C, D, Q, 
                          initX, initU, initP, 
-                         PDSTORE, try_catch_errors = NULL,
-                         storePath_adj, store_count) {
+                         PDSTORE, try_catch_errors = NULL) {
   # if (!ident_block) {
   # Vhat Array (mit Adjustmentmatrix A) bzgl. der Zeit sortiert
   R <- bdiagByTime(
@@ -28,7 +27,9 @@ compute_FFBS <- function(yObs, uReg, wReg,
   } else {
     stopifnot(`Arg. 'try_catch_errors' must be a named list` = 
       all(names(try_catch_errors) %in% c("fSTORE", " BSTORE", "ASTORE",
-                                         "block_count", "initials")))
+                                         "block_count", "initials",
+                                         "storePath_adj", "store_count",
+                                         "incObsNew", "iter")))
     invisible(
       capture.output(
         KF <- tryCatch(
@@ -49,44 +50,37 @@ compute_FFBS <- function(yObs, uReg, wReg,
     if (is.character(KF)) {
       msg_error_kf <- KF
       if (try_catch_errors$store_count == 0) {
-        dir.create(storePath_adj, recursive = TRUE)
+        dir.create(try_catch_errors$storePath_adj, recursive = TRUE)
         try_catch_errors$store_count <- try_catch_errors$store_count + 1
       }
-      if (VdiagEst) {
-        saveRDS(
-          list(
-            f = try_catch_errors$fSTORE,
-            B = try_catch_errors$BSTORE,
-            V = try_catch_errors$VSTORE,
-            blockCount = try_catch_errors$block_count,
-            errorMsg = msg_error_kf,
-            initials = try_catch_errors$initials
-          ),
-          file = paste0(
-            storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
-            "_V", initials$Vhat[1, 1, 1], "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, "_error", iter, ".rds"
-          )
-        )
-      } else {
-        saveRDS(
-          list(
-            f = try_catch_errors$fSTORE,
-            B = try_catch_errors$BSTORE,
-            A = try_catch_errors$ASTORE,
-            blockCount = try_catch_errors$block_count,
-            errorMsg = msg_error_kf,
-            initials = try_catch_errors$initials
-          ),
-          file = paste0(
-            storePath_adj, "/", "B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1],
-            "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, "_error", iter, ".rds"
-          )
-        )
+      storePath_kf <- get_store_path_kf_errror(VdiagEst,
+                                               try_catch_errors$storePath_adj,
+                                               try_catch_errors$initials, 
+                                               try_catch_errors$iter, 
+                                               try_catch_errors$incObsNew)
+      out_error_kf <- list(
+        f = try_catch_errors$fSTORE,
+        B = try_catch_errors$BSTORE)
+      if (isTRUE(VdiagEst)) {
+        out_error_kf <- c(out_error_kf, list(V = try_catch_errors$VSTORE))
+      } else if (isFALSE(VdiagEst)) {
+        out_error_kf <- c(out_error_kf, list(A = try_catch_errors$ASTORE))
       }
+      out_error_kf <- c(out_error_kf,
+                        list(
+                          blockCount = try_catch_errors$block_count,
+                          errorMsg = msg_error_kf,
+                          initials = try_catch_errors$initials)
+                        )
+      saveRDS(out_error_kf, file = storePath_kf)
       stop("KF produced numerical errors.")
-      # return(list(f = try_catch_errors$fSTORE, B = try_catch_errors$BSTORE, D = try_catch_errors$DSTORE, A = ASTORE, blockCount = block_count, errorMsg = msg_error_kf))
     }
     return(GibbsSSM_f(TT = TT, nfac = num_fac, Phi = Phi, Q = Q, filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
+    # return(list(f = try_catch_errors$fSTORE,
+    # B = try_catch_errors$BSTORE,
+    # D = try_catch_errors$DSTORE,
+    # A = ASTORE, 
+    # blockCount = block_count, errorMsg = msg_error_kf))
     #
     #
     #
@@ -104,6 +98,31 @@ compute_FFBS <- function(yObs, uReg, wReg,
     #   break
     # }
     # }
+  }
+}
+get_store_path_kf_errror <- function(VdiagEst, store_path_adj, init_set, iter, inc_obs_new) {
+  if (VdiagEst) {
+  paste0(
+    store_path_adj,
+    "/",
+    "B",
+    round(init_set$B0[1, 1, 1], 2),
+    "_Omega", init_set$Omega0[1, 1],
+    "_V", init_set$Vhat[1, 1, 1],
+    "_alpha", init_set$alpha0,
+    "_beta", init_set$beta0,
+    "_IO", inc_obs_new, "_error", iter, ".rds"
+   )
+  } else {
+    paste0(
+      store_path_adj, "/",
+      "B", round(init_set$B0[1, 1, 1], 2),
+      "_Omega", init_set$Omega0[1, 1],
+      "_A", init_set$A[1, 1],
+      "_Psi", init_set$Psi0[1, 1],
+      "_nu0", init_set$nu0,
+      "_IO", inc_obs_new, "_error", iter, ".rds"
+    )
   }
 }
 #' Backward Sampling based Kalman-Filter Output
