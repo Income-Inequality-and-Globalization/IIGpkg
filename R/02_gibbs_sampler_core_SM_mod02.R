@@ -379,7 +379,6 @@ GibbsSSM_2 <- function(itermax = 15000,
       VhatSqrt       <- tmp_V$V_hat_sqrt
       VSTORE[, iter] <- tmp_V$V_diag
     }
-
     if (sampleA) {
       if (countryA) {
         A_countryArray <- sample_A(countryA, diagA, scaleA,
@@ -397,7 +396,6 @@ GibbsSSM_2 <- function(itermax = 15000,
         ASTORE[, , iter] <- A
       }
     }
-    # }
     ############################################################################
     ## GIBBS sampler Iteration ENDE
     ############################################################################

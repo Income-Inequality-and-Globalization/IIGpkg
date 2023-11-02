@@ -143,24 +143,34 @@ bdiagByTime <- function(VhatArray_A, npara, N, TT, Nnpara) {
 #'
 #' @return sum of squared residuals
 #' @export
-utuSum <- function(uSplit, VhatSqrt, TT, N, npara) {
+utuSum <- function(countryA, u, VhatSqrt, TT, NN, TT_num_y, npara) {
+  uSplit <- lapply(
+    split(u, matrix(rep(1:NN, each = TT_num_y), ncol = TT, byrow = T)), 
+    matrix, ncol = TT)
   sumUtu <- 0
-  utildeSplit <- lapply(1:N, matrix, data = NA, nrow = npara, ncol = TT)
-  sumUtu_individ <- lapply(1:N, matrix, data = NA, nrow = npara, ncol = npara)
-  for (i in 1:N) {
+  utildeSplit <- lapply(1:NN, matrix, data = NA, nrow = npara, ncol = TT)
+  if (isTRUE(countryA)) {
+    sumUtu_individ <- lapply(1:NN, matrix, data = NA, nrow = npara, ncol = npara)
+  }
+  for (i in 1:NN) {
     for (t in 1:TT) {
       utildeSplit[[i]][, t] <- solve(VhatSqrt[, , (i - 1) * TT + t]) %*% uSplit[[i]][, t]
     }
-
     utu <- apply(utildeSplit[[i]], 2, function(x) {
       x %*% t(x)
     })
     sumUtu_i <- apply(utu, 1, sum, na.rm = TRUE)
     sumUtu <- sumUtu + sumUtu_i
-    sumUtu_i_mat <- matrix(sumUtu_i, ncol = npara)
-    sumUtu_individ[[i]] <- (t(sumUtu_i_mat) + sumUtu_i_mat) / 2
+    
+    if (isTRUE(countryA)) {
+      sumUtu_i_mat <- matrix(sumUtu_i, ncol = npara)
+      sumUtu_individ[[i]] <- (t(sumUtu_i_mat) + sumUtu_i_mat) / 2
+    }
   }
-  return(list(sumUtu_total = matrix(sumUtu, ncol = npara), sumUtu_individ = sumUtu_individ))
+  if (isTRUE(countryA)) return(sumUtu_individ)
+  if (isFALSE(countryA)) return(matrix(sumUtu, ncol = npara))
+  # countryA = TRUE -> $sumUtu_individ # countryA = FALSE -> $sumUtu_total
+  # return(list(sumUtu_total = matrix(sumUtu, ncol = npara), sumUtu_individ = sumUtu_individ))
 }
 #' Loading matrix and array
 #'
@@ -363,9 +373,8 @@ sample_A <- function(countryA, diagA, scaleA,
                      NN, TT, num_y, TT_num_y,
                      NN_TT_avail, availableObs_crossSection,
                      shape0, rate0, Psi0, nu0) {
-  uSplit <- lapply(split(u, matrix(rep(1:NN, each = TT_num_y), ncol = TT, byrow = T)), matrix, ncol = TT)
   if (countryA) {
-    utu_country <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_individ
+    utu_country <- utuSum(countryA = countryA, u = u, VhatSqrt = VhatSqrt, NN = NN, TT = TT, TT_num_y = TT_num_y, npara = num_y)
     if (diagA) {
       uSum_country <- lapply(utu_country, diag)
       Adiag_country <- lapply(1:NN, \(xx)  sapply(uSum_country[[xx]], \(x) LaplacesDemon::rinvgamma(n = 1, shape = shape0 + 0.5 * sum(availableObs_crossSection[xx, ]), scale = rate0 + 0.5 * x)))
@@ -376,7 +385,7 @@ sample_A <- function(countryA, diagA, scaleA,
     }
     return(A_countryArray)
   } else {
-    utu <- utuSum(uSplit = uSplit, VhatSqrt = VhatSqrt, N = NN, TT = TT, npara = num_y)$sumUtu_total
+    utu <- utuSum(countryA = countryA, u = u, VhatSqrt = VhatSqrt, NN = NN, TT = TT, TT_num_y = TT_num_y, npara = num_y)  
     utu <- (utu + t(utu)) / 2
     if (diagA) {
       # uSplitSqrt <- lapply(uSplit,\(x) x^2)
