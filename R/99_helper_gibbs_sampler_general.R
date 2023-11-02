@@ -9,10 +9,11 @@ set_reg_specification <- function(wRegSpec) {
   wRegSpec
 }
 set_store_path_subdir <- function(store_path, V_DIAG_EST, SAMPLE_A,
-                                  init_set, cov_scale, num_joint_fac,
+                                  init_set, V_start, cov_scale, num_joint_fac,
                                   w_reg_spec, Omega_D0, inc_obs_new) {
   if (store_path == "none") {
-    return(invisible(store_path))
+    return(invisible(list(store_path_adj = "none",
+                          store_path_rds = "none")))
   }
   base_adj <- paste0(
     store_path,
@@ -48,8 +49,64 @@ set_store_path_subdir <- function(store_path, V_DIAG_EST, SAMPLE_A,
       )
     }
   }
-  if (is.null(store_path_adj)) stop("HIT ME IN MY FACE")
-  return(store_path_adj)
+  # if (is.null(store_path_adj)) stop("HIT ME IN MY FACE")
+  store_path_rds <- get_store_path_rds(store_path_adj,
+                                       V_DIAG_EST,
+                                       SAMPLE_A,
+                                       init_set,
+                                       V_start,
+                                       cov_scale,
+                                       num_joint_fac,
+                                       Omega_D0,
+                                       inc_obs_new)
+  # STORE WITH uSTORE:
+  # saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, blockCount = block_count,  errorMsg = errorMsg, initials = initials)
+  #         , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",Omega0[dim(Omega0)[1], dim(Omega0)[1]],"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
+  return(list(store_path_adj = store_path_adj, store_path_rds = store_path_rds))
+}
+get_store_path_rds <- function(store_path_adj,
+                               V_DIAG_EST, SAMPLE_A,
+                               init_set, V_start,
+                               cov_scale, num_joint_fac, Omega_D0,
+                               inc_obs_new) {
+  base_path <- file.path(store_path_adj,
+                         paste0("cs", cov_scale,
+                                "_pj", num_joint_fac,
+                                "_B", round(init_set$B0[1, 1, 1], 2),
+                                "_Om", init_set$Omega_D0[1, 1],
+                                "_D", init_set$D0[1, 1, 1],
+                                "_OmD", Omega_D0[dim(Omega_D0)[1], dim(Omega_D0)[1]])
+  )
+  if (V_DIAG_EST) {
+    base_path <- paste0(base_path,
+                        "_V", V_start,
+                        "_alpha", init_set$alpha0,
+                        "_beta", init_set$beta0)
+  } else if (SAMPLE_A) {
+    base_path <- paste0(base_path,
+                       "_A", init_set$A[1, 1],
+                       "_Psi", init_set$Psi0[1, 1],
+                       "_nu", init_set$nu0)
+  }
+  paste0(base_path, "_IO", inc_obs_new, ".rds")
+}
+store_mcmc <- function(VdiagEst, init_set,
+                       fSTORE, BSTORE, DSTORE, VSTORE, ASTORE,
+                       block_count, msg_error_kf, store_path_rds) {
+  if (store_path_rds == "none") return(invisible(NULL))
+  store_mcmc_rds <- list(f = fSTORE,
+                         B = BSTORE,
+                         D = DSTORE)
+  if (VdiagEst) {
+    store_mcmc_rds <- c(store_mcmc_rds, list(V = VSTORE))
+  } else {
+    store_mcmc_rds <- c(store_mcmc_rds, list(A = ASTORE))
+  }
+  saveRDS(c(store_mcmc_rds,
+            list(blockCount = block_count,
+                 errorMsg = msg_error_kf,
+                 initials = init_set)),
+          file = store_path_rds)
 }
 get_check_store <- function(store_path, mcmc_iter, mcmc_itermax, store_unit) {
   if (store_path == "none") return(FALSE)

@@ -149,11 +149,14 @@ GibbsSSM_2 <- function(itermax = 15000,
   # es unten auch noch drin steht. War vom alten Sampler, um die
   # identifizierenden Restriktionen einzuhalten.
   # storePath Anpassung
-  storePath_adj <- set_store_path_subdir(
+  store_paths <- set_store_path_subdir(
     storePath, VdiagEst, sampleA,
-    initials, covScale, njointfac,
+    initials, Vstart, covScale, njointfac,
     w_reg_spec, Omega0, incObsNew
   )
+  storePath_adj <- store_paths$store_path_adj
+  storePath_rds <- store_paths$store_path_rds
+
   ##############################################################################
   ####################### GIBBS sampler Iteration START ########################
   ##############################################################################
@@ -333,8 +336,6 @@ GibbsSSM_2 <- function(itermax = 15000,
         Bjoint[((i - 1) * num_y + 1):(i * num_y), ] <- jointFac
       }
       Bidio[, i] <- idioFac
-
-
       if (nreg != 0) {
         DSTORE[(1 + num_y * (i - 1)):(i * num_y), (1 + nreg * (i - 1)):(i * nreg), iter] <- D_i
       }
@@ -411,27 +412,12 @@ GibbsSSM_2 <- function(itermax = 15000,
                                    store_unit = storeUnit)
     if (CHECK_STORE) {
       store_count <- store_count + 1
-      if (store_count == 1) {
-        dir.create(storePath_adj, recursive = T)
-      }
-      if (VdiagEst) {
-        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, blockCount = block_count, errorMsg = msg_error_kf, initials = initials),
-          file = paste0(storePath_adj, "/", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_V", Vstart, "_alpha", initials$alpha0, "_beta", initials$beta0, "_IO", incObsNew, ".rds")
-          # STORE WITH uSTORE:
-          # saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, blockCount = block_count,  errorMsg = errorMsg, initials = initials)
-          #         , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",Omega0[dim(Omega0)[1], dim(Omega0)[1]],"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
-        )
-      } else if (sampleA) {
-        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = block_count, errorMsg = msg_error_kf, initials = initials),
-          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu", initials$nu0, "_IO", incObsNew, ".rds")
-        )
-      } else {
-        saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = block_count, errorMsg = msg_error_kf, initials = initials),
-          file = paste0(storePath_adj, "/", "cs", covScale, "_pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Om", initials$Omega0[1, 1], "_D", initials$D0[1, 1, 1], "_OmD", Omega0[dim(Omega0)[1], dim(Omega0)[1]], "_IO", incObsNew, ".rds")
-        )
-      }
+      if (store_count == 1) dir.create(storePath_adj, recursive = TRUE)
+      store_mcmc(VdiagEst, initials,
+                 fSTORE, BSTORE, DSTORE, VSTORE, ASTORE,
+                 block_count, msg_error_kf, storePath_rds)
+        
     }
-
     print(iter)
   }
 
