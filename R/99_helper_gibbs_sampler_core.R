@@ -336,3 +336,25 @@ compute_V_hat_array_A <- function(VhatSqrt, A,
     )
   }
 }
+sample_V <- function(VhatDiagScale, VhatArrayBdiagByTimeFix, VhatFix, u,
+                     TT, NN_TT, num_y, availableObs_crossSection,
+                     alpha0, beta0) {
+  if (VhatDiagScale) {
+    u <- sapply(1:TT, \(x) (1 / sqrt(diag(VhatArrayBdiagByTimeFix[, , x]))) * u[, x])
+  }
+  ssu <- apply(u, 1, \(x) sum(x^2, na.rm = TRUE))
+  TT_available <- rep(apply(availableObs_crossSection, 1, sum), each = num_y)
+  ssu_TT <- cbind(ssu, TT_available)
+  Vdiag <- apply(ssu_TT, 1, \(x) LaplacesDemon::rinvgamma(1, shape = alpha0 + x[2] / 2, scale = beta0 + x[1] / 2))
+  VdiagMat <- matrix(Vdiag, ncol = num_y, byrow = T)
+  VdiagMat_extend <- VdiagMat[rep(1:nrow(VdiagMat), each = TT), ]
+  VdiagArray <- array(apply(VdiagMat_extend, 1, diag), dim = c(num_y, num_y, NN_TT))
+  if (VhatDiagScale) {
+    VdiagArray <- array(sapply(1:(NN_TT), \(x) VdiagArray[, , x] %*% VhatFix[, , x]), dim = c(num_y, num_y, NN_TT))
+  }
+  VhatSqrt <- compute_mat_square_root_V(VdiagArray, num_y, NN_TT)
+  return(list(V_diag = Vdiag, V_hat_sqrt = VhatSqrt))
+}
+compute_residuals <- function(y, f, B, D, regs) {
+  y - B %*% f - D %*% regs
+} 
