@@ -97,6 +97,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                        sampleA,
                        identification = TRUE,
                        storeUnit = 10000) {
+  # DEBUG_ITER <- 464
   # Vhat muss (npara, npara, N * T) Array sein. Start: Alle Zeitpunkte fuer das erste Land.
   # Funktioniert noch nicht fuer npara < njointfac (Geweke)
   # Modell ohne Konstante
@@ -167,7 +168,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Gibbs-Iteration:
   iter <- 1
   for (iter in seq_len(itermax)) {
-    # if (iter == 5) browser()
+    # if (iter == DEBUG_ITER) browser()
     # Erweiterung das Vhat-Arrays um die Adjustmentmatrix A
     VhatArray_A <- compute_V_hat_array_A(VhatSqrt, A,
                                          countryA, A_countryArray,
@@ -213,10 +214,27 @@ GibbsSSM_2 <- function(itermax = 15000,
 
       ## Posterior Momente fuer die Ladungen und die partiellen Effekte
       invOmega0 <- solve(Omega0)
-      invOmega1_part2 <- sumffkronV(availableObs, npara = num_y, nreg = nreg, njointfac = njointfac, i = i, fPost = fPost, wReg = wReg, Viarray = Viarray, type = type)
+      invOmega1_part2 <- sumffkronV(availableObs,
+                                    npara = num_y,
+                                    nreg = nreg,
+                                    njointfac = njointfac, 
+                                    i = i,
+                                    fPost = fPost,
+                                    wReg = wReg,
+                                    Viarray = Viarray,
+                                    type = type)
       invOmega1 <- invOmega0 + invOmega1_part2
 
-      beta1_mid <- sumfyV(availableObs, npara = num_y, nreg = nreg, njointfac = njointfac, i = i, fPost = fPost, wReg = wReg, yiObs = yiObs, Viarray = Viarray, type = type)
+      beta1_mid <- sumfyV(availableObs,
+                          npara = num_y,
+                          nreg = nreg,
+                          njointfac = njointfac,
+                          i = i,
+                          fPost = fPost,
+                          wReg = wReg,
+                          yiObs = yiObs, 
+                          Viarray = Viarray,
+                          type = type)
 
       # Omega1 <-  tryCatch({solve(invOmega1)},
       #          error = function(e){
@@ -245,11 +263,8 @@ GibbsSSM_2 <- function(itermax = 15000,
         }
       )
 
-
-
       # beta1 <- Omega1 %*% (c(beta1_mid) + invOmega0 %*%  c(B0[,,i]) )
       beta1 <- Omega1 %*% (selectR %*% (c(beta1_mid) + invOmega0 %*% c(B0[, , i], D0[, , i])))
-
 
       # valid <- FALSE
       # ident_control <- 1
@@ -378,6 +393,7 @@ GibbsSSM_2 <- function(itermax = 15000,
       D <- matrix(0, nrow = N_num_y)
       wReg <- matrix(0, ncol = TT)
     }
+    # if (iter == DEBUG_ITER) browser()
     ############################################################################
     ######### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A ##########
     ############################################################################
