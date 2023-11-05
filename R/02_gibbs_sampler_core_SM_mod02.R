@@ -213,60 +213,67 @@ GibbsSSM_2 <- function(itermax = 15000,
       availableObs <- which(availableObs_crossSection[i, ])
 
 
-      ## Posterior Momente fuer die Ladungen und die partiellen Effekte
-      invOmega0 <- solve(Omega0)
-      invOmega1_part2 <- sumffkronV(availableObs,
-                                    npara = num_y,
-                                    nreg = nreg,
-                                    njointfac = njointfac, 
-                                    i = i,
-                                    fPost = fPost,
-                                    wReg = wReg,
-                                    Viarray = Viarray,
-                                    type = type)
-      invOmega1 <- invOmega0 + invOmega1_part2
 
-      beta1_mid <- sumfyV(availableObs,
-                          npara = num_y,
-                          nreg = nreg,
-                          njointfac = njointfac,
-                          i = i,
-                          fPost = fPost,
-                          wReg = wReg,
-                          yiObs = yiObs, 
-                          Viarray = Viarray,
-                          type = type)
-
-      # Omega1 <-  tryCatch({solve(invOmega1)},
-      #          error = function(e){
-      #            #print(invOmega1)
-      #            if(storePath != "none"){saveRDS(invOmega1, file =paste0(storePath,"invOmega1_","pj",njointfac,"_B",initials$B0[1,1,1],"_Omega",initials$Omega0[1,1],"_A",initials$A[1,1],"_Psi",initials$Psi0[1,1],"_nu0",initials$nu0,"_",iter))}
-      #            #browser()
-      #            solve(invOmega1, tol = 0)
-      #            })
-      #
-
-      Omega1 <- tryCatch(
-        {
-          solve(selectR %*% invOmega1 %*% t(selectR))
-        },
-        error = function(e) {
-          # print(invOmega1)
-          if (storePath != "none") {
-            if (store_count == 0) {
-              dir.create(storePath_adj, recursive = T)
-              store_count <- store_count + 1
+      compute_Omega1 <- function() {
+        ## Posterior Momente fuer die Ladungen und die partiellen Effekte
+        
+        invOmega1_part2 <- sumffkronV(availableObs,
+                                      npara = num_y,
+                                      nreg = nreg,
+                                      njointfac = njointfac, 
+                                      i = i,
+                                      fPost = fPost,
+                                      wReg = wReg,
+                                      Viarray = Viarray,
+                                      type = type)
+        invOmega1 <- invOmega0 + invOmega1_part2
+        
+        
+        Omega1 <- tryCatch(
+          {
+            solve(selectR %*% invOmega1 %*% t(selectR))
+          },
+          error = function(e) {
+            # print(invOmega1)
+            if (storePath != "none") {
+              if (store_count == 0) {
+                dir.create(storePath_adj, recursive = T)
+                store_count <- store_count + 1
+              }
+              saveRDS(invOmega1, file = paste0(storePath_adj, "/", "invOmega1_", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, "_", iter))
             }
-            saveRDS(invOmega1, file = paste0(storePath_adj, "/", "invOmega1_", "pj", njointfac, "_B", round(initials$B0[1, 1, 1], 2), "_Omega", initials$Omega0[1, 1], "_A", initials$A[1, 1], "_Psi", initials$Psi0[1, 1], "_nu0", initials$nu0, "_IO", incObsNew, "_", iter))
+            # browser()
+            solve(selectR %*% invOmega1 %*% t(selectR), tol = 0)
           }
-          # browser()
-          solve(selectR %*% invOmega1 %*% t(selectR), tol = 0)
-        }
-      )
-
-      # beta1 <- Omega1 %*% (c(beta1_mid) + invOmega0 %*%  c(B0[,,i]) )
-      beta1 <- Omega1 %*% (selectR %*% (c(beta1_mid) + invOmega0 %*% c(B0[, , i], D0[, , i])))
-
+        )
+        # Omega1 <-  tryCatch({solve(invOmega1)},
+        #          error = function(e){
+        #            #print(invOmega1)
+        #            if(storePath != "none"){saveRDS(invOmega1, file =paste0(storePath,"invOmega1_","pj",njointfac,"_B",initials$B0[1,1,1],"_Omega",initials$Omega0[1,1],"_A",initials$A[1,1],"_Psi",initials$Psi0[1,1],"_nu0",initials$nu0,"_",iter))}
+        #            #browser()
+        #            solve(invOmega1, tol = 0)
+        #            })
+        #
+      }
+      beta1 <- compute_B_mean(Omega = Omega1,
+                              invOmega = invOmega0,
+                              B0 = B0[, , i],
+                              D0 = D0[, , i],
+                              availableObs = availableObs,
+                              selectR = selectR,
+                              num_y = num_y,
+                              nreg = nreg, 
+                              njointfac = njointfac,
+                              i = i,
+                              fPost = fPost,
+                              wReg = wReg,
+                              yiObs = yiObs, 
+                              Viarray = Viarray,
+                              type = type) 
+      
+      # Sigma <- 0.5 * (selectR %*% Omega1 %*% t(selectR)) + 0.5 * t(selectR %*% Omega1 %*% t(selectR))
+      Sigma <- 0.5 * Omega1 + 0.5 * t(Omega1)
+      
       # valid <- FALSE
       # ident_control <- 1
       # while(!valid){
@@ -312,8 +319,6 @@ GibbsSSM_2 <- function(itermax = 15000,
 
 
       # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
-      # Sigma <- 0.5 * (selectR %*% Omega1 %*% t(selectR)) + 0.5 * t(selectR %*% Omega1 %*% t(selectR))
-      Sigma <- 0.5 * Omega1 + 0.5 * t(Omega1)
       # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
       #                          lower = lower, upper = upper))
 

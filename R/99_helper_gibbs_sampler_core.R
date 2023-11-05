@@ -403,3 +403,23 @@ sample_A <- function(countryA, diagA, scaleA,
     return(A)
   }
 }
+compute_B_mean <- function(Omega, invOmega,
+                           B0, D0,
+                           availableObs, selectR,
+                           num_y, nreg,  njointfac, i,
+                           fPost, wReg, yiObs,  Viarray, type) {
+  
+  beta1_mid <- sumfyV(availableObs,
+                      npara = num_y,
+                      nreg = nreg,
+                      njointfac = njointfac,
+                      i = i,
+                      fPost = fPost,
+                      wReg = wReg,
+                      yiObs = yiObs, 
+                      Viarray = Viarray,
+                      type = type)
+  return(Omega %*% (selectR %*% (c(beta1_mid) + invOmega %*% c(B0, D0))))
+  # beta1 <- Omega1 %*% (c(beta1_mid) + invOmega0 %*%  c(B0[,,i]) )
+  # beta1 <- Omega1 %*% (selectR %*% (c(beta1_mid) + invOmega0 %*% c(B0[, , i], D0[, , i])))
+}
