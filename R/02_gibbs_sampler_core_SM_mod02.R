@@ -127,6 +127,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   availableObs_crossSection <- t(
     apply(yObs[seq(1, N_num_y, 3), ],  1, \(x) !is.na(x))
   ) 
+  invOmega0 <- solve(Omega0)
 
   # Container fuer Gibbs-Zuege fuer f, B, D, A, V
   fSTORE <- set_f_out(num_fac, TT, itermax)
