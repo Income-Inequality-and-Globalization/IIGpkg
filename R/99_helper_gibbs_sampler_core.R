@@ -423,3 +423,66 @@ compute_B_mean <- function(Omega, invOmega,
   # beta1 <- Omega1 %*% (c(beta1_mid) + invOmega0 %*%  c(B0[,,i]) )
   # beta1 <- Omega1 %*% (selectR %*% (c(beta1_mid) + invOmega0 %*% c(B0[, , i], D0[, , i])))
 }
+compute_Omega1 <- function(invOmega0 = invOmega0,
+                           availableObs = availableObs,
+                           selectR = selectR,
+                           num_y = num_y,
+                           nreg = nreg,
+                           njointfac = njointfac, 
+                           i = i,
+                           fPost = fPost,
+                           wReg = wReg,
+                           Viarray = Viarray,
+                           type = type,
+                           storePath_adj = storePath_adj,
+                           store_count = store_count,
+                           initials = initials,
+                           incObsNew = incObsNew,
+                           iter = iter) {
+  ## Posterior Momente fuer die Ladungen und die partiellen Effekte
+  
+  invOmega1_part2 <- sumffkronV(availableObs,
+                                npara = num_y,
+                                nreg = nreg,
+                                njointfac = njointfac, 
+                                i = i,
+                                fPost = fPost,
+                                wReg = wReg,
+                                Viarray = Viarray,
+                                type = type)
+  invOmega1 <- invOmega0 + invOmega1_part2
+  tryCatch(
+    {
+      solve(selectR %*% invOmega1 %*% t(selectR))
+    },
+    error = function(e) {
+      # print(invOmega1)
+      if (storePath != "none") {
+        if (store_count == 0) {
+          dir.create(storePath_adj, recursive = TRUE)
+          store_count <- store_count + 1
+        }
+        saveRDS(
+          invOmega1,
+          file = paste0(
+            storePath_adj, 
+            "/", "invOmega1_", "pj", njointfac, 
+            "_B", round(initials$B0[1, 1, 1], 2),
+            "_Omega", initials$Omega0[1, 1],
+            "_A", initials$A[1, 1],
+            "_Psi", initials$Psi0[1, 1],
+            "_nu0", initials$nu0,
+            "_IO", incObsNew, "_", iter))
+      }
+      solve(selectR %*% invOmega1 %*% t(selectR), tol = 0)
+    }
+  )
+  # Omega1 <-  tryCatch({solve(invOmega1)},
+  #          error = function(e){
+  #            #print(invOmega1)
+  #            if(storePath != "none"){saveRDS(invOmega1, file =paste0(storePath,"invOmega1_","pj",njointfac,"_B",initials$B0[1,1,1],"_Omega",initials$Omega0[1,1],"_A",initials$A[1,1],"_Psi",initials$Psi0[1,1],"_nu0",initials$nu0,"_",iter))}
+  #            #browser()
+  #            solve(invOmega1, tol = 0)
+  #            })
+  #
+}
