@@ -486,3 +486,7 @@ compute_Omega1 <- function(invOmega0 = invOmega0,
   #            })
   #
 }
+compute_Sigma_adjust <- function(Omega) {
+  0.5 * Omega + 0.5 * t(Omega)
+  # Sigma <- 0.5 * (selectR %*% Omega1 %*% t(selectR)) + 0.5 * t(selectR %*% Omega1 %*% t(selectR))
+}

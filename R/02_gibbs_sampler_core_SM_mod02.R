@@ -246,10 +246,8 @@ GibbsSSM_2 <- function(itermax = 15000,
                               yiObs = yiObs, 
                               Viarray = Viarray,
                               type = type) 
-      
-      # Sigma <- 0.5 * (selectR %*% Omega1 %*% t(selectR)) + 0.5 * t(selectR %*% Omega1 %*% t(selectR))
-      Sigma <- 0.5 * Omega1 + 0.5 * t(Omega1)
-      
+
+      Sigma <- compute_Sigma_adjust(Omega1)
       # valid <- FALSE
       # ident_control <- 1
       # while(!valid){
