@@ -150,6 +150,14 @@ GibbsSSM_2 <- function(itermax = 15000,
   # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da
   # es unten auch noch drin steht. War vom alten Sampler, um die
   # identifizierenden Restriktionen einzuhalten.
+  tmp_ir <-  get_identificiation_restrictions(type = type,
+                                              num_joint_fac = njointfac,
+                                              num_y = num_y,
+                                              num_reg = nreg,
+                                              i = 2)
+  upper <- tmp_ir$upper
+  lower <- tmp_ir$lower
+
   # storePath Anpassung
   store_paths <- set_store_path_subdir(
     storePath, VdiagEst, sampleA,
@@ -253,42 +261,9 @@ GibbsSSM_2 <- function(itermax = 15000,
       # while(!valid){
       #   if(ident_control == identmax + 1){iter <- iter - 1; ident_block <- T; blockCount <- blockCount +1 ; break}
 
-      ## Identifikationsrestriktionen fuer die Ladungen
-      upper <- rep(Inf, 6)
-      # Dselect <- diag(6)
-      if (type == "allidio") {
-        if (njointfac == 0) {
-          lower <- c(rep(0, num_y), rep(-Inf, num_y * nreg)) # muss fuer gemeinsamen faktor angepasst werden
-          upper <- rep(Inf, num_y + num_y * nreg) # muss fuer gemeinsamen faktor angepasst werden
-        } else {
-          if (i == 1) {
-            lower <- c(0, rep(-Inf, 2), rep(0, 3))
-            #   Dselect <- Dselect[-c(2,3),]
-          } else {
-            lower <- c(rep(-Inf, 3), rep(0, 3))
-            #   Dselect <- Dselect[-c(1,2,3),]
-          }
-        }
-      } else if (type == "countryidio") {
-        if (i == 1) {
-          lower <- c(0, rep(-Inf, 2), 0, rep(-Inf, 2))
-          #   Dselect <- Dselect[-c(2,3),]
-        } else {
-          lower <- c(rep(-Inf, 3), 0, rep(-Inf, 2))
-          #   Dselect <- Dselect[-c(1,2,3),]
-        }
-      } else if (type == "countryidio_nomu") {
-        if (i == 1) {
-          lower <- c(0, rep(-Inf, 2), 0, -Inf)
-          #   Dselect <- Dselect[-c(2,3),]
-        } else {
-          lower <- c(rep(-Inf, 3), 0, -Inf)
-          #   Dselect <- Dselect[-c(1,2,3),]
-        }
-        upper <- rep(Inf, 5)
-      } else {
-        stop("No valid model type selected.")
-      }
+
+      
+
       # muss verallgemeinert werden fuer num_y < njointfac (fuer uns nicht noetig)
 
 

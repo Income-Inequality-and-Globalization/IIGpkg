@@ -490,3 +490,46 @@ compute_Sigma_adjust <- function(Omega) {
   0.5 * Omega + 0.5 * t(Omega)
   # Sigma <- 0.5 * (selectR %*% Omega1 %*% t(selectR)) + 0.5 * t(selectR %*% Omega1 %*% t(selectR))
 }
+get_identificiation_restrictions <- function(type, num_joint_fac,
+                                             num_y, num_reg, i) {
+  ## Identifikationsrestriktionen fuer die Ladungen
+  # Dselect <- diag(6)
+  if (type == "allidio") {
+    if (num_joint_fac == 0) {
+      # muss fuer gemeinsamen faktor angepasst werden
+      lower <- c(rep(0, num_y), rep(-Inf, num_y * num_reg))
+      # muss fuer gemeinsamen faktor angepasst werden
+      upper <- rep(Inf, num_y + num_y * num_reg)
+    } else {
+      if (i == 1) {
+        #   Dselect <- Dselect[-c(2,3),]
+        lower <- c(0, rep(-Inf, 2), rep(0, 3))
+      } else {
+        # Dselect <- Dselect[-c(1,2,3),]
+        lower <- c(rep(-Inf, 3), rep(0, 3))
+      }
+      upper <- rep(Inf, 6)
+    }
+  } else if (type == "countryidio") {
+    if (i == 1) {
+      lower <- c(0, rep(-Inf, 2), 0, rep(-Inf, 2))
+      #   Dselect <- Dselect[-c(2,3),]
+    } else {
+      lower <- c(rep(-Inf, 3), 0, rep(-Inf, 2))
+      #   Dselect <- Dselect[-c(1,2,3),]
+    }
+    upper <- rep(Inf, 6)
+  } else if (type == "countryidio_nomu") {
+    if (i == 1) {
+      lower <- c(0, rep(-Inf, 2), 0, -Inf)
+      #   Dselect <- Dselect[-c(2,3),]
+    } else {
+      lower <- c(rep(-Inf, 3), 0, -Inf)
+      #   Dselect <- Dselect[-c(1,2,3),]
+    }
+    upper <- rep(Inf, 5)
+  } else {
+    stop("No valid model type selected.")
+  }
+  return(list(upper = upper, lower = lower))
+}
