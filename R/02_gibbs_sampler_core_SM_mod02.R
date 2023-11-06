@@ -175,7 +175,6 @@ GibbsSSM_2 <- function(itermax = 15000,
   # einzuhalten:
   block_count <- 0 
   # Gibbs-Iteration:
-  iter <- 1
   for (iter in seq_len(itermax)) {
     # if (iter == DEBUG_ITER) browser()
     # Erweiterung das Vhat-Arrays um die Adjustmentmatrix A
