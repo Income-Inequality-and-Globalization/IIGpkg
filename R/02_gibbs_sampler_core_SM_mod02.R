@@ -134,6 +134,10 @@ GibbsSSM_2 <- function(itermax = 15000,
   fSTORE <- set_f_out(num_fac, TT, itermax)
   BSTORE <- set_B_out(N_num_y, num_fac, itermax)
   DSTORE <- set_D_out(N_num_y, NN, nreg, itermax)
+  if (is.null(DSTORE)) {
+    D <- matrix(0, nrow = N_num_y)
+    wReg <- matrix(0, ncol = TT)
+  }
   if (nreg == 0) D0 <- NULL
   ASTORE <- set_A_out(countryA, num_y, itermax, NN) 
   VSTORE <- set_V_out(N_num_y, itermax)
@@ -250,12 +254,6 @@ GibbsSSM_2 <- function(itermax = 15000,
                               Viarray = Viarray,
                               type = type)
       Sigma <- compute_Sigma_adjust(Omega1)
-      # valid <- FALSE
-      # ident_control <- 1
-      # while(!valid){
-      #   if(ident_control == identmax + 1){iter <- iter - 1; ident_block <- T; blockCount <- blockCount +1 ; break}
-
-      # muss verallgemeinert werden fuer num_y < njointfac (fuer uns nicht noetig)
       # Sampling der Ladungen bzw. partiellen Effekte
       B_D_samp <- sample_B_D(mean_B_full = beta1, Sigma,
                            upper = upper, lower = lower,
@@ -276,12 +274,7 @@ GibbsSSM_2 <- function(itermax = 15000,
     B <- get_B(Bjoint, Bidio, num_fac_jnt = njointfac,
                NN = NN, num_y = num_y, type = type)
     BSTORE[, , iter] <- B
-    if (nreg != 0) {
-      D <- DSTORE[, , iter]
-    } else {
-      D <- matrix(0, nrow = N_num_y)
-      wReg <- matrix(0, ncol = TT)
-    }
+    if (nreg != 0) D <- DSTORE[, , iter]
     # if (iter == DEBUG_ITER) browser()
     ############################################################################
     ######### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A ##########
@@ -342,3 +335,7 @@ GibbsSSM_2 <- function(itermax = 15000,
 # RETURN WITH uSTOREÖ
 # return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE,
 # u = uSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials))
+# valid <- FALSE
+# ident_control <- 1
+# while(!valid){
+#   if(ident_control == identmax + 1){iter <- iter - 1; ident_block <- T; blockCount <- blockCount +1 ; break}
