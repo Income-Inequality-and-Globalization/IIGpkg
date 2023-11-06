@@ -81,7 +81,7 @@ sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, 
     V <- Viarray[, , tt]
     summ <- summ + solve(V) %*% y %*% t(f)
   }
-  return(summ)
+  return(as.numeric(summ))
 }
 #' Matrix square root (by spectral decomposition)
 #'
@@ -403,8 +403,7 @@ sample_A <- function(countryA, diagA, scaleA,
     return(A)
   }
 }
-compute_B_mean <- function(Omega, invOmega,
-                           B0, D0,
+compute_B_mean <- function(Omega, invOmega_B0_D0,
                            availableObs, selectR,
                            num_y, nreg,  njointfac, i,
                            fPost, wReg, yiObs,  Viarray, type) {
@@ -419,7 +418,8 @@ compute_B_mean <- function(Omega, invOmega,
                       yiObs = yiObs, 
                       Viarray = Viarray,
                       type = type)
-  return(Omega %*% (selectR %*% (c(beta1_mid) + invOmega %*% c(B0, D0))))
+  drop(Omega %*% (selectR %*% (beta1_mid + invOmega_B0_D0)))
+  # return(Omega %*% (selectR %*% (c(beta1_mid) + invOmega %*% c(B0, D0))))
   # beta1 <- Omega1 %*% (c(beta1_mid) + invOmega0 %*%  c(B0[,,i]) )
   # beta1 <- Omega1 %*% (selectR %*% (c(beta1_mid) + invOmega0 %*% c(B0[, , i], D0[, , i])))
 }
@@ -532,4 +532,24 @@ get_identificiation_restrictions <- function(type, num_joint_fac,
     stop("No valid model type selected.")
   }
   return(list(upper = upper, lower = lower))
+}
+sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower) {
+  # BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
+  # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
+  # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
+  #                          lower = lower, upper = upper))
+  
+  # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma )$samp
+  # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma )$samp
+  tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper,
+                   means = mean_B_full, sigma = sigma_B_full)$samp
+}
+compute_invOmega0_B0_D0 <- function(invOmega0, B0, D0) {
+  NN <- dim(B0)[3]
+  out <- list(NN)
+  for (n in seq_len(NN)) {
+    B0_D0 <- c(B0[, , n], D0[, , n])
+    out[[n]] <- drop(invOmega0 %*% B0_D0)
+  }
+  return(out)
 }

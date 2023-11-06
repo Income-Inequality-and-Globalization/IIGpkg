@@ -128,6 +128,7 @@ GibbsSSM_2 <- function(itermax = 15000,
     apply(yObs[seq(1, N_num_y, 3), ],  1, \(x) !is.na(x))
   ) 
   invOmega0 <- solve(Omega0)
+  invOmega0_B0_D0 <- compute_invOmega0_B0_D0(invOmega0, B0, D0) 
 
   # Container fuer Gibbs-Zuege fuer f, B, D, A, V
   fSTORE <- set_f_out(num_fac, TT, itermax)
@@ -219,9 +220,6 @@ GibbsSSM_2 <- function(itermax = 15000,
       # availableObs <- which(!is.na(yObs[1 + num_y * (i-1),]))
       availableObs <- which(availableObs_crossSection[i, ])
 
-
-
-
       Omega1 <- compute_Omega1(invOmega0 = invOmega0,
                                availableObs = availableObs,
                                selectR = selectR,
@@ -239,9 +237,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                                incObsNew = incObsNew,
                                iter = iter)
       beta1 <- compute_B_mean(Omega = Omega1,
-                              invOmega = invOmega0,
-                              B0 = B0[, , i],
-                              D0 = D0[, , i],
+                              invOmega0_B0_D0[[i]],
                               availableObs = availableObs,
                               selectR = selectR,
                               num_y = num_y,
@@ -260,21 +256,9 @@ GibbsSSM_2 <- function(itermax = 15000,
       # while(!valid){
       #   if(ident_control == identmax + 1){iter <- iter - 1; ident_block <- T; blockCount <- blockCount +1 ; break}
 
-
-      
-
       # muss verallgemeinert werden fuer num_y < njointfac (fuer uns nicht noetig)
-
-
-      # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
-      # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
-      #                          lower = lower, upper = upper))
-
-      # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma )$samp
-      # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma )$samp
-
       # Sampling der Ladungen bzw. partiellen Effekte
-      BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
+      BDsamp <- sample_B_D(mean_B_full = beta1, Sigma, upper, lower)
 
       Bvec <- BDsamp[1:((njointfac + 1) * num_y)]
       Dvec <- BDsamp[-(1:((njointfac + 1) * num_y))]
