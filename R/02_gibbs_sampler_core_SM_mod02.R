@@ -206,7 +206,6 @@ GibbsSSM_2 <- function(itermax = 15000,
                             #        storePath_kfe = storePath_kfe,
                             #        block_count = block_count, 
                             #        initials = initials,
-                            #        incObsNew = incObsNew,
                             #        iter = iter))
       fSTORE[, , iter] <- fPost
     } else {
