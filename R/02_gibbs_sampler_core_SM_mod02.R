@@ -171,7 +171,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   )
   storePath_adj <- store_paths$store_path_adj
   storePath_rds <- store_paths$store_path_rds
-
+  storePath_omg <- store_paths$store_path_omg
   ##############################################################################
   ####################### GIBBS sampler Iteration START ########################
   ##############################################################################
@@ -236,6 +236,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                                Viarray = Viarray,
                                type = type,
                                storePath_adj = storePath_adj,
+                               storePath_omg = storePath_omg,
                                store_count = store_count,
                                initials = initials,
                                incObsNew = incObsNew,

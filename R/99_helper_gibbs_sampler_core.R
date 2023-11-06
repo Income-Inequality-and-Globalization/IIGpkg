@@ -435,6 +435,7 @@ compute_Omega1 <- function(invOmega0 = invOmega0,
                            Viarray = Viarray,
                            type = type,
                            storePath_adj = storePath_adj,
+                           storePath_omg = storePath_omg,
                            store_count = store_count,
                            initials = initials,
                            incObsNew = incObsNew,
@@ -464,15 +465,7 @@ compute_Omega1 <- function(invOmega0 = invOmega0,
         }
         saveRDS(
           invOmega1,
-          file = paste0(
-            storePath_adj, 
-            "/", "invOmega1_", "pj", njointfac, 
-            "_B", round(initials$B0[1, 1, 1], 2),
-            "_Omega", initials$Omega0[1, 1],
-            "_A", initials$A[1, 1],
-            "_Psi", initials$Psi0[1, 1],
-            "_nu0", initials$nu0,
-            "_IO", incObsNew, "_", iter))
+          file = paste0(storePath_omg, "_", iter))
       }
       solve(selectR %*% invOmega1 %*% t(selectR), tol = 0)
     }

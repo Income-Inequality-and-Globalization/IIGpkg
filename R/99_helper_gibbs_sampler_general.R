@@ -59,10 +59,21 @@ set_store_path_subdir <- function(store_path, V_DIAG_EST, SAMPLE_A,
                                        num_joint_fac,
                                        Omega_D0,
                                        inc_obs_new)
+  store_path_omg <- paste0(
+    store_path_adj, 
+    "/", "invOmega1_", "pj", num_joint_fac, 
+    "_B", round(init_set$B0[1, 1, 1], 2),
+    "_Omega", init_set$Omega0[1, 1],
+    "_A", init_set$A[1, 1],
+    "_Psi", init_set$Psi0[1, 1],
+    "_nu0", init_set$nu0,
+    "_IO", inc_obs_new)
   # STORE WITH uSTORE:
   # saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, blockCount = block_count,  errorMsg = errorMsg, initials = initials)
   #         , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",Omega0[dim(Omega0)[1], dim(Omega0)[1]],"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
-  return(list(store_path_adj = store_path_adj, store_path_rds = store_path_rds))
+  return(list(store_path_adj = store_path_adj,
+              store_path_rds = store_path_rds,
+              store_path_omg = store_path_omg))
 }
 get_store_path_rds <- function(store_path_adj,
                                V_DIAG_EST, SAMPLE_A,
