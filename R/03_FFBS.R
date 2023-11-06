@@ -23,13 +23,15 @@ compute_FFBS <- function(yObs, uReg, wReg,
       Q = Q, R = R, x00 = initX,
       u00 = initU, P00 = initP, PDSTORE = PDSTORE)
     # Backward Sampling and return
-    return(GibbsSSM_f(TT = TT, nfac = num_fac, Phi = Phi, Q = Q, filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
+    return(GibbsSSM_f(TT = TT, nfac = num_fac,
+                      Phi = Phi, Q = Q,
+                      filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
   } else {
     stopifnot(`Arg. 'try_catch_errors' must be a named list` = 
       all(names(try_catch_errors) %in% c("fSTORE", " BSTORE", "ASTORE",
                                          "block_count", "initials",
-                                         "storePath_adj", "store_count",
-                                         "incObsNew", "iter")))
+                                         "storePath_adj", "storePath_kfe",
+                                         "store_count", "iter")))
     invisible(
       capture.output(
         KF <- tryCatch(
@@ -53,11 +55,9 @@ compute_FFBS <- function(yObs, uReg, wReg,
         dir.create(try_catch_errors$storePath_adj, recursive = TRUE)
         try_catch_errors$store_count <- try_catch_errors$store_count + 1
       }
-      storePath_kf <- get_store_path_kf_errror(VdiagEst,
-                                               try_catch_errors$storePath_adj,
-                                               try_catch_errors$initials, 
-                                               try_catch_errors$iter, 
-                                               try_catch_errors$incObsNew)
+      storePath_kf <- get_store_path_kf_error_iter(
+        try_catch_errors$storePath_kfe, try_catch_errors$iter
+      )
       out_error_kf <- list(
         f = try_catch_errors$fSTORE,
         B = try_catch_errors$BSTORE)
@@ -75,7 +75,8 @@ compute_FFBS <- function(yObs, uReg, wReg,
       saveRDS(out_error_kf, file = storePath_kf)
       stop("KF produced numerical errors.")
     }
-    return(GibbsSSM_f(TT = TT, nfac = num_fac, Phi = Phi, Q = Q, filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
+    return(GibbsSSM_f(TT = TT, nfac = num_fac, Phi = Phi, Q = Q,
+                      filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
     # return(list(f = try_catch_errors$fSTORE,
     # B = try_catch_errors$BSTORE,
     # D = try_catch_errors$DSTORE,
@@ -100,7 +101,7 @@ compute_FFBS <- function(yObs, uReg, wReg,
     # }
   }
 }
-get_store_path_kf_errror <- function(VdiagEst, store_path_adj, init_set, iter, inc_obs_new) {
+get_store_path_kf_error_base <- function(VdiagEst, store_path_adj, init_set, inc_obs_new) {
   if (VdiagEst) {
   paste0(
     store_path_adj,
@@ -111,7 +112,7 @@ get_store_path_kf_errror <- function(VdiagEst, store_path_adj, init_set, iter, i
     "_V", init_set$Vhat[1, 1, 1],
     "_alpha", init_set$alpha0,
     "_beta", init_set$beta0,
-    "_IO", inc_obs_new, "_error", iter, ".rds"
+    "_IO", inc_obs_new, "_error"
    )
   } else {
     paste0(
@@ -121,9 +122,12 @@ get_store_path_kf_errror <- function(VdiagEst, store_path_adj, init_set, iter, i
       "_A", init_set$A[1, 1],
       "_Psi", init_set$Psi0[1, 1],
       "_nu0", init_set$nu0,
-      "_IO", inc_obs_new, "_error", iter, ".rds"
+      "_IO", inc_obs_new, "_error"
     )
   }
+}
+get_store_path_kf_error_iter <- function(store_path_kf_error_base, iter) {
+  paste0(store_path_kf_error_base, "_ITER_",iter, ".rds")
 }
 #' Backward Sampling based Kalman-Filter Output
 #'
