@@ -533,7 +533,7 @@ get_identificiation_restrictions <- function(type, num_joint_fac,
   }
   return(list(upper = upper, lower = lower))
 }
-sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower) {
+sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y) {
   # BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
   # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
   # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
@@ -541,9 +541,48 @@ sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower) {
   
   # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma )$samp
   # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma )$samp
-  tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper,
-                   means = mean_B_full, sigma = sigma_B_full)$samp
+  Bsamp_full <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper,
+                                 means = mean_B_full, sigma = sigma_B_full)$samp
+  get_BD_samp(Bsamp_full, num_jnt_fac, num_y)
 }
+get_BD_samp <- function(Bsamp_full, num_jnt_fac, num_y) {
+  Bvec <- Bsamp_full[1:((num_jnt_fac + 1) * num_y)]
+  if (num_jnt_fac != 0) {
+    idioFac <- Bvec[-(1:(num_y * num_jnt_fac))]
+    if (type == "countryidio_nomu") {
+      idioFac <- c(idioFac, 0)
+    }
+    # idioPos <- TRUE
+    jointFac <- matrix(Bvec[1:(num_y * num_jnt_fac)], ncol = num_jnt_fac)
+    # neu
+    # Unterscheidung i =1 und sonst
+    # jointFac <- matrix(0, nrow = num_y, ncol = num_jnt_fac)
+    # jointFac_select <- lower.tri(jointFac, diag = T)
+    # jointFac[jointFac_select] <- Bvec[1:sum(jointFac_select)]
+    # idioFac <- Bvec[-(1:sum(jointFac_select))]
+  } else {
+    jointFac <- NULL
+    idioFac <- Bvec # muss fuer regs geaendert werden bzw. Bvec oben neu definieren (D abziehen)
+  }
+  # idioPos <- all(idioFac > 0)
+  # gewekePos <- TRUE
+  
+  # if(i == 1 & num_jnt_fac != 0){
+  #   gewekeMatrix <- jointFac[1:num_jnt_fac, 1:num_jnt_fac] # muss verallgemeinert werden fuer num_y < num_jnt_fac
+  #   gewekePos <- all(diag(gewekeMatrix, num_jnt_fac) > 0) # muss verallgemeinert werden fuer num_y < num_jnt_fac
+  #   #gewekePos <- TRUE
+  # }
+  # if(gewekePos & idioPos){valid <- TRUE}
+  # if(!identification){valid <- TRUE}
+  # valid <- TRUE
+  # ident_control <- ident_control + 1
+  # }
+  
+  # if(ident_block){break}
+  return(list(Bsamp_idi = idioFac, Bsamp_jnt = jointFac,
+              Dsamp = Bsamp_full[-(1:((num_jnt_fac + 1) * num_y))]))
+}
+
 compute_invOmega0_B0_D0 <- function(invOmega0, B0, D0) {
   NN <- dim(B0)[3]
   out <- list(NN)
@@ -552,4 +591,22 @@ compute_invOmega0_B0_D0 <- function(invOmega0, B0, D0) {
     out[[n]] <- drop(invOmega0 %*% B0_D0)
   }
   return(out)
+}
+get_B <- function(Bjoint, Bidio, num_fac_jnt, NN, num_y, type) {
+  # if (!ident_block) {
+  if (type == "allidio") {
+    if (num_fac_jnt != 0) {
+      B <- cbind(Bjoint, diag(c(Bidio)))
+    } else {
+      B <- diag(c(Bidio))
+    }
+  } else if (type == "countryidio" | type == "countryidio_nomu") {
+    BidioMat <- as.matrix(Matrix::bdiag(plyr::alply(array(Bidio, c(num_y, 1, NN)), 3)))
+    if (num_fac_jnt != 0) {
+      B <- cbind(Bjoint, BidioMat)
+    } else {
+      B <- BidioMat
+    }
+  }
+  return(B)
 }

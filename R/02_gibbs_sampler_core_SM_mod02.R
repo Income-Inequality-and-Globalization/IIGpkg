@@ -248,8 +248,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                               wReg = wReg,
                               yiObs = yiObs, 
                               Viarray = Viarray,
-                              type = type) 
-
+                              type = type)
       Sigma <- compute_Sigma_adjust(Omega1)
       # valid <- FALSE
       # ident_control <- 1
@@ -258,73 +257,25 @@ GibbsSSM_2 <- function(itermax = 15000,
 
       # muss verallgemeinert werden fuer num_y < njointfac (fuer uns nicht noetig)
       # Sampling der Ladungen bzw. partiellen Effekte
-      BDsamp <- sample_B_D(mean_B_full = beta1, Sigma, upper, lower)
+      B_D_samp <- sample_B_D(mean_B_full = beta1, Sigma,
+                           upper = upper, lower = lower,
+                           num_jnt_fac = njointfac, num_y = num_y)
+      Dsamp <- B_D_samp$Dsamp
+      Bsamp_jnt <- B_D_samp$Bsamp_jnt
+      Bsamp_idi <- B_D_samp$Bsamp_idi
 
-      Bvec <- BDsamp[1:((njointfac + 1) * num_y)]
-      Dvec <- BDsamp[-(1:((njointfac + 1) * num_y))]
-      D_i <- matrix(Dvec, nrow = num_y, ncol = nreg)
-
-      if (njointfac != 0) {
-        idioFac <- Bvec[-(1:(num_y * njointfac))]
-        if (type == "countryidio_nomu") {
-          idioFac <- c(idioFac, 0)
-        }
-        # idioPos <- TRUE
-        jointFac <- matrix(Bvec[1:(num_y * njointfac)], ncol = njointfac)
-        # neu
-        # Unterscheidung i =1 und sonst
-        # jointFac <- matrix(0, nrow = num_y, ncol = njointfac)
-        # jointFac_select <- lower.tri(jointFac, diag = T)
-        # jointFac[jointFac_select] <- Bvec[1:sum(jointFac_select)]
-        # idioFac <- Bvec[-(1:sum(jointFac_select))]
-      } else {
-        idioFac <- Bvec # muss fuer regs geaendert werden bzw. Bvec oben neu definieren (D abziehen)
-      }
-      # idioPos <- all(idioFac > 0)
-      # gewekePos <- TRUE
-
-      # if(i == 1 & njointfac != 0){
-      #   gewekeMatrix <- jointFac[1:njointfac, 1:njointfac] # muss verallgemeinert werden fuer num_y < njointfac
-      #   gewekePos <- all(diag(gewekeMatrix, njointfac) > 0) # muss verallgemeinert werden fuer num_y < njointfac
-      #   #gewekePos <- TRUE
-      # }
-      # if(gewekePos & idioPos){valid <- TRUE}
-      # if(!identification){valid <- TRUE}
-      # valid <- TRUE
-      # ident_control <- ident_control + 1
-      # }
-
-      # if(ident_block){break}
-      if (njointfac != 0) {
-        Bjoint[((i - 1) * num_y + 1):(i * num_y), ] <- jointFac
-      }
-      Bidio[, i] <- idioFac
       if (nreg != 0) {
-        DSTORE[(1 + num_y * (i - 1)):(i * num_y), (1 + nreg * (i - 1)):(i * nreg), iter] <- D_i
+        DSTORE[(1 + num_y * (i - 1)):(i * num_y),
+               (1 + nreg * (i - 1)):(i * nreg), iter] <- Dsamp
       }
-    }
-    # browser()
-
-
-    # if (!ident_block) {
-    if (type == "allidio") {
       if (njointfac != 0) {
-        B <- cbind(Bjoint, diag(c(Bidio)))
-      } else {
-        B <- diag(c(Bidio))
+        Bjoint[((i - 1) * num_y + 1):(i * num_y), ] <- Bsamp_jnt
       }
-    } else if (type == "countryidio" | type == "countryidio_nomu") {
-      BidioMat <- as.matrix(Matrix::bdiag(plyr::alply(array(Bidio, c(num_y, 1, NN)), 3)))
-      if (njointfac != 0) {
-        B <- cbind(Bjoint, BidioMat)
-      } else {
-        B <- BidioMat
-      }
+      Bidio[, i] <- Bsamp_idi
     }
-
-
+    B <- get_B(Bjoint, Bidio, num_fac_jnt = njointfac,
+               NN = NN, num_y = num_y, type = type)
     BSTORE[, , iter] <- B
-
     if (nreg != 0) {
       D <- DSTORE[, , iter]
     } else {
