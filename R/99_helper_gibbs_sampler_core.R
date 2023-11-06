@@ -526,7 +526,7 @@ get_identificiation_restrictions <- function(type, num_joint_fac,
   }
   return(list(upper = upper, lower = lower))
 }
-sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y) {
+sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y, LEGACY = TRUE) {
   # BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
   # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
   # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
@@ -534,8 +534,15 @@ sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num
   
   # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma )$samp
   # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma )$samp
-  Bsamp_full <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper,
-                                 means = mean_B_full, sigma = sigma_B_full)$samp
+  if (isTRUE(LEGACY)) {
+    Bsamp_full <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper,
+                                   means = mean_B_full, sigma = sigma_B_full)$samp
+  } else {
+    Bsamp_full <- tmvtnorm::rtmvnorm(1, mean = mean_B_full,
+                                     sigma = sigma_B_full,
+                                     lower = lower, upper = upper)
+  }
+    
   get_BD_samp(Bsamp_full, num_jnt_fac, num_y)
 }
 get_BD_samp <- function(Bsamp_full, num_jnt_fac, num_y) {

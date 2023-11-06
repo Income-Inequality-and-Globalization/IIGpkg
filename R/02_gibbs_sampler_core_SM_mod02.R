@@ -97,12 +97,11 @@ GibbsSSM_2 <- function(itermax = 15000,
                        sampleA,
                        identification = TRUE,
                        storeUnit = 10000) {
-  # DEBUG_ITER <- 464
   # Vhat muss (npara, npara, N * T) Array sein. Start: Alle Zeitpunkte fuer das erste Land.
   # Funktioniert noch nicht fuer npara < njointfac (Geweke)
   # Modell ohne Konstante
   initials <- as.list(environment()) # speichert die Initialisierung
-
+  # DEBUG_ITER <- 464
   Vhat             <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
   store_count      <- 0 # zaehlt wie oft bereits zwischengespeichert wurde
   SIMULATE_FACTORS <- set_simulate_factors(fPost)
