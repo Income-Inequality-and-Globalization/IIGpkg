@@ -11,6 +11,24 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// compute_B_mean_cpp
+arma::mat compute_B_mean_cpp(const arma::mat Omega, const arma::colvec& invOmega_B0_D0, const Rcpp::IntegerVector& availableObs, const arma::mat selectR, const arma::mat& fPost, const arma::mat& w_regs, const arma::mat yiObs, const arma::cube& Viarray);
+RcppExport SEXP _IIGpkg_compute_B_mean_cpp(SEXP OmegaSEXP, SEXP invOmega_B0_D0SEXP, SEXP availableObsSEXP, SEXP selectRSEXP, SEXP fPostSEXP, SEXP w_regsSEXP, SEXP yiObsSEXP, SEXP ViarraySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type Omega(OmegaSEXP);
+    Rcpp::traits::input_parameter< const arma::colvec& >::type invOmega_B0_D0(invOmega_B0_D0SEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type availableObs(availableObsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type selectR(selectRSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type fPost(fPostSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type w_regs(w_regsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type yiObs(yiObsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Viarray(ViarraySEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_B_mean_cpp(Omega, invOmega_B0_D0, availableObs, selectR, fPost, w_regs, yiObs, Viarray));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_Omega1_cpp
 arma::mat compute_Omega1_cpp(const arma::mat& invOmega0, const Rcpp::IntegerVector& availableObs, const arma::mat selectR, const arma::mat& fPost, const arma::mat& w_regs, const arma::cube& Viarray);
 RcppExport SEXP _IIGpkg_compute_Omega1_cpp(SEXP invOmega0SEXP, SEXP availableObsSEXP, SEXP selectRSEXP, SEXP fPostSEXP, SEXP w_regsSEXP, SEXP ViarraySEXP) {
@@ -58,6 +76,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_IIGpkg_compute_B_mean_cpp", (DL_FUNC) &_IIGpkg_compute_B_mean_cpp, 8},
     {"_IIGpkg_compute_Omega1_cpp", (DL_FUNC) &_IIGpkg_compute_Omega1_cpp, 6},
     {"_IIGpkg_sum_ff_kron_v", (DL_FUNC) &_IIGpkg_sum_ff_kron_v, 4},
     {"_IIGpkg_sum_f_y_v", (DL_FUNC) &_IIGpkg_sum_f_y_v, 5},
