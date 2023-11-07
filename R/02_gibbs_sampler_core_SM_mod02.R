@@ -239,13 +239,14 @@ GibbsSSM_2 <- function(itermax = 15000,
       # availableObs <- which(!is.na(yObs[1 + num_y * (i-1),]))
       availableObs <- which(availableObs_crossSection[i, ])
 
+      w_reg_info_i <- w_reg_info
+      w_reg_info_i$id_reg <- w_reg_info_i$id_reg[, i]
       Omega1 <- compute_Omega1(invOmega0 = invOmega0,
                                availableObs = availableObs,
                                selectR = selectR,
-                               i = i,
-                               id_f,
+                               id_f[, i],
                                fPost = fPost,
-                               w_reg_info = w_reg_info,
+                               w_reg_info = w_reg_info_i,
                                Viarray = Viarray,
                                storePath_adj = storePath_adj,
                                storePath_omg = storePath_omg,
@@ -257,10 +258,9 @@ GibbsSSM_2 <- function(itermax = 15000,
                               invOmega0_B0_D0[[i]],
                               availableObs = availableObs,
                               selectR = selectR,
-                              i = i,
-                              id_f, 
+                              id_f[, i], 
                               fPost = fPost,
-                              w_reg_info = w_reg_info,
+                              w_reg_info = w_reg_info_i,
                               yiObs = yiObs, 
                               Viarray = Viarray)
       Sigma <- compute_Sigma_adjust(Omega1)

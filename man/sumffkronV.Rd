@@ -4,12 +4,10 @@
 \alias{sumffkronV}
 \title{Sum in the inverse of the posterior variance for loadings/partial effects}
 \usage{
-sumffkronV(availableObs, i, id_f, fPost, w_reg_info, Viarray)
+sumffkronV(availableObs, id_f, fPost, w_reg_info, Viarray)
 }
 \arguments{
 \item{availableObs}{available observations}
-
-\item{i}{cross-sectional index}
 
 \item{id_f}{`integer` (sequence); index for selection of correct factors}
 
