@@ -14,6 +14,7 @@ Imports:
     LaplacesDemon,
     RcppSMCkalman,
     tmvnsim,
+    tmvtnorm,
     plyr,
     MASS,
     Matrix,
@@ -21,7 +22,8 @@ Imports:
     crayon,
     gert,
     quarto,
-    rstudioapi,
-    testthat,
-    tibble
+    rstudioapi
+LinkingTo:
+    Rcpp,
+    RcppArmadillo
 RoxygenNote: 7.2.3
