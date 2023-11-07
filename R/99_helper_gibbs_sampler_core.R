@@ -8,25 +8,28 @@
 #' @param fPost backward sampled states (FFBS output)
 #' @param wReg regressors
 #' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
-#' @param type either of "allidio", "countryidio" or "countryidio_nomu"
 #'
 #' @return  cronecker summation part
 #' @export
-sumffkronV <- function(availableObs, npara, nreg, njointfac, i, id_f, fPost, wReg, Viarray, type) {
+sumffkronV <- function(availableObs, npara, njointfac, i, id_f, fPost, w_reg_info, Viarray) {
   summ <- 0
-  for (tt in availableObs) {
-    f <- fPost[id_f, tt]
-    if (nreg != 0) {
-      wReg_it <- wReg[(1 + nreg * (i - 1)):(i * nreg), tt]
-      f <- c(f, wReg_it)
+  if (is.null(w_reg_info)) {
+    for (tt in availableObs) {
+      f <- fPost[id_f, tt]
+      V <- Viarray[, , tt]
+      summ <- summ + kronecker(f %*% t(f), solve(V))
     }
-    V <- Viarray[, , tt]
-    summ <- summ + kronecker(f %*% t(f), solve(V))
+  } else {
+    id_reg <- w_reg_info$id_reg[, i]
+    w_regs  <- w_reg_info$w_reg
+    for (tt in availableObs) {
+      f <- c(fPost[id_f, tt],w_regs[id_reg, tt])
+      V <- Viarray[, , tt]
+      summ <- summ + kronecker(f %*% t(f), solve(V))
+    }
   }
   return(summ)
 }
-
-
 #' Sum part of posterior mean for vectorized loadings/partial effects
 #'
 #' @inheritParams GibbsSSM_2
@@ -36,17 +39,24 @@ sumffkronV <- function(availableObs, npara, nreg, njointfac, i, id_f, fPost, wRe
 #'
 #' @return summation part
 #' @export
-sumfyV <- function(availableObs, npara, nreg, njointfac, i, id_f, fPost, wReg, yiObs, Viarray, type) {
+sumfyV <- function(availableObs, npara, njointfac, i, id_f, fPost, w_reg_info, yiObs, Viarray) {
   summ <- 0
-  for (tt in availableObs) {
-    f <- fPost[id_f, tt]
-    if (nreg != 0) {
-      wReg_it <- wReg[(1 + nreg * (i - 1)):(i * nreg), tt]
-      f <- c(f, wReg_it)
+  if (is.null(w_reg_info)) {
+    for (tt in availableObs) {
+      f <- fPost[id_f, tt]
+      y <- yiObs[, tt]
+      V <- Viarray[, , tt]
+      summ <- summ + solve(V) %*% y %*% t(f)
     }
-    y <- yiObs[, tt]
-    V <- Viarray[, , tt]
-    summ <- summ + solve(V) %*% y %*% t(f)
+  } else {
+    id_reg <- w_reg_info$id_reg[, i]
+    w_regs  <- w_reg_info$w_reg
+    for (tt in availableObs) {
+      f <- c(fPost[id_f, tt], w_regs[id_reg, tt])
+      y <- yiObs[, tt]
+      V <- Viarray[, , tt]
+      summ <- summ + solve(V) %*% y %*% t(f)
+    }
   }
   return(as.numeric(summ))
 }
@@ -372,20 +382,18 @@ sample_A <- function(countryA, diagA, scaleA,
 }
 compute_B_mean <- function(Omega, invOmega_B0_D0,
                            availableObs, selectR,
-                           num_y, nreg,  njointfac, i, id_f,
-                           fPost, wReg, yiObs,  Viarray, type) {
+                           num_y, njointfac, i, id_f,
+                           fPost, w_reg_info, yiObs,  Viarray) {
   
   beta1_mid <- sumfyV(availableObs,
                       npara = num_y,
-                      nreg = nreg,
                       njointfac = njointfac,
                       i = i,
                       id_f = id_f[, i],
                       fPost = fPost,
-                      wReg = wReg,
+                      w_reg_info = w_reg_info,
                       yiObs = yiObs, 
-                      Viarray = Viarray,
-                      type = type)
+                      Viarray = Viarray)
   drop(Omega %*% (selectR %*% (beta1_mid + invOmega_B0_D0)))
   # return(Omega %*% (selectR %*% (c(beta1_mid) + invOmega %*% c(B0, D0))))
   # beta1 <- Omega1 %*% (c(beta1_mid) + invOmega0 %*%  c(B0[,,i]) )
@@ -395,14 +403,12 @@ compute_Omega1 <- function(invOmega0 ,
                            availableObs,
                            selectR,
                            num_y,
-                           nreg,
                            njointfac, 
                            i,
                            id_f, 
                            fPost,
-                           wReg,
+                           w_reg_info,
                            Viarray,
-                           type,
                            storePath_adj,
                            storePath_omg,
                            store_count,
@@ -413,14 +419,12 @@ compute_Omega1 <- function(invOmega0 ,
 
   invOmega1_part2 <- sumffkronV(availableObs,
                                 npara = num_y,
-                                nreg = nreg,
                                 njointfac = njointfac, 
                                 i = i,
                                 id_f = id_f[, i],
                                 fPost = fPost,
-                                wReg = wReg,
-                                Viarray = Viarray,
-                                type = type)
+                                w_reg_info = w_reg_info,
+                                Viarray = Viarray)
   invOmega1 <- invOmega0 + invOmega1_part2
   tryCatch(
     {
@@ -603,4 +607,11 @@ get_id_fpost <- function(num_fac_jnt, num_y, NN, type) {
     id_out[, i] <- id_tmp
   }
   return(id_out)
+}
+get_id_wreg <- function(num_w_reg, NN) {
+  out_id <- matrix(0, nrow = num_w_reg, NN)
+  for (i in seq_len(NN)) {
+    out_id[, i] <- (1 + num_w_reg * (i - 1)):(i * num_w_reg)
+  }
+  out_id
 }

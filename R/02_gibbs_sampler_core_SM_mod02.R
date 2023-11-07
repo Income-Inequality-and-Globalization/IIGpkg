@@ -128,6 +128,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   availableObs_crossSection <- t(
     apply(yObs[seq(1, N_num_y, 3), ],  1, \(x) !is.na(x))
   ) 
+
   invOmega0 <- solve(Omega0)
   invOmega0_B0_D0 <- compute_invOmega0_B0_D0(invOmega0, B0, D0) 
 
@@ -135,11 +136,20 @@ GibbsSSM_2 <- function(itermax = 15000,
   fSTORE <- set_f_out(num_fac, TT, itermax)
   BSTORE <- set_B_out(N_num_y, num_fac, itermax)
   DSTORE <- set_D_out(N_num_y, NN, nreg, itermax)
-  if (is.null(DSTORE)) {
+
+  # Availability of regressors
+  if (is.null(DSTORE)) {W_REG_AVAIL <- TRUE} else {W_REG_AVAIL <- TRUE}
+  if(W_REG_AVAIL) {
+    id_w_reg <- get_id_wreg(nreg, NN)
+    w_reg_info = list(w_reg = wReg, 
+                      id_reg = id_w_reg)
+  } else {
     D <- matrix(0, nrow = N_num_y)
     wReg <- matrix(0, ncol = TT)
+    D0 <- NULL
+    w_reg_info <- NULL
   }
-  if (nreg == 0) D0 <- NULL
+
   ASTORE <- set_A_out(countryA, num_y, itermax, NN) 
   VSTORE <- set_V_out(N_num_y, itermax)
   V_tmp  <- set_V_tmp(VdiagEst, VhatDiagScale,
@@ -175,7 +185,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   storePath_omg <- store_paths$store_path_omg
   storePath_kfe <- store_paths$store_path_kfe
 
-  id_f <- get_id_fpost(num_fac_jnt, num_y, NN, type)
+  id_f     <- get_id_fpost(num_fac_jnt, num_y, NN, type)
   ##############################################################################
   ####################### GIBBS sampler Iteration START ########################
   ##############################################################################
@@ -220,6 +230,7 @@ GibbsSSM_2 <- function(itermax = 15000,
     # Ergebnis-Matrix fuer die idiosynkratischen Ladungen (wird spaeter befuellt)
     Bidio <- matrix(rep(0, N_num_y), ncol = NN)
 
+    # browser()
     for (i in 1:NN) {
       # Vhat Array for cross-sectional unit (country) i
       Viarray <- VhatArray_A[, , (1 + (i - 1) * TT):(i * TT)]
@@ -232,14 +243,12 @@ GibbsSSM_2 <- function(itermax = 15000,
                                availableObs = availableObs,
                                selectR = selectR,
                                num_y = num_y,
-                               nreg = nreg,
                                njointfac = njointfac, 
                                i = i,
                                id_f,
                                fPost = fPost,
-                               wReg = wReg,
+                               w_reg_info = w_reg_info,
                                Viarray = Viarray,
-                               type = type,
                                storePath_adj = storePath_adj,
                                storePath_omg = storePath_omg,
                                store_count = store_count,
@@ -251,15 +260,13 @@ GibbsSSM_2 <- function(itermax = 15000,
                               availableObs = availableObs,
                               selectR = selectR,
                               num_y = num_y,
-                              nreg = nreg, 
                               njointfac = njointfac,
                               i = i,
                               id_f, 
                               fPost = fPost,
-                              wReg = wReg,
+                              w_reg_info = w_reg_info,
                               yiObs = yiObs, 
-                              Viarray = Viarray,
-                              type = type)
+                              Viarray = Viarray)
       Sigma <- compute_Sigma_adjust(Omega1)
       # Sampling der Ladungen bzw. partiellen Effekte
       B_D_samp <- sample_B_D(mean_B_full = beta1, Sigma,
