@@ -1,17 +1,20 @@
 #' Sum in the inverse of the posterior variance for loadings/partial effects
 #'
 #' @param availableObs available observations
-#' @param npara number of params (usually 3)
-#' @param nreg  number of regressors
-#' @param njointfac number of joint factors
 #' @param i cross-sectional index
+#' @param id_f `integer` (sequence); index for selection of correct factors
 #' @param fPost backward sampled states (FFBS output)
-#' @param wReg regressors
+#' @param w_reg_info a named list of two elements 
+#' \itemize{
+#'    \item{w_reg}{ regressor matrix}
+#'    \item{id_reg}{ `integer` (sequence); index for selection of correct 
+#'    regressors}
+#' }
 #' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
 #'
 #' @return  cronecker summation part
 #' @export
-sumffkronV <- function(availableObs, npara, njointfac, i, id_f, fPost, w_reg_info, Viarray) {
+sumffkronV <- function(availableObs, i, id_f, fPost, w_reg_info, Viarray) {
   summ <- 0
   if (is.null(w_reg_info)) {
     for (tt in availableObs) {
@@ -23,7 +26,7 @@ sumffkronV <- function(availableObs, npara, njointfac, i, id_f, fPost, w_reg_inf
     id_reg <- w_reg_info$id_reg[, i]
     w_regs  <- w_reg_info$w_reg
     for (tt in availableObs) {
-      f <- c(fPost[id_f, tt],w_regs[id_reg, tt])
+      f <- c(fPost[id_f, tt], w_regs[id_reg, tt])
       V <- Viarray[, , tt]
       summ <- summ + kronecker(f %*% t(f), solve(V))
     }
@@ -39,7 +42,7 @@ sumffkronV <- function(availableObs, npara, njointfac, i, id_f, fPost, w_reg_inf
 #'
 #' @return summation part
 #' @export
-sumfyV <- function(availableObs, npara, njointfac, i, id_f, fPost, w_reg_info, yiObs, Viarray) {
+sumfyV <- function(availableObs, i, id_f, fPost, w_reg_info, yiObs, Viarray) {
   summ <- 0
   if (is.null(w_reg_info)) {
     for (tt in availableObs) {
@@ -382,12 +385,10 @@ sample_A <- function(countryA, diagA, scaleA,
 }
 compute_B_mean <- function(Omega, invOmega_B0_D0,
                            availableObs, selectR,
-                           num_y, njointfac, i, id_f,
-                           fPost, w_reg_info, yiObs,  Viarray) {
+                           i, id_f, fPost, w_reg_info,
+                           yiObs,  Viarray) {
   
   beta1_mid <- sumfyV(availableObs,
-                      npara = num_y,
-                      njointfac = njointfac,
                       i = i,
                       id_f = id_f[, i],
                       fPost = fPost,
@@ -402,8 +403,6 @@ compute_B_mean <- function(Omega, invOmega_B0_D0,
 compute_Omega1 <- function(invOmega0 ,
                            availableObs,
                            selectR,
-                           num_y,
-                           njointfac, 
                            i,
                            id_f, 
                            fPost,
@@ -418,8 +417,6 @@ compute_Omega1 <- function(invOmega0 ,
   ## Posterior Momente fuer die Ladungen und die partiellen Effekte
 
   invOmega1_part2 <- sumffkronV(availableObs,
-                                npara = num_y,
-                                njointfac = njointfac, 
                                 i = i,
                                 id_f = id_f[, i],
                                 fPost = fPost,
