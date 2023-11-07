@@ -53,7 +53,6 @@ compute_FFBS <- function(yObs, uReg, wReg,
       msg_error_kf <- KF
       if (try_catch_errors$store_count == 0) {
         dir.create(try_catch_errors$storePath_adj, recursive = TRUE)
-        try_catch_errors$store_count <- try_catch_errors$store_count + 1
       }
       storePath_kf <- get_store_path_kf_error_iter(
         try_catch_errors$storePath_kfe, try_catch_errors$iter
