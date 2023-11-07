@@ -540,7 +540,8 @@ sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num
   } else {
     Bsamp_full <- tmvtnorm::rtmvnorm(1, mean = mean_B_full,
                                      sigma = sigma_B_full,
-                                     lower = lower, upper = upper)
+                                     lower = lower, upper = upper,
+                                     algorithm = "gibbsR")
   }
     
   get_BD_samp(Bsamp_full, num_jnt_fac, num_y)
