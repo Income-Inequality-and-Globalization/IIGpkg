@@ -4,26 +4,25 @@
 \alias{sumffkronV}
 \title{Sum in the inverse of the posterior variance for loadings/partial effects}
 \usage{
-sumffkronV(availableObs, npara, nreg, njointfac, i, fPost, wReg, Viarray, type)
+sumffkronV(availableObs, i, id_f, fPost, w_reg_info, Viarray)
 }
 \arguments{
 \item{availableObs}{available observations}
 
-\item{npara}{number of params (usually 3)}
-
-\item{nreg}{number of regressors}
-
-\item{njointfac}{number of joint factors}
-
 \item{i}{cross-sectional index}
+
+\item{id_f}{`integer` (sequence); index for selection of correct factors}
 
 \item{fPost}{backward sampled states (FFBS output)}
 
-\item{wReg}{regressors}
+\item{w_reg_info}{a named list of two elements 
+\itemize{
+   \item{w_reg}{ regressor matrix}
+   \item{id_reg}{ `integer` (sequence); index for selection of correct 
+   regressors}
+}}
 
 \item{Viarray}{VCOV array (npara x npara x TT) of cross-sectional unit i}
-
-\item{type}{either of "allidio", "countryidio" or "countryidio_nomu"}
 }
 \value{
 cronecker summation part

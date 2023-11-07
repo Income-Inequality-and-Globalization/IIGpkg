@@ -7,7 +7,7 @@
 makeBi(npara, N, p, p_joint, B_stack, type = "allidio")
 }
 \arguments{
-\item{npara}{number of params (usually 3)}
+\item{npara}{Anzahl der Parameter (bei uns immer 3)}
 
 \item{N}{Cross-sectional dimension (number of countries)}
 

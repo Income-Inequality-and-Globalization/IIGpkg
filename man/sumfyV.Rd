@@ -4,39 +4,27 @@
 \alias{sumfyV}
 \title{Sum part of posterior mean for vectorized loadings/partial effects}
 \usage{
-sumfyV(
-  availableObs,
-  npara,
-  nreg,
-  njointfac,
-  i,
-  fPost,
-  wReg,
-  yiObs,
-  Viarray,
-  type
-)
+sumfyV(availableObs, i, id_f, fPost, w_reg_info, yiObs, Viarray)
 }
 \arguments{
 \item{availableObs}{available observations}
 
-\item{npara}{Anzahl der Parameter (bei uns immer 3)}
-
-\item{nreg}{Anzahl der  Regressoren (1 bis 3)}
-
-\item{njointfac}{Anzahl der gemeinsamen Faktoren (zuletzt immer 0)}
-
 \item{i}{cross-sectional index}
+
+\item{id_f}{`integer` (sequence); index for selection of correct factors}
 
 \item{fPost}{Kann angegeben werden, wenn FFBS ausgelassen werden soll und man gegeben fester Faktoren samplen möchte. fPost muss dann #Faktoren x T sein. Wenn es fehlt, wird FFBS durchgefuehrt.}
 
-\item{wReg}{Regressoren für die Messgleichung, also die Makros: nreg * N x T (muss natuerlich zu wRegSpec passen)}
+\item{w_reg_info}{a named list of two elements 
+\itemize{
+   \item{w_reg}{ regressor matrix}
+   \item{id_reg}{ `integer` (sequence); index for selection of correct 
+   regressors}
+}}
 
 \item{yiObs}{Matrix (npara x TT) of cross-sectional unit i}
 
 \item{Viarray}{VCOV array (npara x npara x TT) of cross-sectional unit i}
-
-\item{type}{Modelltyp: Auswahls aus "allidio","countryidio", "countryidio_nomu". Bei uns immer "allidio", d.h. jeder Paramter (jeden Landes) bekommt eigenen idiosynkr. Faktor. Hatte auch mal ausprobiert, dass z.B. nur jedes Land einen bekommt.}
 }
 \value{
 summation part

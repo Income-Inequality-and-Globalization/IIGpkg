@@ -4,18 +4,18 @@
 \alias{utuSum}
 \title{Sum of squared residuals (u * u') for VCOV/adjustment matrix sampling}
 \usage{
-utuSum(uSplit, VhatSqrt, TT, N, npara)
+utuSum(countryA, u, VhatSqrt, TT, NN, TT_num_y, npara)
 }
 \arguments{
-\item{uSplit}{List (N elements) of resiudal matrices (npara x TT) for each cross-sectional unit}
+\item{countryA}{= TRUE, wenn fuer jedes Land eine eigene Adjustmentmatrix (der GMM-Varianz) A geschaetzt werden soll}
 
 \item{VhatSqrt}{Array (npara x npara x N*TT) of square-root VCOVs (sorted by cross-sectional unit)}
 
 \item{TT}{time series length}
 
-\item{N}{cross sectional dimension}
-
 \item{npara}{Anzahl der Parameter (bei uns immer 3)}
+
+\item{uSplit}{List (N elements) of resiudal matrices (npara x TT) for each cross-sectional unit}
 }
 \value{
 sum of squared residuals

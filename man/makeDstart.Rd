@@ -7,11 +7,9 @@
 makeDstart(npara, N, nreg, D_par)
 }
 \arguments{
-\item{npara}{number of params (usually 3)}
+\item{npara}{Anzahl der Parameter (bei uns immer 3)}
 
 \item{N}{cross sectional dimension}
-
-\item{nreg}{number of regressors}
 
 \item{D_par}{number of D parameters}
 }
