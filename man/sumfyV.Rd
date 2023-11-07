@@ -4,21 +4,12 @@
 \alias{sumfyV}
 \title{Sum part of posterior mean for vectorized loadings/partial effects}
 \usage{
-sumfyV(availableObs, id_f, fPost, w_reg_info, yiObs, Viarray)
+sumfyV(availableObs, fPost, w_regs, yiObs, Viarray)
 }
 \arguments{
 \item{availableObs}{available observations}
 
-\item{id_f}{`integer` (sequence); index for selection of correct factors}
-
 \item{fPost}{Kann angegeben werden, wenn FFBS ausgelassen werden soll und man gegeben fester Faktoren samplen möchte. fPost muss dann #Faktoren x T sein. Wenn es fehlt, wird FFBS durchgefuehrt.}
-
-\item{w_reg_info}{a named list of two elements 
-\itemize{
-   \item{w_reg}{ regressor matrix}
-   \item{id_reg}{ `integer` (sequence); index for selection of correct 
-   regressors}
-}}
 
 \item{yiObs}{Matrix (npara x TT) of cross-sectional unit i}
 
