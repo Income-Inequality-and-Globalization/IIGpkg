@@ -19,6 +19,7 @@
 #'  `--set-upstream`).}
 #' }
 #'
+#' @useDynLib IIGpkg, .registration = TRUE
 #' @docType package
 #' @name IIGpkg
 NULL

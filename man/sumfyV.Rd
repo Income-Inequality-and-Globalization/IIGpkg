@@ -11,6 +11,8 @@ sumfyV(availableObs, fPost, w_regs, yiObs, Viarray)
 
 \item{fPost}{Kann angegeben werden, wenn FFBS ausgelassen werden soll und man gegeben fester Faktoren samplen möchte. fPost muss dann #Faktoren x T sein. Wenn es fehlt, wird FFBS durchgefuehrt.}
 
+\item{w_regs}{}
+
 \item{yiObs}{Matrix (npara x TT) of cross-sectional unit i}
 
 \item{Viarray}{VCOV array (npara x npara x TT) of cross-sectional unit i}
