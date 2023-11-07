@@ -139,10 +139,11 @@ GibbsSSM_2 <- function(itermax = 15000,
 
   # Availability of regressors
   if (is.null(DSTORE)) {W_REG_AVAIL <- TRUE} else {W_REG_AVAIL <- TRUE}
-  if(W_REG_AVAIL) {
+  if (W_REG_AVAIL) {
     id_w_reg <- get_id_wreg(nreg, NN)
     w_reg_info = list(w_reg = wReg, 
-                      id_reg = id_w_reg)
+                      id_reg = id_w_reg,
+                      nregs = nreg)
   } else {
     D <- matrix(0, nrow = N_num_y)
     wReg <- matrix(0, ncol = TT)
@@ -224,66 +225,15 @@ GibbsSSM_2 <- function(itermax = 15000,
     } else {
       fSTORE[, , iter] <- fPost
     }
-    ##### GIBBS PART: Sampling of loadings (on latent factors) and partial effects (on regressors)
-    # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
-    Bjoint <- matrix(rep(0, N_num_y * njointfac), ncol = njointfac)
-    # Ergebnis-Matrix fuer die idiosynkratischen Ladungen (wird spaeter befuellt)
-    Bidio <- matrix(rep(0, N_num_y), ncol = NN)
-
-    # browser()
-    for (i in 1:NN) {
-      # Vhat Array for cross-sectional unit (country) i
-      Viarray <- VhatArray_A[, , (1 + (i - 1) * TT):(i * TT)]
-      # yObs for cross-sectional unit (country) i
-      yiObs <- yObs[(1 + num_y * (i - 1)):(num_y * i), ]
-      # availableObs <- which(!is.na(yObs[1 + num_y * (i-1),]))
-      availableObs <- which(availableObs_crossSection[i, ])
-
-      w_reg_info_i <- w_reg_info
-      w_reg_info_i$id_reg <- w_reg_info_i$id_reg[, i]
-      Omega1 <- compute_Omega1(invOmega0 = invOmega0,
-                               availableObs = availableObs,
-                               selectR = selectR,
-                               id_f[, i],
-                               fPost = fPost,
-                               w_reg_info = w_reg_info_i,
-                               Viarray = Viarray,
-                               storePath_adj = storePath_adj,
-                               storePath_omg = storePath_omg,
-                               store_count = store_count,
-                               initials = initials,
-                               incObsNew = incObsNew,
-                               iter = iter)
-      beta1 <- compute_B_mean(Omega = Omega1,
-                              invOmega0_B0_D0[[i]],
-                              availableObs = availableObs,
-                              selectR = selectR,
-                              id_f[, i], 
-                              fPost = fPost,
-                              w_reg_info = w_reg_info_i,
-                              yiObs = yiObs, 
-                              Viarray = Viarray)
-      Sigma <- compute_Sigma_adjust(Omega1)
-      # Sampling der Ladungen bzw. partiellen Effekte
-      B_D_samp <- sample_B_D(mean_B_full = beta1, Sigma,
-                             upper = upper, lower = lower,
-                             num_jnt_fac = njointfac, num_y = num_y)
-      Dsamp <- B_D_samp$Dsamp
-      Bsamp_jnt <- B_D_samp$Bsamp_jnt
-      Bsamp_idi <- B_D_samp$Bsamp_idi
-
-      if (nreg != 0) {
-        DSTORE[(1 + num_y * (i - 1)):(i * num_y),
-               (1 + nreg * (i - 1)):(i * nreg), iter] <- Dsamp
-      }
-      if (njointfac != 0) {
-        Bjoint[((i - 1) * num_y + 1):(i * num_y), ] <- Bsamp_jnt
-      }
-      Bidio[, i] <- Bsamp_idi
-    }
-    B <- get_B(Bjoint, Bidio, num_fac_jnt = njointfac,
-               NN = NN, num_y = num_y, type = type)
-    BSTORE[, , iter] <- B
+    ##### GIBBS PART: Sampling of loadings (on latent factors) and partial
+    ##### effects (on regressors)
+    B_post_all <- sample_B_full(yObs, availableObs_crossSection, 
+                                fPost, VhatArray_A, w_reg_info,
+                                invOmega0, invOmega0_B0_D0, 
+                                id_f, selectR, lower, upper, 
+                                NN, TT, N_num_y, num_y, num_fac_jnt)
+    DSTORE[, , iter] <- B_post_all$Dregs
+    BSTORE[, , iter] <- B_post_all$Bfacs
     if (nreg != 0) D <- DSTORE[, , iter]
     # if (iter == DEBUG_ITER) browser()
     ############################################################################
