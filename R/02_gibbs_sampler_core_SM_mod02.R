@@ -112,6 +112,8 @@ GibbsSSM_2 <- function(itermax = 15000,
   num_y   <- npara
   N_num_y <- dim(B)[1] # N * number of components in y
   num_fac <- dim(B)[2] # number of factors
+  num_fac_jnt <- njointfac
+  num_fac_idi <- num_fac - num_fac_jnt
   # Anzahl der Laender:
   NN       <- N_num_y / num_y
   # Anzahl der Zeitpunkte:
@@ -172,6 +174,8 @@ GibbsSSM_2 <- function(itermax = 15000,
   storePath_rds <- store_paths$store_path_rds
   storePath_omg <- store_paths$store_path_omg
   storePath_kfe <- store_paths$store_path_kfe
+
+  id_f <- get_id_fpost(num_fac_jnt, num_y, NN, type)
   ##############################################################################
   ####################### GIBBS sampler Iteration START ########################
   ##############################################################################
@@ -231,6 +235,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                                nreg = nreg,
                                njointfac = njointfac, 
                                i = i,
+                               id_f,
                                fPost = fPost,
                                wReg = wReg,
                                Viarray = Viarray,
@@ -249,6 +254,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                               nreg = nreg, 
                               njointfac = njointfac,
                               i = i,
+                              id_f, 
                               fPost = fPost,
                               wReg = wReg,
                               yiObs = yiObs, 

@@ -12,31 +12,14 @@
 #'
 #' @return  cronecker summation part
 #' @export
-sumffkronV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, Viarray, type) {
+sumffkronV <- function(availableObs, npara, nreg, njointfac, i, id_f, fPost, wReg, Viarray, type) {
   summ <- 0
   for (tt in availableObs) {
-    if (type == "allidio") {
-      if (njointfac != 0) {
-        f <- fPost[c(1:njointfac, (njointfac + 1 + npara * (i - 1)):(njointfac + npara * i)), tt] # generalize of no njointfac is included
-      } else {
-        f <- fPost[(njointfac + 1 + npara * (i - 1)):(njointfac + npara * i), tt]
-      }
-    } else if (type == "countryidio" | type == "countryidio_nomu") {
-      if (njointfac != 0) {
-        f <- fPost[c(1:njointfac, njointfac + i), tt] # generalize of no njointfac is included
-      } else {
-        f <- fPost[i, tt]
-      }
-    } else {
-      stop("No valid model type selected.")
-    }
-
+    f <- fPost[id_f, tt]
     if (nreg != 0) {
       wReg_it <- wReg[(1 + nreg * (i - 1)):(i * nreg), tt]
       f <- c(f, wReg_it)
     }
-
-
     V <- Viarray[, , tt]
     summ <- summ + kronecker(f %*% t(f), solve(V))
   }
@@ -53,30 +36,14 @@ sumffkronV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, Via
 #'
 #' @return summation part
 #' @export
-sumfyV <- function(availableObs, npara, nreg, njointfac, i, fPost, wReg, yiObs, Viarray, type) {
+sumfyV <- function(availableObs, npara, nreg, njointfac, i, id_f, fPost, wReg, yiObs, Viarray, type) {
   summ <- 0
   for (tt in availableObs) {
-    if (type == "allidio") {
-      if (njointfac != 0) {
-        f <- fPost[c(1:njointfac, (njointfac + 1 + npara * (i - 1)):(njointfac + npara * i)), tt] # generalize of no njointfac is included
-      } else {
-        f <- fPost[(njointfac + 1 + npara * (i - 1)):(njointfac + npara * i), tt]
-      }
-    } else if (type == "countryidio" | type == "countryidio_nomu") {
-      if (njointfac != 0) {
-        f <- fPost[c(1:njointfac, njointfac + i), tt] # generalize of no njointfac is included
-      } else {
-        f <- fPost[i, tt]
-      }
-    } else {
-      stop("No valid model type selected.")
-    }
-
+    f <- fPost[id_f, tt]
     if (nreg != 0) {
       wReg_it <- wReg[(1 + nreg * (i - 1)):(i * nreg), tt]
       f <- c(f, wReg_it)
     }
-
     y <- yiObs[, tt]
     V <- Viarray[, , tt]
     summ <- summ + solve(V) %*% y %*% t(f)
@@ -405,7 +372,7 @@ sample_A <- function(countryA, diagA, scaleA,
 }
 compute_B_mean <- function(Omega, invOmega_B0_D0,
                            availableObs, selectR,
-                           num_y, nreg,  njointfac, i,
+                           num_y, nreg,  njointfac, i, id_f,
                            fPost, wReg, yiObs,  Viarray, type) {
   
   beta1_mid <- sumfyV(availableObs,
@@ -413,6 +380,7 @@ compute_B_mean <- function(Omega, invOmega_B0_D0,
                       nreg = nreg,
                       njointfac = njointfac,
                       i = i,
+                      id_f = id_f[, i],
                       fPost = fPost,
                       wReg = wReg,
                       yiObs = yiObs, 
@@ -430,6 +398,7 @@ compute_Omega1 <- function(invOmega0 ,
                            nreg,
                            njointfac, 
                            i,
+                           id_f, 
                            fPost,
                            wReg,
                            Viarray,
@@ -441,12 +410,13 @@ compute_Omega1 <- function(invOmega0 ,
                            incObsNew,
                            iter) {
   ## Posterior Momente fuer die Ladungen und die partiellen Effekte
-  
+
   invOmega1_part2 <- sumffkronV(availableObs,
                                 npara = num_y,
                                 nreg = nreg,
                                 njointfac = njointfac, 
                                 i = i,
+                                id_f = id_f[, i],
                                 fPost = fPost,
                                 wReg = wReg,
                                 Viarray = Viarray,
@@ -610,4 +580,27 @@ get_B <- function(Bjoint, Bidio, num_fac_jnt, NN, num_y, type) {
     }
   }
   return(B)
+}
+get_id_fpost <- function(num_fac_jnt, num_y, NN, type) {
+  id_out <- matrix(0, ncol = NN, nrow = num_fac_jnt + num_y)
+  for (i in 1:NN) {
+    if (type == "allidio") {
+      if (num_fac_jnt != 0) {
+        # generalize of no num_fac_jnt is included
+        id_tmp <- c(1:num_fac_jnt, (num_fac_jnt + 1 + num_y * (i - 1)):(num_fac_jnt + num_y * i))
+      } else {
+        id_tmp <- (num_fac_jnt + 1 + num_y * (i - 1)):(num_fac_jnt + num_y * i)
+      }
+    } else if (type == "countryidio" | type == "countryidio_nomu") {
+      if (num_fac_jnt != 0) {
+        id_tmp <- c(1:num_fac_jnt, num_fac_jnt + i) # generalize of no num_fac_jnt is included
+      } else {
+        id_tmp <- i
+      }
+    } else {
+      stop("No valid model type selected.")
+    }
+    id_out[, i] <- id_tmp
+  }
+  return(id_out)
 }
