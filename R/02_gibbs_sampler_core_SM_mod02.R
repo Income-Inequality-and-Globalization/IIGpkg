@@ -257,8 +257,8 @@ GibbsSSM_2 <- function(itermax = 15000,
       Sigma <- compute_Sigma_adjust(Omega1)
       # Sampling der Ladungen bzw. partiellen Effekte
       B_D_samp <- sample_B_D(mean_B_full = beta1, Sigma,
-                           upper = upper, lower = lower,
-                           num_jnt_fac = njointfac, num_y = num_y)
+                             upper = upper, lower = lower,
+                             num_jnt_fac = njointfac, num_y = num_y)
       Dsamp <- B_D_samp$Dsamp
       Bsamp_jnt <- B_D_samp$Bsamp_jnt
       Bsamp_idi <- B_D_samp$Bsamp_idi
