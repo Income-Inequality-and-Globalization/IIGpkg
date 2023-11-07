@@ -3,15 +3,36 @@
 
 #' Sum in the inverse of the posterior variance for loadings/partial effects
 #'
+#' @param invOmega0 inverse prior matrix
 #' @param availableObs available observations
 #' @param id_f `integer` (sequence); index for selection of correct factors
 #' @param fPost backward sampled states (FFBS output)
-#' @param w_regs 
+#' @param w_regs regressor matrix
 #' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
+#'
+#' @return summation of kronecker products of appropriate dimension
+#'
+compute_Omega1_cpp <- function(invOmega0, availableObs, selectR, fPost, w_regs, Viarray) {
+    .Call(`_IIGpkg_compute_Omega1_cpp`, invOmega0, availableObs, selectR, fPost, w_regs, Viarray)
+}
+
+#' Sum in the inverse of the posterior variance for loadings/partial effects
+#'
+#' @inheritParams compute_Omega1_cpp
 #'
 #' @return summation of kronecker products of appropriate dimension
 #'
 sum_ff_kron_v <- function(availableObs, fPost, w_regs, Viarray) {
     .Call(`_IIGpkg_sum_ff_kron_v`, availableObs, fPost, w_regs, Viarray)
+}
+
+#' Sum in the inverse of the posterior variance for loadings/partial effects
+#'
+#' @inheritParams compute_Omega1_cpp
+#'
+#' @return summation of kronecker products of appropriate dimension
+#'
+sum_f_y_v <- function(availableObs, fPost, w_regs, yiObs, Viarray) {
+    .Call(`_IIGpkg_sum_f_y_v`, availableObs, fPost, w_regs, yiObs, Viarray)
 }
 

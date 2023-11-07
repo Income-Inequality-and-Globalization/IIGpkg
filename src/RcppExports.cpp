@@ -11,6 +11,22 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// compute_Omega1_cpp
+arma::mat compute_Omega1_cpp(const arma::mat& invOmega0, const Rcpp::IntegerVector& availableObs, const arma::mat selectR, const arma::mat& fPost, const arma::mat& w_regs, const arma::cube& Viarray);
+RcppExport SEXP _IIGpkg_compute_Omega1_cpp(SEXP invOmega0SEXP, SEXP availableObsSEXP, SEXP selectRSEXP, SEXP fPostSEXP, SEXP w_regsSEXP, SEXP ViarraySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type invOmega0(invOmega0SEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type availableObs(availableObsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type selectR(selectRSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type fPost(fPostSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type w_regs(w_regsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Viarray(ViarraySEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_Omega1_cpp(invOmega0, availableObs, selectR, fPost, w_regs, Viarray));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sum_ff_kron_v
 arma::mat sum_ff_kron_v(const Rcpp::IntegerVector& availableObs, const arma::mat fPost, const arma::mat w_regs, const arma::cube Viarray);
 RcppExport SEXP _IIGpkg_sum_ff_kron_v(SEXP availableObsSEXP, SEXP fPostSEXP, SEXP w_regsSEXP, SEXP ViarraySEXP) {
@@ -25,9 +41,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sum_f_y_v
+arma::colvec sum_f_y_v(const Rcpp::IntegerVector& availableObs, const arma::mat fPost, const arma::mat w_regs, const arma::mat yiObs, const arma::cube Viarray);
+RcppExport SEXP _IIGpkg_sum_f_y_v(SEXP availableObsSEXP, SEXP fPostSEXP, SEXP w_regsSEXP, SEXP yiObsSEXP, SEXP ViarraySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type availableObs(availableObsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type fPost(fPostSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type w_regs(w_regsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type yiObs(yiObsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube >::type Viarray(ViarraySEXP);
+    rcpp_result_gen = Rcpp::wrap(sum_f_y_v(availableObs, fPost, w_regs, yiObs, Viarray));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_IIGpkg_compute_Omega1_cpp", (DL_FUNC) &_IIGpkg_compute_Omega1_cpp, 6},
     {"_IIGpkg_sum_ff_kron_v", (DL_FUNC) &_IIGpkg_sum_ff_kron_v, 4},
+    {"_IIGpkg_sum_f_y_v", (DL_FUNC) &_IIGpkg_sum_f_y_v, 5},
     {NULL, NULL, 0}
 };
 
