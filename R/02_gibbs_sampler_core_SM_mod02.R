@@ -72,11 +72,11 @@ GibbsSSM_2 <- function(itermax = 15000,
                        wReg,
                        uReg = NULL,
                        B0,
-                       # mu_b0, 
-                       # Sigma_b0,
+                       mu_b0,
+                       Sigma_b0,
                        Omega0,
-                       # alpha_b0,
-                       # beta_b0,
+                       alpha_b0,
+                       beta_b0,
                        selectR,
                        selectC,
                        Vhat,
@@ -104,7 +104,8 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Vhat muss (npara, npara, N * T) Array sein. Start: Alle Zeitpunkte fuer das erste Land.
   # Funktioniert noch nicht fuer npara < njointfac (Geweke)
   # Modell ohne Konstante
-  initials <- as.list(environment()) # speichert die Initialisierung
+  # browser()
+  initials <- get_initials(as.list(environment())) # speichert die Initialisierung
   # DEBUG_ITER <- 464
   Vhat             <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
   store_count      <- 0 # zaehlt wie oft bereits zwischengespeichert wurde
