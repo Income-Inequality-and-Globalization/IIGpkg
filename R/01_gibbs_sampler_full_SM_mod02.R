@@ -70,11 +70,6 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
                                  sampleA,
                                  identification,
                                  type = "allidio") {
-  mu_b0_par    <- prior_list$hyperpriors$mu_b0_par
-  Sigma_b0_par <- prior_list$hyperpriors$Sigma_b0_par
-  alpha_b0_par <- prior_list$hyperpriors$alpha_b0_par
-  beta_b0_par  <- prior_list$hyperpriors$beta_b0_par
-  
   ## Number of parameters from GMM estimation: a, q, mu
   npara <- 3
 
@@ -86,7 +81,11 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
     selectR <- diag(selectR_vec)[-which(selectR_vec == 0), ]
     selectC <- rep(0, npara + npara * p_joint)
 
-    OmegaLoad0 <- OmegaLoad0Scale * diag(npara * (p_joint + npara))
+    if (is.null(prior_list)) {
+      OmegaLoad0 <- OmegaLoad0Scale * diag(npara * (p_joint + npara))
+    } else {
+      OmegaLoad0 <- OmegaLoad0Scale * diag((p_joint + npara))
+    }
   } else if (type == "countryidio") {
     p <- N + p_joint
     # Selection matrices
@@ -141,6 +140,14 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
 
   Vhat <- array(apply(Vhat, 3, covarianceScale, scale = covScale), c(npara, npara, N * TT))
 
+  if (!is.null(prior_list)) {
+    ncoef    <- sum(selectR)
+    prior_list$hyperpriors$mu_b0    <- rep(prior_list$hyperpriors$mu_b0, ncoef)
+    prior_list$hyperpriors$Sigma_b0 <- diag(prior_list$hyperpriors$Sigma_b0, ncoef)
+    prior_list$hyperpriors$alpha_b0 <- rep(prior_list$hyperpriors$alpha_b0, ncoef)
+    prior_list$hyperpriors$beta_b0  <- rep(prior_list$hyperpriors$beta_b0, ncoef)
+  }
+  
   identmax <- 1000
   itermax <- itermax
   storePath <- storePath
