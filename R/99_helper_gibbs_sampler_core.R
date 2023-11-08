@@ -215,9 +215,13 @@ makeBi <- function(npara, N, p, p_joint, B_stack, type = "allidio") { # type = c
 #' @return partial effects matrix and array for starting
 #' @export
 makeDstart <- function(npara, N, nreg, D_par) {
-  Dmat <- matrix(D_par, nrow = npara, ncol = nreg)
-  Dstack <- kronecker(diag(N), Dmat)
+  # Dmat <- matrix(D_par, nrow = npara, ncol = nreg)
+  # Dstack <- kronecker(diag(N), Dmat)
+  # D_i <- array(D_par, c(npara, nreg, N))
+  # return(list(Dstack = Dstack, D_i = D_i))
   D_i <- array(D_par, c(npara, nreg, N))
+  Dstack <- as.matrix(Matrix::bdiag(plyr::alply(D_i, 3)))
+
   return(list(Dstack = Dstack, D_i = D_i))
 }
 set_scale_Vhat <- function(Vhat, inc_obs_old, inc_obs_new) {
