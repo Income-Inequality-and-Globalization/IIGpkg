@@ -40,6 +40,7 @@
 Gibbs2_SM_SA_sampler <- function(p_joint,
                                  B_par,
                                  D_par,
+                                 prior_list = NULL,
                                  nreg,
                                  OmegaLoad0Scale,
                                  OmegaReg0Scale,
@@ -69,6 +70,11 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
                                  sampleA,
                                  identification,
                                  type = "allidio") {
+  mu_b0_par    <- prior_list$hyperpriors$mu_b0_par
+  Sigma_b0_par <- prior_list$hyperpriors$Sigma_b0_par
+  alpha_b0_par <- prior_list$hyperpriors$alpha_b0_par
+  beta_b0_par  <- prior_list$hyperpriors$beta_b0_par
+  
   ## Number of parameters from GMM estimation: a, q, mu
   npara <- 3
 
@@ -140,6 +146,8 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
   storePath <- storePath
   storeUnit <- 10000
 
+  prior_list$priors$B0 <- B_prior_i
+  prior_list$priors$Omega0 <- Omega0
   start <- Sys.time()
   set.seed(123)
   Gibbs2_SM_SA <- GibbsSSM_2(
@@ -161,8 +169,7 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
     initU = initU,
     wRegSpec = wRegSpec,
     wReg = wReg,
-    B0 = B_prior_i,
-    Omega0 = Omega0,
+    prior_list = prior_list,
     selectR = selectR,
     selectC = selectC,
     Vhat = Vhat,

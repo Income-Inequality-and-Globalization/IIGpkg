@@ -71,12 +71,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                        wRegSpec,
                        wReg,
                        uReg = NULL,
-                       B0,
-                       mu_b0,
-                       Sigma_b0,
-                       Omega0,
-                       alpha_b0,
-                       beta_b0,
+                       prior_list,
                        selectR,
                        selectC,
                        Vhat,
@@ -106,6 +101,12 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Modell ohne Konstante
   # browser()
   initials <- get_initials(as.list(environment())) # speichert die Initialisierung
+  B0       <- prior_list$priors$B0
+  mu_b0    <- prior_list$hyperpriors$mu_b0_par
+  Sigma_b0 <- prior_list$hyperpriors$Sigma_b0
+  Omega0   <- prior_list$priors$Omega0
+  alpha_b0 <- prior_list$hyperpriors$alpha_b0
+  beta_b0  <- prior_list$hyperpriors$beta_b0
   # DEBUG_ITER <- 464
   Vhat             <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
   store_count      <- 0 # zaehlt wie oft bereits zwischengespeichert wurde

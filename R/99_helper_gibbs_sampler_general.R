@@ -193,7 +193,19 @@ get_initials <- function(envir_list) {
     "identification",
     "storeUnit"
   )
-  remove_names <- c("alpha_b0", "beta_b0", "mu_b0", "Sigma_b0")
+  # browser()
+  prior_list <- envir_list[["prior_list"]]
+  remove_names <- c("prior_list")
   envir_list[remove_names] <- NULL
-  return(envir_list)
+  envir_list_out <- envir_list[1:19]
+  envir_list_out$B0     <- prior_list$priors$B0
+  envir_list_out$Omega0 <- prior_list$priors$Omega0
+  envir_list_out <- c(envir_list_out, envir_list[20:43])
+  # B0       <- prior_list$priors$B0
+  # mu_b0    <- prior_list$hyperpriors$mu_b0_par
+  # Sigma_b0 <- prior_list$hyperpriors$Sigma_b0
+  # Omega0   <- prior_list$priors$Omega0
+  # alpha_b0 <- prior_list$hyperpriors$alpha_b0
+  # beta_b0  <- prior_list$hyperpriors$beta_b0
+  return(envir_list_out)
 }
