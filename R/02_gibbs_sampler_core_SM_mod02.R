@@ -231,9 +231,11 @@ GibbsSSM_2 <- function(itermax = 15000,
                                 fPost, VhatArray_A, w_reg_info,
                                 invOmega0, invOmega0_B0_D0, 
                                 id_f, selectR, lower, upper, 
-                                NN, TT, N_num_y, num_y, num_fac_jnt)
+                                NN, TT, N_num_y, num_y, num_fac_jnt,
+                                type)
     DSTORE[, , iter] <- B_post_all$Dregs
     BSTORE[, , iter] <- B_post_all$Bfacs
+    B <- B_post_all$Bfacs
     if (nreg != 0) D <- DSTORE[, , iter]
     # if (iter == DEBUG_ITER) browser()
     ############################################################################

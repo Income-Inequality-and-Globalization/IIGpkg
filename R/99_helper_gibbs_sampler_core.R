@@ -488,7 +488,7 @@ get_identificiation_restrictions <- function(type, num_joint_fac,
   }
   return(list(upper = upper, lower = lower))
 }
-sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y, LEGACY = FALSE) {
+sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y, LEGACY = TRUE) {
   # BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
   # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
   # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
@@ -605,7 +605,8 @@ sample_B_full <- function(yObs, availableObs_crossSection,
                           fPost, VhatArray_A, w_reg_info,
                           invOmega0, invOmega0_B0_D0, 
                           id_f, selectR, lower, upper, 
-                          NN, TT, N_num_y, num_y, num_fac_jnt) {
+                          NN, TT, N_num_y, num_y, num_fac_jnt,
+                          type) {
   # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
   Bjoint <- matrix(rep(0, N_num_y * num_fac_jnt), ncol = num_fac_jnt)
   # Ergebnis-Matrix fuer die idiosynkratischen Ladungen (wird spaeter befuellt)
