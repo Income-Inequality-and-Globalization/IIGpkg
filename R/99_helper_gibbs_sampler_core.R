@@ -3,12 +3,7 @@
 #' @param availableObs available observations
 #' @param id_f `integer` (sequence); index for selection of correct factors
 #' @param fPost backward sampled states (FFBS output)
-#' @param w_reg_info a named list of two elements 
-#' \itemize{
-#'    \item{w_reg}{ regressor matrix}
-#'    \item{id_reg}{ `integer` (sequence); index for selection of correct 
-#'    regressors}
-#' }
+#' @param w_regs 
 #' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
 #'
 #' @return  cronecker summation part
@@ -417,7 +412,6 @@ compute_Omega1 <- function(invOmega0 ,
                            Viarray,
                            try_catch_errors) {
   ## Posterior Momente fuer die Ladungen und die partiellen Effekte
-
   invOmega1_part2 <- sumffkronV(availableObs,
                                 fPost = fPost,
                                 w_regs = w_regs,
@@ -494,7 +488,7 @@ get_identificiation_restrictions <- function(type, num_joint_fac,
   }
   return(list(upper = upper, lower = lower))
 }
-sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y, LEGACY = TRUE) {
+sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y, LEGACY = FALSE) {
   # BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
   # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
   # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
@@ -508,8 +502,7 @@ sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num
   } else {
     Bsamp_full <- tmvtnorm::rtmvnorm(1, mean = mean_B_full,
                                      sigma = sigma_B_full,
-                                     lower = lower, upper = upper,
-                                     algorithm = "gibbsR")
+                                     lower = lower, upper = upper)
   }
     
   get_BD_samp(Bsamp_full, num_jnt_fac, num_y)
@@ -551,7 +544,6 @@ get_BD_samp <- function(Bsamp_full, num_jnt_fac, num_y) {
   return(list(Bsamp_idi = idioFac, Bsamp_jnt = jointFac,
               Dsamp = Bsamp_full[-(1:((num_jnt_fac + 1) * num_y))]))
 }
-
 compute_invOmega0_B0_D0 <- function(invOmega0, B0, D0) {
   NN <- dim(B0)[3]
   out <- list(NN)
