@@ -20,3 +20,8 @@
 ^tmp-dir/
 ^data/
 ^LICENSE\.md$
+
+^./R/999_Gibbs2_SM_SA_sampler_alt\.R
+^./R/999_Gibbs2_SM_SA_sampler\.R
+^./R/999_GibbsSSM_2_alt\.R
+^./R/999_GibbsSSM_2\.R
