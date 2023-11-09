@@ -3,8 +3,8 @@
 .RData
 .Ruserdata
 .quarto
-.o
-.so
+src/*.o
+src/*.so
 
 
 run_cluster.R
