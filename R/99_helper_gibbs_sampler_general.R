@@ -193,7 +193,7 @@ get_initials <- function(envir_list) {
     "identification",
     "storeUnit"
   )
-  # browser()
+
   prior_list <- envir_list[["prior_list"]]
   remove_names <- c("prior_list")
   envir_list[remove_names] <- NULL
