@@ -3,16 +3,19 @@
 .RData
 .Ruserdata
 .quarto
+.o
+.so
+
 
 run_cluster.R
 data_sim.R
 data_sim_helpers.R
 data_simulation.R
 plot_functions_ACF.R
-include/legacy-code
 
 IIGpkg.Rproj
 tests
 data
+inst
 figures
 /.quarto/
