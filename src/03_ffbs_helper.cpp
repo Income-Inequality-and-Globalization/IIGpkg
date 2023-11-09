@@ -1,4 +1,5 @@
 #include "03_ffbs_helper.h"
+//[[Rcpp::export]]
 arma::mat compute_mat_reg(const arma::mat& mat, 
                           const arma::mat& reg) {
   // int dim,
@@ -6,7 +7,8 @@ arma::mat compute_mat_reg(const arma::mat& mat,
   // if (is.null(mat) || is.null(reg)) return(matrix(0, nrow = dim, ncol = lenT))
   return(mat * reg);
 }
-arma::mat copute_Xtt_1(const arma::mat& A, const arma::mat& xtt) {
+//[[Rcpp::export]]
+arma::mat compute_Xtt_1(const arma::mat& A, const arma::mat& xtt) {
   // , BuReg, dimX) {
   // if (dimX == 1) return(A*xtt + BuReg)
   return(A * xtt);
@@ -15,7 +17,8 @@ arma::mat copute_Xtt_1(const arma::mat& A, const arma::mat& xtt) {
   //     A %*% xtt + BuReg
   // }
 }
-arma::mat compute_ptt_1(const arma::mat& A,
+//[[Rcpp::export]]
+arma::mat compute_Ptt_1(const arma::mat& A,
                         const arma::mat&Ptt,
                         const arma::mat&Q) {
   // computePtt1 <- function(A, Ptt, Q) {
@@ -24,6 +27,7 @@ arma::mat compute_ptt_1(const arma::mat& A,
   // }
   return(A * Ptt * A.t() + Q);
 }
+//[[Rcpp::export]]
 arma::mat compute_Lt(const arma::mat& C,
                      const arma::mat& Ptt1,
                      const arma::mat& R) {
@@ -38,19 +42,21 @@ arma::mat compute_Lt(const arma::mat& C,
   //   R_inv - R_inv %*% C %*% PCRC %*% t(C) %*% R_inv
   // }
   arma::mat R2 = 0.5 * (R + R.t());
-  arma::mat R_inv = arma::inv(R);
+  arma::mat R_inv = arma::inv(R2);
   arma::mat P = 0.5 * (Ptt1 + Ptt1.t());
   arma::mat P_inv = arma::inv(P);
   
   arma::mat PCRC = arma::inv(P_inv + C.t() * R_inv * C);
   return(R_inv - R_inv * C * PCRC * C.t() * R_inv);
 }
+//[[Rcpp::export]]
 arma::mat compute_Kt(const arma::mat& Ptt1, const arma::mat& C) {
   // computeKt <-function(Ptt1, C) {
   //   tcrossprod(Ptt1, C)
   // }
   return(Ptt1 * C.t());
 }
+//[[Rcpp::export]]
 arma::mat compute_kG(const arma::mat& yObs, const arma::mat& C,
                      const arma::mat& xtt1, const arma::mat& DwReg) {
   // computekG <- function(yObs, C, xtt1, DwReg) {
@@ -58,6 +64,7 @@ arma::mat compute_kG(const arma::mat& yObs, const arma::mat& C,
   // }
   return(yObs - C * xtt1 - DwReg);
 }
+//[[Rcpp::export]]
 arma::mat compute_Xtt(const arma::mat& xtt1, const arma::mat& Kt,
                       const arma::mat& Lt, const arma::mat& kGain) {
   // computeXtt <- function(xtt1, Kt, Lt, kGain) {
@@ -65,6 +72,7 @@ arma::mat compute_Xtt(const arma::mat& xtt1, const arma::mat& Kt,
   // }
   return(xtt1 + Kt * Lt * kGain);
 }
+//[[Rcpp::export]]
 arma::mat compute_Ptt(const arma::mat& Ptt1, const arma::mat& Kt,
                       const arma::mat& Lt, const arma::mat& C, 
                       const arma::mat& R) {
