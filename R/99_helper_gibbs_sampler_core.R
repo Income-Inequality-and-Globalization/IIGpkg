@@ -407,7 +407,6 @@ compute_B_mean <- function(Omega,
                            availableObs, selectR,
                            fPost, w_regs,
                            yiObs,  Viarray) {
-  # browser()
   beta1_mid <- sumfyV(availableObs,
                       fPost = fPost,
                       w_regs = w_regs,
@@ -431,7 +430,7 @@ compute_Omega1 <- function(invOmega0 ,
                                 fPost = fPost,
                                 w_regs = w_regs,
                                 Viarray = Viarray)
-  # browser()
+
   invOmega1 <- invOmega0 + selectR %*% invOmega1_part2  %*% t(selectR)
   # invOmega1 <- invOmega0 + invOmega1_part2
   
@@ -631,9 +630,10 @@ sample_B_full <- function(yObs, availableObs_crossSection,
   # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
   Bjoint <- matrix(rep(0, N_num_y * num_fac_jnt), ncol = num_fac_jnt)
   # Ergebnis-Matrix fuer die idiosynkratischen Ladungen (wird spaeter befuellt)
-  Bidio <- matrix(rep(0, N_num_y), ncol = NN)
-  nregs <- w_reg_info$nregs
-  Dregs <- matrix(0, N_num_y, NN * nregs)
+  Bidio   <- matrix(rep(0, N_num_y), ncol = NN)
+  nregs   <- w_reg_info$nregs
+  Dregs   <- matrix(0, N_num_y, NN * nregs)
+  Dregs_i <- array(0, dim = c(num_y, nregs, NN))
   for (i in 1:NN) {
     # Vhat Array for cross-sectional unit (country) i
     Viarray <- VhatArray_A[, , (1 + (i - 1) * TT):(i * TT)]
@@ -674,6 +674,7 @@ sample_B_full <- function(yObs, availableObs_crossSection,
     if (nregs != 0) {
       Dregs[(1 + num_y * (i - 1)):(i * num_y),
             (1 + nregs * (i - 1)):(i * nregs)] <- Dsamp
+      Dregs_i[, , i] <- Dsamp
     }
     if (num_fac_jnt != 0) {
       Bjoint[((i - 1) * num_y + 1):(i * num_y), ] <- Bsamp_jnt
@@ -685,5 +686,6 @@ sample_B_full <- function(yObs, availableObs_crossSection,
   Bfacs_i <- makeBi(npara = num_y, N = NN, p = num_par_all,
                     p_joint = num_fac_jnt, B_stack = Bfacs,
                     type = type)
-  return(list(Bfacs = Bfacs, Dregs = Dregs, Bfacs_i = Bfacs_i))
+  return(list(Bfacs = Bfacs, Dregs = Dregs, 
+              Bfacs_i = Bfacs_i, Dregs_i = Dregs_i))
 }

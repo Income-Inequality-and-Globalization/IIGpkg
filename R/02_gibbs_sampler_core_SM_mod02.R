@@ -99,17 +99,16 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Vhat muss (npara, npara, N * T) Array sein. Start: Alle Zeitpunkte fuer das erste Land.
   # Funktioniert noch nicht fuer npara < njointfac (Geweke)
   # Modell ohne Konstante
-  # browser()
   initials <- get_initials(as.list(environment())) # speichert die Initialisierung
   B0       <- prior_list$priors$B0
   Omega0   <- prior_list$priors$Omega0
-  HYPER_SAMPLE <- FALSE
+  sampleH  <- FALSE
   if (!is.null(prior_list$hyperpriors)) {
-    mu_b0    <- prior_list$hyperpriors$mu_b0_par
+    mu_b0    <- prior_list$hyperpriors$mu_b0
     Sigma_b0 <- prior_list$hyperpriors$Sigma_b0
     alpha_b0 <- prior_list$hyperpriors$alpha_b0
     beta_b0  <- prior_list$hyperpriors$beta_b0
-    HYPER_SAMPLE <- TRUE
+    sampleH  <- TRUE
   }
   # DEBUG_ITER <- 464
   Vhat             <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
@@ -118,7 +117,6 @@ GibbsSSM_2 <- function(itermax = 15000,
   w_reg_spec       <- set_reg_specification(wRegSpec)
   msg_error_kf     <- NULL
 
-  # browser()
   num_y   <- npara
   N_num_y <- dim(B)[1] # N * number of components in y
   num_fac <- dim(B)[2] # number of factors
@@ -141,8 +139,8 @@ GibbsSSM_2 <- function(itermax = 15000,
   ) 
 
   Omega0_legacy <- Omega0
-  if (HYPER_SAMPLE) {
-    invOmega0 <- NULL
+  if (sampleH) {
+    invOmega0 <- solve(Omega0)
     # invOmega0_B0_D0 <- NULL
   } else {
     invOmega0 <- solve(Omega0)
@@ -260,11 +258,33 @@ GibbsSSM_2 <- function(itermax = 15000,
                                 id_f, selectR, lower, upper, 
                                 NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
                                 type)
+                                # if (sampleH),)
     DSTORE[, , iter] <- B_post_all$Dregs
+    DiSTORE          <- B_post_all$Dregs_i # if (sampleH)
     BSTORE[, , iter] <- B_post_all$Bfacs
     B   <- B_post_all$Bfacs
     B_i <- B_post_all$Bfacs_i 
     if (nreg != 0) D <- DSTORE[, , iter]
+    #### GIBBS Part : Sampling of B0, D0, and Omega0
+    if (sampleH) {
+      BD_0 <- mu_sampler(NN = NN, npara = num_y, nreg = nreg, 
+                         njointfac = num_fac_jnt,
+                         B0 = B0, D0 = D0,
+                         B_i = B_i, 
+                         D_i = DiSTORE,
+                         invOmega0 = invOmega0, mu_b0 = mu_b0, Sigma_b0 = Sigma_b0, 
+                         selectR = selectR, type = type)
+      B0 <- BD_0$B0
+      D0 <- BD_0$D0
+      BD0STORE[, iter] <- selectR %*% c(B0[,,1], D0[,,1])
+      
+      Omega0 <- omega_sampler(NN = NN, 
+                              B_i = B_i, D_i = DiSTORE,
+                              B0 = B0, D0 = D0, 
+                              alpha_b0 = alpha_b0, beta_b0 = beta_b0, 
+                              selectR = selectR)
+      Omega0STORE[, iter] <- diag(Omega0) 
+    }
     # if (iter == DEBUG_ITER) browser()
     ############################################################################
     ######### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A ##########
@@ -308,9 +328,14 @@ GibbsSSM_2 <- function(itermax = 15000,
     }
     print(iter)
   }
-  return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, 
-              blockCount = block_count, errorMsg = msg_error_kf,
-              initials = initials))
+  out_list <- list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, 
+                   blockCount = block_count, errorMsg = msg_error_kf,
+                   initials = initials)
+  if (sampleH) {
+    out_list$BD0STORE    <- BD0STORE
+    out_list$Omega0STORE <- Omega0STORE
+  }
+  return(out_list)
 }
 ############################################################################
 ## GIBBS sampler Iteration ENDE
