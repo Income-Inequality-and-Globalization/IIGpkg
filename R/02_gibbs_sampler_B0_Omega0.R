@@ -20,7 +20,7 @@ mu_sampler <- function(NN, npara, nreg,
                        njointfac,
                        B0, D0,
                        B_i, D_i, 
-                       invOmega0, mu_b0, Sigma_b0, 
+                       invOmega0, mu_b0, Sigma_b0,
                        selectR, type) {
   BD <- sapply(1:NN, \(x) selectR %*% c(B_i[, , x], D_i[, , x]))
   meanBD <- apply(BD, 1, mean)
@@ -31,8 +31,7 @@ mu_sampler <- function(NN, npara, nreg,
 
   mu0_sim <- mvtnorm::rmvnorm(n = 1, mean = mu_b1, sigma = Sigma_b1)
 
-  # B0vec <- mu0_sim[1:((njointfac + 1) * npara)]
-  browser()
+  B0vec <- mu0_sim[1:((njointfac + 1) * npara)]
   D0vec <- mu0_sim[-(1:((njointfac + 1) * npara))]
   D0 <- replicate(NN, matrix(D0vec, nrow = npara, ncol = nreg))
 
@@ -53,6 +52,8 @@ mu_sampler <- function(NN, npara, nreg,
   # } else {
   #   B0 <- diag(idioFac)
   # }
+  idioFac <- B0vec
+  B0 <- diag(idioFac)
   B0 <- replicate(NN, B0)
   return(list(B0 = B0, D0 = D0))
 }
