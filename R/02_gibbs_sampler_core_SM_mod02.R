@@ -102,11 +102,15 @@ GibbsSSM_2 <- function(itermax = 15000,
   # browser()
   initials <- get_initials(as.list(environment())) # speichert die Initialisierung
   B0       <- prior_list$priors$B0
-  mu_b0    <- prior_list$hyperpriors$mu_b0_par
-  Sigma_b0 <- prior_list$hyperpriors$Sigma_b0
   Omega0   <- prior_list$priors$Omega0
-  alpha_b0 <- prior_list$hyperpriors$alpha_b0
-  beta_b0  <- prior_list$hyperpriors$beta_b0
+  HYPER_SAMPLE <- FALSE
+  if (!is.null(prior_list$hyperpriors)) {
+    mu_b0    <- prior_list$hyperpriors$mu_b0_par
+    Sigma_b0 <- prior_list$hyperpriors$Sigma_b0
+    alpha_b0 <- prior_list$hyperpriors$alpha_b0
+    beta_b0  <- prior_list$hyperpriors$beta_b0
+    HYPER_SAMPLE <- TRUE
+  }
   # DEBUG_ITER <- 464
   Vhat             <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
   store_count      <- 0 # zaehlt wie oft bereits zwischengespeichert wurde
@@ -120,6 +124,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   num_fac <- dim(B)[2] # number of factors
   num_fac_jnt <- njointfac
   num_fac_idi <- num_fac - num_fac_jnt
+  num_par_all <- N_num_y + num_fac_jnt
   # Anzahl der Laender:
   NN       <- N_num_y / num_y
   # Anzahl der Zeitpunkte:
@@ -135,13 +140,27 @@ GibbsSSM_2 <- function(itermax = 15000,
     apply(yObs[seq(1, N_num_y, 3), ],  1, \(x) !is.na(x))
   ) 
 
-  invOmega0 <- solve(Omega0)
-  invOmega0_B0_D0 <- compute_invOmega0_B0_D0(invOmega0, B0, D0) 
+  Omega0_legacy <- Omega0
+  if (HYPER_SAMPLE) {
+    invOmega0 <- NULL
+    # invOmega0_B0_D0 <- NULL
+  } else {
+    invOmega0 <- solve(Omega0)
+    # invOmega0_B0_D0 <- compute_invOmega0_B0_D0(invOmega0, B0, D0)
+    # Omega0 <- NULL
+    # B0 <- NULL
+    # D0 <- NULL
+  }
 
   # Container fuer Gibbs-Zuege fuer f, B, D, A, V
-  fSTORE <- set_f_out(num_fac, TT, itermax)
-  BSTORE <- set_B_out(N_num_y, num_fac, itermax)
-  DSTORE <- set_D_out(N_num_y, NN, nreg, itermax)
+  fSTORE  <- set_f_out(num_fac, TT, itermax)
+  BSTORE  <- set_B_out(N_num_y, num_fac, itermax)
+  DSTORES <- set_D_out(N_num_y, NN, nreg, itermax)
+  DSTORE  <- DSTORES$DSTORE
+  DiSTORE <- DSTORES$DiSTORE
+  # uSTORE <- array(0, dim = c(N_num_y, TT, itermax) )
+  BD0STORE    <- matrix(0, nrow = sum(selectR), ncol = itermax)
+  Omega0STORE <- matrix(0, nrow = sum(selectR), ncol = itermax)
 
   # Availability of regressors
   if (is.null(DSTORE)) {W_REG_AVAIL <- TRUE} else {W_REG_AVAIL <- TRUE}
@@ -185,7 +204,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   store_paths <- set_store_path_subdir(
     storePath, VdiagEst, sampleA,
     initials, Vstart, covScale, njointfac,
-    w_reg_spec, Omega0, incObsNew
+    w_reg_spec, Omega0_legacy, incObsNew
   )
   storePath_adj <- store_paths$store_path_adj
   storePath_rds <- store_paths$store_path_rds
@@ -235,13 +254,16 @@ GibbsSSM_2 <- function(itermax = 15000,
     ##### effects (on regressors)
     B_post_all <- sample_B_full(yObs, availableObs_crossSection, 
                                 fPost, VhatArray_A, w_reg_info,
-                                invOmega0, invOmega0_B0_D0, 
+                                # invOmega0 = invOmega0, 
+                                # invOmega0_B0_D0 = invOmega0_B0_D0,
+                                Omega0 = Omega0, B0 = B0, D0 = D0,
                                 id_f, selectR, lower, upper, 
-                                NN, TT, N_num_y, num_y, num_fac_jnt,
+                                NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
                                 type)
     DSTORE[, , iter] <- B_post_all$Dregs
     BSTORE[, , iter] <- B_post_all$Bfacs
-    B <- B_post_all$Bfacs
+    B   <- B_post_all$Bfacs
+    B_i <- B_post_all$Bfacs_i 
     if (nreg != 0) D <- DSTORE[, , iter]
     # if (iter == DEBUG_ITER) browser()
     ############################################################################

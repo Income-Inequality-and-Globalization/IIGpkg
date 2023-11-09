@@ -240,7 +240,8 @@ set_B_out <- function(N_num_y, num_fac, itermax) {
 set_D_out <- function(N_num_y, NN, nreg, itermax) {
   if (nreg != 0) {
     # speichert die Koeffizienten der Makroregressor-Koeffizienten
-    return(array(0, dim = c(N_num_y, NN * nreg, itermax)))
+    return(list(DSTORE = array(0, dim = c(N_num_y, NN * nreg, itermax)),
+                DiSTORE = array(0, dim = c(N_num_y / NN, nreg, NN))))
   } else {
     return(NULL)
   }
@@ -377,33 +378,43 @@ sample_A <- function(countryA, diagA, scaleA,
     return(A)
   }
 }
-compute_B_post_full <- function(availableObs, invOmega0, invOmega_B0_D0,
+compute_B_post_full <- function(availableObs, 
+                                invOmega0, B0_D0,
+                                # invOmega_B0_D0,
+                                # Omega0,
                                 fPost, w_regs, Viarray, yiObs, selectR,
                                 try_catch_errors) {
-  B_Omega <- compute_Omega1(invOmega0 ,
+  B_Omega <- compute_Omega1(invOmega0,
                             availableObs,
                             selectR,
                             fPost,
                             w_regs,
                             Viarray,
                             try_catch_errors) 
-  B_mean <- compute_B_mean(B_Omega, invOmega_B0_D0,
+  B_mean <- compute_B_mean(B_Omega,
+                           invOmega0,
+                           B0_D0,
+                           # invOmega_B0_D0,
                            availableObs, selectR,
                            fPost, w_regs,
                            yiObs,  Viarray)
   B_Sigma <- compute_Sigma_adjust(B_Omega)
   return(list(B_mean = B_mean, B_Sigma = B_Sigma))
 }
-compute_B_mean <- function(Omega, invOmega_B0_D0,
+compute_B_mean <- function(Omega, 
+                           invOmega0,
+                           B0_D0,
                            availableObs, selectR,
                            fPost, w_regs,
                            yiObs,  Viarray) {
+  # browser()
   beta1_mid <- sumfyV(availableObs,
                       fPost = fPost,
                       w_regs = w_regs,
                       yiObs = yiObs, 
                       Viarray = Viarray)
-  drop(Omega %*% (selectR %*% (beta1_mid + invOmega_B0_D0)))
+  # drop(Omega %*% (selectR %*% (beta1_mid + invOmega_B0_D0)))
+  drop(Omega %*% (selectR %*% beta1_mid + invOmega0 %*% selectR %*% B0_D0))
   # return(Omega %*% (selectR %*% (c(beta1_mid) + invOmega %*% c(B0, D0))))
   # beta1 <- Omega1 %*% (c(beta1_mid) + invOmega0 %*%  c(B0[,,i]) )
   # beta1 <- Omega1 %*% (selectR %*% (c(beta1_mid) + invOmega0 %*% c(B0[, , i], D0[, , i])))
@@ -420,12 +431,15 @@ compute_Omega1 <- function(invOmega0 ,
                                 fPost = fPost,
                                 w_regs = w_regs,
                                 Viarray = Viarray)
-  invOmega1 <- invOmega0 + invOmega1_part2
+  # browser()
+  invOmega1 <- invOmega0 + selectR %*% invOmega1_part2  %*% t(selectR)
+  # invOmega1 <- invOmega0 + invOmega1_part2
   
   if (isFALSE(is.null(try_catch_errors))) {
     tryCatch(
       {
-        solve(selectR %*% invOmega1 %*% t(selectR))
+        solve(invOmega1)
+        # solve(selectR %*% invOmega1 %*% t(selectR))
       },
       error = function(e) {
         # print(invOmega1)
@@ -439,11 +453,13 @@ compute_Omega1 <- function(invOmega0 ,
             file = paste0(try_catch_errors$storePath_omg, "_",
                           try_catch_errors$iter))
         }
-        solve(selectR %*% invOmega1 %*% t(selectR), tol = 0)
+        solve(invOmega1, tol = 0)
+        # solve(selectR %*% invOmega1 %*% t(selectR), tol = 0)
       }
     )
   }
-  return(solve(selectR %*% invOmega1 %*% t(selectR)))
+  return(solve(invOmega1))
+  # return(solve(selectR %*% invOmega1 %*% t(selectR)))
 }
 compute_Sigma_adjust <- function(Omega) {
   0.5 * Omega + 0.5 * t(Omega)
@@ -607,9 +623,10 @@ get_id_wreg <- function(num_w_reg, NN) {
 }
 sample_B_full <- function(yObs, availableObs_crossSection, 
                           fPost, VhatArray_A, w_reg_info,
-                          invOmega0, invOmega0_B0_D0, 
+                          # invOmega0, invOmega0_B0_D0,
+                          Omega0, B0, D0,
                           id_f, selectR, lower, upper, 
-                          NN, TT, N_num_y, num_y, num_fac_jnt,
+                          NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
                           type) {
   # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
   Bjoint <- matrix(rep(0, N_num_y * num_fac_jnt), ncol = num_fac_jnt)
@@ -625,12 +642,14 @@ sample_B_full <- function(yObs, availableObs_crossSection,
     # availableObs <- which(!is.na(yObs[1 + num_y * (i-1),]))
     availableObs <- which(availableObs_crossSection[i, ])
     f_post_i <- fPost[id_f[, i], ]
-    invOmega0_B0_D0_i <- invOmega0_B0_D0[[i]]
+    # invOmega0_B0_D0_i <- invOmega0_B0_D0[[i]]
+    B0_D0_i  <- c(B0[, , i], D0[, , i])
     w_regs_i <- w_reg_info$w_reg[w_reg_info$id_reg[, i], ]
-    
+    invOmega0_i <- solve(Omega0)
     B_post <- compute_B_post_full(availableObs = availableObs,
-                                  invOmega0 = invOmega0,
-                                  invOmega_B0_D0 = invOmega0_B0_D0_i,
+                                  invOmega0 = invOmega0_i,
+                                  B0_D0 = B0_D0_i,
+                                  # invOmega_B0_D0 = invOmega0_B0_D0_i,
                                   fPost = f_post_i,
                                   w_regs = w_regs_i,
                                   Viarray = Viarray,
@@ -663,5 +682,8 @@ sample_B_full <- function(yObs, availableObs_crossSection,
   }
   Bfacs <- get_B(Bjoint, Bidio, num_fac_jnt = num_fac_jnt,
                  NN = NN, num_y = num_y, type = type)
-  return(list(Bfacs = Bfacs, Dregs = Dregs))
+  Bfacs_i <- makeBi(npara = num_y, N = NN, p = num_par_all,
+                    p_joint = num_fac_jnt, B_stack = Bfacs,
+                    type = type)
+  return(list(Bfacs = Bfacs, Dregs = Dregs, Bfacs_i = Bfacs_i))
 }

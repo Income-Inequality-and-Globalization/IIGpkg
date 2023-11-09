@@ -81,11 +81,11 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
     selectR <- diag(selectR_vec)[-which(selectR_vec == 0), ]
     selectC <- rep(0, npara + npara * p_joint)
 
-    if (is.null(prior_list)) {
-      OmegaLoad0 <- OmegaLoad0Scale * diag(npara * (p_joint + npara))
-    } else {
+    # if (is.null(prior_list)) {
+    #   OmegaLoad0 <- OmegaLoad0Scale * diag(npara * (p_joint + npara))
+    # } else {
       OmegaLoad0 <- OmegaLoad0Scale * diag((p_joint + npara))
-    }
+    # }
   } else if (type == "countryidio") {
     p <- N + p_joint
     # Selection matrices
