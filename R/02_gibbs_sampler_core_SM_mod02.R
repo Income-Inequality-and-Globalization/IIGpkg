@@ -332,7 +332,6 @@ GibbsSSM_2 <- function(itermax = 15000,
     }
     print(iter)
   }
-  browser()
   out_list <- get_outlist_Gibbs_sampler(fSTORE, BSTORE, DSTORE,
                                         ASTORE, VSTORE, uSTORE,
                                         BD0STORE, Omega0STORE,
