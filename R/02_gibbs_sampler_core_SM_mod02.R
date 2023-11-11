@@ -31,11 +31,11 @@
 #'    Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden 
 #'    soll. `Diag_VCOV = TRUE` muss in der top-level Function gesetzt werden,
 #'    damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn
-#'    `VhatDiagScale = TRUE` ist muss auch `VdiagEst = TRUE` sein.
+#'    `VhatDiagScale = TRUE` ist muss auch `sampleV = TRUE` sein.
 #' @param VhatDiagScale_start Startwert fuer die Skalierungsfaktoren
-#' @param VdiagEst (wahrscheinlich irrelevant) = TRUE, wenn die diagonale Messfehlervarianz geschaetzt werden soll. (Fuer uns irrelevant, wir wollen die GMM-Varianz nutzen)
-#' @param alpha0 Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE
-#' @param beta0 Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE
+#' @param sampleV (wahrscheinlich irrelevant) = TRUE, wenn die diagonale Messfehlervarianz geschaetzt werden soll. (Fuer uns irrelevant, wir wollen die GMM-Varianz nutzen)
+#' @param alpha0 Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn sampleV = TRUE
+#' @param beta0 Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn sampleV = TRUE
 #' @param countryA = TRUE, wenn fuer jedes Land eine eigene Adjustmentmatrix (der GMM-Varianz) A geschaetzt werden soll
 #' @param A Startwert fuer A, bei mir immer diag(npara)
 #' @param scaleA =TRUE, wenn die Matrix A nur ein Skalar sein soll.
@@ -80,7 +80,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                        covScale,
                        VhatDiagScale,
                        VhatDiagScale_start = NULL,
-                       VdiagEst,
+                       sampleV,
                        alpha0,
                        beta0,
                        countryA,
@@ -175,8 +175,8 @@ GibbsSSM_2 <- function(itermax = 15000,
   }
 
   ASTORE <- set_A_out(countryA, num_y, itermax, NN) 
-  VSTORE <- set_V_out(N_num_y, itermax)
-  V_tmp  <- set_V_tmp(VdiagEst, VhatDiagScale,
+  VSTORE <- set_V_out(sampleV, N_num_y, itermax)
+  V_tmp  <- set_V_tmp(sampleV, VhatDiagScale,
                       Vhat, VhatDiagScale_start,
                       NN, TT, NN_TT, N_num_y, num_y)
   VhatArrayBdiagByTimeFix <- V_tmp$VhatArrayBdiagByTimeFix
@@ -200,7 +200,7 @@ GibbsSSM_2 <- function(itermax = 15000,
 
   # storePath Anpassung
   store_paths <- set_store_path_subdir(
-    storePath, VdiagEst, sampleA,
+    storePath, sampleV, sampleA,
     initials, Vstart, covScale, njointfac,
     w_reg_spec, Omega0_legacy, incObsNew
   )
@@ -290,7 +290,7 @@ GibbsSSM_2 <- function(itermax = 15000,
     ######### GIBBS PART: Sampling VCOV matrix or Adjustment-Matrix A ##########
     ############################################################################
     u <- compute_residuals(yObs, fPost, B, D, wReg) # uSTORE[,, iter] <- u
-    if (VdiagEst) {
+    if (sampleV) {
       tmp_V <- sample_V(VhatDiagScale, VhatArrayBdiagByTimeFix, VhatFix, u,
                         TT, NN_TT, num_y, availableObs_crossSection,
                         alpha0, beta0)

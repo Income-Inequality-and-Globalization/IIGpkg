@@ -24,8 +24,7 @@ GibbsSSM_2(
   wRegSpec,
   wReg,
   uReg = NULL,
-  B0,
-  Omega0,
+  prior_list,
   selectR,
   selectC,
   Vhat,
@@ -34,7 +33,7 @@ GibbsSSM_2(
   covScale,
   VhatDiagScale,
   VhatDiagScale_start = NULL,
-  VdiagEst,
+  sampleV,
   alpha0,
   beta0,
   countryA,
@@ -91,10 +90,6 @@ GibbsSSM_2(
 
 \item{uReg}{Siehe initU. Fuer uns irrelevant, wird gleich NULL gesetzt.}
 
-\item{B0}{Prior Erwwartungswert fuer die Ladungen auf die latenten Fakoren (bei mir immer gleich dem Starwert, da ich beides mit makeBstart erzeuge. Aber nicht stacked, sondern npara x (npara + njointfac) x N Array bei type = "allidio")}
-
-\item{Omega0}{Prior Varianz fuer die Ladungen auf die latenten Fakoren und die Makro-Regressor-Koeffizienten.}
-
 \item{selectR}{Selektionsmatrix: Waehlt Elemente aus vec(B_i), die gesamplet werden sollen. Auf den anderen Elementen liegen Nullrestriktionen}
 
 \item{selectC}{Es wird selectR * vec(B_i) + selectC gesamplet. selectC ist bei uns immer ein Nullvektor, da wir keine affin-lineare Transformation benoetigen.}
@@ -111,15 +106,15 @@ GibbsSSM_2(
 Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden 
 soll. `Diag_VCOV = TRUE` muss in der top-level Function gesetzt werden,
 damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn
-`VhatDiagScale = TRUE` ist muss auch `VdiagEst = TRUE` sein.}
+`VhatDiagScale = TRUE` ist muss auch `sampleV = TRUE` sein.}
 
 \item{VhatDiagScale_start}{Startwert fuer die Skalierungsfaktoren}
 
-\item{VdiagEst}{(wahrscheinlich irrelevant) = TRUE, wenn die diagonale Messfehlervarianz geschaetzt werden soll. (Fuer uns irrelevant, wir wollen die GMM-Varianz nutzen)}
+\item{sampleV}{(wahrscheinlich irrelevant) = TRUE, wenn die diagonale Messfehlervarianz geschaetzt werden soll. (Fuer uns irrelevant, wir wollen die GMM-Varianz nutzen)}
 
-\item{alpha0}{Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE}
+\item{alpha0}{Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn sampleV = TRUE}
 
-\item{beta0}{Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE}
+\item{beta0}{Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn sampleV = TRUE}
 
 \item{countryA}{= TRUE, wenn fuer jedes Land eine eigene Adjustmentmatrix (der GMM-Varianz) A geschaetzt werden soll}
 
@@ -146,6 +141,10 @@ damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn
 \item{identification}{(Kann ignoriert werden) Boolscher Wert der dazu diente, um identifizierende Restriktionen zu ignorieren. Jetzt werde diese immer eingehalten.}
 
 \item{storeUnit}{Zahl. Alle storeUnit-Iterationen werden die Zwischenergebnisse gespeichert.}
+
+\item{B0}{Prior Erwwartungswert fuer die Ladungen auf die latenten Fakoren (bei mir immer gleich dem Starwert, da ich beides mit makeBstart erzeuge. Aber nicht stacked, sondern npara x (npara + njointfac) x N Array bei type = "allidio")}
+
+\item{Omega0}{Prior Varianz fuer die Ladungen auf die latenten Fakoren und die Makro-Regressor-Koeffizienten.}
 }
 \value{
 core Gibbs sampler output

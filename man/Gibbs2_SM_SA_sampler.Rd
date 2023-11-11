@@ -8,6 +8,7 @@ Gibbs2_SM_SA_sampler(
   p_joint,
   B_par,
   D_par,
+  prior_list = NULL,
   nreg,
   OmegaLoad0Scale,
   OmegaReg0Scale,
@@ -83,15 +84,13 @@ Gibbs2_SM_SA_sampler(
 Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden 
 soll. `Diag_VCOV = TRUE` muss in der top-level Function gesetzt werden,
 damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn
-`VhatDiagScale = TRUE` ist muss auch `VdiagEst = TRUE` sein.}
+`VhatDiagScale = TRUE` ist muss auch `sampleV = TRUE` sein.}
 
 \item{VhatDiagScale_start}{Startwert fuer die Skalierungsfaktoren}
 
-\item{VdiagEst}{(wahrscheinlich irrelevant) = TRUE, wenn die diagonale Messfehlervarianz geschaetzt werden soll. (Fuer uns irrelevant, wir wollen die GMM-Varianz nutzen)}
+\item{alpha0}{Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn sampleV = TRUE}
 
-\item{alpha0}{Prior-Shape-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE}
-
-\item{beta0}{Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn VdiagEst = TRUE}
+\item{beta0}{Prior-Scale-Paramter fuer Inverse-Gamma(!), wenn sampleV = TRUE}
 
 \item{N}{Cross-sectional dimension (number of countries)}
 
