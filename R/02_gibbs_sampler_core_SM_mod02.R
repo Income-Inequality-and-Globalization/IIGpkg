@@ -99,7 +99,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Vhat muss (npara, npara, N * T) Array sein. Start: Alle Zeitpunkte fuer das erste Land.
   # Funktioniert noch nicht fuer npara < njointfac (Geweke)
   # Modell ohne Konstante
-  initials <- get_initials(as.list(environment())) # speichert die Initialisierung
+  # initials <- get_initials(as.list(environment())) # speichert die Initialisierung
   B0       <- prior_list$priors$B0
   Omega0   <- prior_list$priors$Omega0
   sampleH  <- FALSE
@@ -110,6 +110,7 @@ GibbsSSM_2 <- function(itermax = 15000,
     beta_b0  <- prior_list$hyperpriors$beta_b0
     sampleH  <- TRUE
   }
+  initials <- as.list(environment())
   # DEBUG_ITER <- 464
   Vhat             <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
   store_count      <- 0 # zaehlt wie oft bereits zwischengespeichert wurde
