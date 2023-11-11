@@ -253,7 +253,8 @@ set_A_out <- function(countryA, num_y, itermax, NN){
     array(0, dim = c(num_y, num_y, itermax))
   }
 }
-set_V_out <- function(n_num_y, num_mcmc) {
+set_V_out <- function(sampleV, n_num_y, num_mcmc) {
+  if (isTRUE(sampleV)) return(NULL)
   matrix(0, nrow = n_num_y, ncol = num_mcmc)
 }
 set_V_tmp <- function(V_DIAG_EST, V_HAT_DIAG_SCALE,
@@ -688,4 +689,19 @@ sample_B_full <- function(yObs, availableObs_crossSection,
                     type = type)
   return(list(Bfacs = Bfacs, Dregs = Dregs, 
               Bfacs_i = Bfacs_i, Dregs_i = Dregs_i))
+}
+get_outlist_Gibbs_sampler <- function(fSTORE, BSTORE, DSTORE,
+                                      ASTORE, VSTORE, uSTORE,
+                                      BD0STORE, Omega0STORE,
+                                      block_count,
+                                      msg_error_kf,
+                                      initials) {
+  out_list <- list(f = fSTORE, B = BSTORE, D = DSTORE,
+                   A = ASTORE, V = VSTORE, u = uSTORE,
+                   BD0STORE = BD0STORE,
+                   Omega0STORE = Omega0STORE,
+                   blockCount = block_count,
+                   errorMsg = msg_error_kf,
+                   initials = initials)
+  return(out_list)
 }

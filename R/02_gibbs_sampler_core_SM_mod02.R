@@ -157,6 +157,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   DSTORE  <- DSTORES$DSTORE
   DiSTORE <- DSTORES$DiSTORE
   # uSTORE <- array(0, dim = c(N_num_y, TT, itermax) )
+  uSTORE <- NULL
   BD0STORE    <- matrix(0, nrow = sum(selectR), ncol = itermax)
   Omega0STORE <- matrix(0, nrow = sum(selectR), ncol = itermax)
 
@@ -321,20 +322,23 @@ GibbsSSM_2 <- function(itermax = 15000,
     if (CHECK_STORE) {
       store_count <- store_count + 1
       if (store_count == 1) dir.create(storePath_adj, recursive = TRUE)
-      store_mcmc(VdiagEst, initials,
-                 fSTORE, BSTORE, DSTORE, VSTORE, ASTORE,
-                 block_count, msg_error_kf, storePath_rds)
-        
+      out_list <- get_outlist_Gibbs_sampler(fSTORE, BSTORE, DSTORE,
+                                            ASTORE, VSTORE, uSTORE,
+                                            BD0STORE, Omega0STORE,
+                                            block_count,
+                                            msg_error_kf,
+                                            initials)
+      store_mcmc(out_list, storePath_rds)
     }
     print(iter)
   }
-  out_list <- list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, V = VSTORE, 
-                   blockCount = block_count, errorMsg = msg_error_kf,
-                   initials = initials)
-  if (sampleH) {
-    out_list$BD0STORE    <- BD0STORE
-    out_list$Omega0STORE <- Omega0STORE
-  }
+  browser()
+  out_list <- get_outlist_Gibbs_sampler(fSTORE, BSTORE, DSTORE,
+                                        ASTORE, VSTORE, uSTORE,
+                                        BD0STORE, Omega0STORE,
+                                        block_count,
+                                        msg_error_kf,
+                                        initials)
   return(out_list)
 }
 ############################################################################

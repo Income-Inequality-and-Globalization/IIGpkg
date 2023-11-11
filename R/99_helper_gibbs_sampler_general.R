@@ -106,23 +106,9 @@ get_store_path_rds <- function(store_path_adj,
   }
   paste0(base_path, "_IO", inc_obs_new, ".rds")
 }
-store_mcmc <- function(VdiagEst, init_set,
-                       fSTORE, BSTORE, DSTORE, VSTORE, ASTORE,
-                       block_count, msg_error_kf, store_path_rds) {
+store_mcmc <- function(output_list, store_path_rds) {
   if (store_path_rds == "none") return(invisible(NULL))
-  store_mcmc_rds <- list(f = fSTORE,
-                         B = BSTORE,
-                         D = DSTORE)
-  if (VdiagEst) {
-    store_mcmc_rds <- c(store_mcmc_rds, list(V = VSTORE))
-  } else {
-    store_mcmc_rds <- c(store_mcmc_rds, list(A = ASTORE))
-  }
-  saveRDS(c(store_mcmc_rds,
-            list(blockCount = block_count,
-                 errorMsg = msg_error_kf,
-                 initials = init_set)),
-          file = store_path_rds)
+  saveRDS(output_list, file = store_path_rds)
 }
 get_check_store <- function(store_path, mcmc_iter, mcmc_itermax, store_unit) {
   if (store_path == "none") return(FALSE)
