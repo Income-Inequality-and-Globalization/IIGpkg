@@ -271,7 +271,6 @@ GibbsSSM_2 <- function(itermax = 15000,
     if (sampleH) {
       BD_0 <- mu_sampler(NN = NN, npara = num_y, nreg = nreg, 
                          njointfac = num_fac_jnt,
-                         B0 = B0, D0 = D0,
                          B_i = B_i, 
                          D_i = DiSTORE,
                          invOmega0 = invOmega0, mu_b0 = mu_b0, Sigma_b0 = Sigma_b0, 
@@ -279,13 +278,14 @@ GibbsSSM_2 <- function(itermax = 15000,
       B0 <- BD_0$B0
       D0 <- BD_0$D0
       BD0STORE[, iter] <- selectR %*% c(B0[,,1], D0[,,1])
-      
+
       Omega0 <- omega_sampler(NN = NN, 
                               B_i = B_i, D_i = DiSTORE,
                               B0 = B0, D0 = D0, 
                               alpha_b0 = alpha_b0, beta_b0 = beta_b0, 
                               selectR = selectR)
-      Omega0STORE[, iter] <- diag(Omega0) 
+      Omega0STORE[, iter] <- diag(Omega0)
+      invOmega0 <- solve(Omega0)
     }
     # if (iter == DEBUG_ITER) browser()
     ############################################################################

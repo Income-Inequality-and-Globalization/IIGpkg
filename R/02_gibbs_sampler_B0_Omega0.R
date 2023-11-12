@@ -4,8 +4,6 @@
 #' @param npara dimension of measurements (of income distribution)
 #' @param nreg number of regressors
 #' @param njointfac number of joint factors
-#' @param B0 B0 samples
-#' @param D0 D0 samples
 #' @param B_i B-matrices factorized per i
 #' @param D_i D-matrices factorized per i
 #' @param invOmega0 inverse of prior matrix
@@ -18,7 +16,6 @@
 #' @export
 mu_sampler <- function(NN, npara, nreg, 
                        njointfac,
-                       B0, D0,
                        B_i, D_i, 
                        invOmega0, mu_b0, Sigma_b0,
                        selectR, type) {
