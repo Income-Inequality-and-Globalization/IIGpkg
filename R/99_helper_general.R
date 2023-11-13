@@ -38,3 +38,44 @@ iw_moments <- function(psi_taken, nu_taken, p = 3) {
   rownames(out_mean) <- paste0("Psi_", psi_taken)
   return(list(mean = out_mean, var = out_var))
 }
+#' Compute Mean and Variance of Inverse Gamma Distribution
+#'
+#' @param alpha Shape parameter of the Inverse Gamma distribution
+#' @param beta Scale parameter of the Inverse Gamma distribution
+#' @return A list containing the variance and mean of the Inverse Gamma
+compute_ig_moments <- function(alpha, beta) {
+  stopifnot(alpha > 2)  # Ensure alpha is greater than 2 for valid computation
+  mu <- beta / (alpha - 1)  # Calculate mean
+  var <- beta^2 / ((alpha - 1)^2 * (alpha - 2))  # Calculate variance
+  return(list(mean = mu, variance = var))
+}
+#' Compute Mean and Variance of Inverse Gamma for Multiple Parameters
+#'
+#' @param alpha_taken Vector of shape parameters of the Inverse Gamma 
+#'    distribution
+#' @param beta_taken Vector of scale parameters
+#' @return A list containing matrices of means and variances for each alpha and
+#'    beta
+#'
+#' @export
+#' @examples
+#' alpha_taken <- c(3, 5, 7, 10)
+#' beta_taken <- c(2, 4, 6, 8)
+#' ig_moments(alpha_taken, beta_taken)
+ig_moments <- function(alpha_taken, beta_taken) {
+  out_var <- matrix(nrow = length(alpha_taken), ncol = length(beta_taken))
+  out_mean <- matrix(nrow = length(alpha_taken), ncol = length(beta_taken))
+  for (i in seq_along(alpha_taken)) {
+    for (j in seq_along(beta_taken)) {
+      moments <- compute_ig_moments(alpha_taken[i], beta_taken[j])
+      out_mean[i, j] <- moments$mean
+      out_var[i, j] <- moments$variance
+    }
+  }
+  colnames(out_var) <- paste0("Beta_", beta_taken)
+  colnames(out_mean) <- paste0("Beta_", beta_taken)
+  
+  rownames(out_var) <- paste0("Alpha_", alpha_taken)
+  rownames(out_mean) <- paste0("Alpha_", alpha_taken)
+  return(list(mean = out_mean, variance = out_var))
+}
