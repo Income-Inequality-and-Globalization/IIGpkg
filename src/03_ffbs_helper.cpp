@@ -93,3 +93,20 @@ arma::mat compute_Ptt(const arma::mat& Ptt1, const arma::mat& Kt,
   arma::mat IKLC = I - KL * C;
   return(IKLC * Ptt1 * IKLC.t() + KL * R * KL.t());
 }
+//[[Rcpp::export]]
+arma::cube compute_b_diag_by_time(const arma::cube& V_hat_array_A,
+                                  const arma::uword num_y, 
+                                  const arma::uword NN,
+                                  const arma::uword TT) {
+  arma::cube R(NN * num_y, NN * num_y, TT);
+  // arma::uvec ids_to_fill = {0, num_y - 1};
+  
+  for (arma::uword nn = 0; nn < NN; ++nn) {
+    for (arma::uword tt = 0; tt < TT; ++tt) {
+      // Q.subcube( first_row, first_col, first_slice, last_row, last_col, last_slice )
+      R.subcube(nn * num_y, nn * num_y, tt,
+                (nn + 1) * num_y - 1, (nn + 1) * num_y - 1, tt) = V_hat_array_A.slice(nn * TT + tt);
+    }
+  }
+  return(R);
+}

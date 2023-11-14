@@ -19,5 +19,9 @@ arma::mat compute_Xtt(const arma::mat& xtt1, const arma::mat& Kt,
 arma::mat compute_Ptt(const arma::mat& Ptt1, const arma::mat& Kt,
                       const arma::mat& Lt, const arma::mat& C, 
                       const arma::mat& R);
+arma::cube compute_b_diag_by_time(const arma::cube& V_hat_array_A,
+                                  const arma::uword num_y, 
+                                  const arma::uword NN,
+                                  const arma::uword TT);
 
 #endif
