@@ -1,4 +1,30 @@
 #include "03_ffbs.h"
+
+//[[Rcpp::export]]
+arma::mat ffbs(const arma::mat& yObs,
+               const arma::mat& wReg,
+               const arma::uword dimX,
+               const arma::uword dimY,
+               const arma::uword TT,
+               const arma::colvec& x00, 
+               const arma::mat& P00,
+               const arma::mat& A, 
+               const arma::mat& C,
+               const arma::mat& D, 
+               const arma::mat& Q,
+               const arma::cube& R_reordered,
+               bool PDSTORE) {
+  const arma::uword num_y = R_reordered.n_rows;
+  const arma::uword NN = dimY / R_reordered.n_rows;
+  arma::cube R = compute_b_diag_by_time(R_reordered, num_y, NN, TT);
+
+  arma::mat mfdEXP;
+  arma::mat mfdVAR;
+  Rcpp::List out_kf = Rcpp::List::create(Rcpp::Named("mfdEXP") = mfdEXP,
+                                         Rcpp::Named("mfdVAR") = mfdVAR);
+  out_kf = kf_ff(yObs, wReg, dimX, dimY, TT, x00, P00, A, C, D, Q, R, PDSTORE);
+  return(bs(TT, dimX, A, Q, out_kf["mfdEXP"], out_kf["mfdVAR"]));
+}
 //[[Rcpp::export]]
 Rcpp::List kf_ff(const arma::mat& yObs,
                  const arma::mat& wReg,
@@ -31,19 +57,15 @@ Rcpp::List kf_ff(const arma::mat& yObs,
   arma::cube Ptt(dimX, dimX, TT);
   arma::mat Lt, Kt;
   arma::vec kGain;
-  if (PDSTORE) {
-    // xtt1STORE <- matrix(0, nrow = dimX, ncol = TT + 1)
-    // arma::mat xtt1STORE(dimX, TT + 1);
-    // Ptt1STORE <- array(0, dim = c(dimX, dimX, TT + 1),
-    //                    dimnames = list(NULL, NULL, as.character(1:(TT + 1))))
-    // arma::cube Ptt1STORE(dimX, dimX, TT + 1);
-  }
+  // if (PDSTORE) {
+  //   // xtt1STORE <- matrix(0, nrow = dimX, ncol = TT + 1)
+  //   // arma::mat xtt1STORE(dimX, TT + 1);
+  //   // Ptt1STORE <- array(0, dim = c(dimX, dimX, TT + 1),
+  //   //                    dimnames = list(NULL, NULL, as.character(1:(TT + 1))))
+  //   // arma::cube Ptt1STORE(dimX, dimX, TT + 1);
+  // }
   arma::mat D_wreg = compute_mat_reg(D, wReg);
-  // 
-  // 
-  //     xtt1 <- computeXtt1(A, x00, BuRegInit[, 1], dimX)
   arma::mat xtt1 = compute_Xtt_1(A, x00);
-  //     Ptt1 <- computePtt1(A, P00, Q)
   arma::mat Ptt1 = compute_Ptt_1(A, P00, Q);
   // 
   if (PDSTORE) {
@@ -52,7 +74,6 @@ Rcpp::List kf_ff(const arma::mat& yObs,
   }
   
   for (arma::uword t = 0; t <  TT; ++t) {
-  // arma::uword t = 0;
     AllObsMissing = false;
     CAdj = C;
 
@@ -120,8 +141,6 @@ Rcpp::List kf_ff(const arma::mat& yObs,
                               Rcpp::Named("pddVAR") = Ptt1STORE));
     
   } else {
-    // return(Rcpp::List::create(Rcpp::Named("Lt") = Lt,
-    //                           Rcpp::Named("mfdVAR") = Ptt));
     return(Rcpp::List::create(Rcpp::Named("mfdEXP") = xtt,
                               Rcpp::Named("mfdVAR") = Ptt));
   }
@@ -137,60 +156,36 @@ Rcpp::List kf_ff(const arma::mat& yObs,
 //'
 //' @return posterior filtered states
 //[[Rcpp::export]]
-arma::mat bs(const int TT,
+arma::mat bs(const arma::uword TT,
              const int nfac,
              const arma::mat& Phi,
              const arma::mat& Q,
              const arma::mat& filt_f,
              const arma::cube& filt_P) {
-  arma::mat fPost(nfac, TT);
+  int TT_use = static_cast<int>(TT);
+  arma::mat fPost(nfac, TT_use);
 
-  arma::colvec fTT = filt_f.col(TT - 1);
-  arma::colvec ftt(TT);
+  arma::colvec fTT = filt_f.col(TT_use - 1);
+  arma::colvec ftt(TT_use);
 
-  arma::mat PTT = filt_P.slice(TT - 1);
+  arma::mat PTT = filt_P.slice(TT_use - 1);
   arma::mat Ptt(arma::size(PTT));
 
-  fPost.col(TT - 1) = arma::mvnrnd(fTT, PTT);
+  fPost.col(TT_use - 1) = arma::mvnrnd(fTT, PTT);
   
-  arma::mat IS(TT, TT);
-  arma::mat sim_v(TT, TT);
-  arma::colvec sim_m(TT);
+  arma::mat IS(TT_use, TT_use);
+  arma::mat sim_v(TT_use, TT_use);
+  arma::colvec sim_m(TT_use);
 
-  for (int t = TT - 2;  t >= 0; --t) {
+  for (int t = TT_use - 2;  t >= 0; --t) {
     ftt = filt_f.col(t);
     Ptt = filt_P.slice(t);
     IS = Ptt * Phi.t() * arma::inv(Phi * Ptt * Phi.t() + Q);
     sim_m = ftt + IS * (fPost.col(t + 1) - Phi * ftt);
     sim_v = Ptt - IS * Phi * Ptt;
     sim_v = 0.5 * (sim_v + sim_v.t());
-  // if(!matrixcalc::is.positive.definite(sim_v)){
-  //   print(iter)
-  //   print(sim_v)
-  //   print(filt_P)
-  // }
-    // fPost[, t] = MASS::mvrnorm(n = 1, mu = sim_m, Sigma = sim_v)
+
     fPost.col(t) = arma::mvnrnd(sim_m, sim_v);
   }
   return(fPost);
-//   
-//   fPost = matrix(rep(0, nfac * TT), ncol = TT)
-//   fPost[, TT] = MASS::mvrnorm(n = 1, mu = fTT, Sigma = PTT)
-//   
-//   for (t in (TT - 1):1) {
-//     ftt = filt_f[, t]
-//     Ptt = filt_P[, , t]
-//     IS = Ptt %*% t(Phi) %*% solve(Phi %*% Ptt %*% t(Phi) + Q)
-//     sim_m = ftt + IS %*% (fPost[, t + 1] - Phi %*% ftt)
-//     sim_v = Ptt - IS %*% Phi %*% Ptt
-//     sim_v = 0.5 * (sim_v + t(sim_v))
-// // if(!matrixcalc::is.positive.definite(sim_v)){
-// //   print(iter)
-// //   print(sim_v)
-// //   print(filt_P)
-// // }
-//     fPost[, t] = MASS::mvrnorm(n = 1, mu = sim_m, Sigma = sim_v)
-//   }
-//   
-  // return(fPost);
 }
