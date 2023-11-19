@@ -15,7 +15,8 @@ Rcpp::List kf_ff(const arma::mat& yObs,
                  const arma::mat& D, 
                  const arma::mat& Q,
                  const arma::cube& R,
-                 bool PDSTORE);
+                 bool PDSTORE,
+                 bool LLVALUE);
 arma::mat bs(const arma::uword TT,
              const int nfac,
              const arma::mat& Phi,
