@@ -22,7 +22,7 @@ arma::mat ffbs(const arma::mat& yObs,
   arma::mat mfdVAR;
   Rcpp::List out_kf = Rcpp::List::create(Rcpp::Named("mfdEXP") = mfdEXP,
                                          Rcpp::Named("mfdVAR") = mfdVAR);
-  out_kf = kf_ff(yObs, wReg, dimX, dimY, TT, x00, P00, A, C, D, Q, R, PDSTORE);
+  out_kf = kf_ff(yObs, wReg, dimX, dimY, TT, x00, P00, A, C, D, Q, R, PDSTORE, false);
   return(bs(TT, dimX, A, Q, out_kf["mfdEXP"], out_kf["mfdVAR"]));
 }
 //[[Rcpp::export]]
@@ -38,7 +38,8 @@ Rcpp::List kf_ff(const arma::mat& yObs,
                  const arma::mat& D, 
                  const arma::mat& Q,
                  const arma::cube& R,
-                 bool PDSTORE) {
+                 bool PDSTORE,
+                 bool LLVALUE) {
   arma::mat xtt1STORE(dimX, TT + 1);
   arma::cube Ptt1STORE(dimX, dimX, TT + 1);
   bool AllObsMissing;
@@ -57,22 +58,38 @@ Rcpp::List kf_ff(const arma::mat& yObs,
   arma::cube Ptt(dimX, dimX, TT);
   arma::mat Lt, Kt;
   arma::vec kGain;
-  // if (PDSTORE) {
-  //   // xtt1STORE <- matrix(0, nrow = dimX, ncol = TT + 1)
-  //   // arma::mat xtt1STORE(dimX, TT + 1);
-  //   // Ptt1STORE <- array(0, dim = c(dimX, dimX, TT + 1),
-  //   //                    dimnames = list(NULL, NULL, as.character(1:(TT + 1))))
-  //   // arma::cube Ptt1STORE(dimX, dimX, TT + 1);
-  // }
+
   arma::mat D_wreg = compute_mat_reg(D, wReg);
   arma::mat xtt1 = compute_Xtt_1(A, x00);
   arma::mat Ptt1 = compute_Ptt_1(A, P00, Q);
+  
+  double logDetVarY;
+  double ll_out_tmp;
+  double ll_out;
+  double dim_tmp;
+  double acc;
+  double missing_obs_total;
+  arma::uvec indices_nan_total = arma::find_nan(yObs);
+  arma::vec vec_tmp_ll;
+  arma::colvec meanY;
+  arma::mat VarY;
+  arma::mat chol_VarY;
+  arma::vec chol_VarY_diag;
   // 
   if (PDSTORE) {
     xtt1STORE.col(0)   = xtt1;
     Ptt1STORE.slice(0) = Ptt1; 
   }
-  
+  //
+  if (LLVALUE) {
+    logDetVarY = 0;
+    ll_out_tmp = 0;
+    ll_out = 0;
+    dim_tmp = 0;
+    acc = 0;
+    missing_obs_total = indices_nan_total.size();
+  }
+  //
   for (arma::uword t = 0; t <  TT; ++t) {
     AllObsMissing = false;
     CAdj = C;
@@ -124,22 +141,73 @@ Rcpp::List kf_ff(const arma::mat& yObs,
       Ptt.slice(t) = Ptt1;
     }
 
-
     xtt1 = compute_Xtt_1(A, xtt.col(t));
     Ptt1 = compute_Ptt_1(A, Ptt.slice(t), Q);
 
-    // period t+1 quantities for next iteration
+    if(LLVALUE) {
+      meanY = C_adj * xtt1 + DwReg_adj;
+      VarY  = C_adj * Ptt1 * C_adj.t() + R_adj;
+      //
+      // 
+      //
+      //
+      //
+      //
+      // chol_VarY = arma::chol(VarY, "lower");
+      // dim_tmp = chol_VarY.n_cols;
+      // chol_VarY_diag = chol_VarY.diag();
+      // arma::vec vec_tmp_ll(dim_tmp);
+      // 
+      // for (unsigned int dd = 0; dd < dim_tmp; ++dd) {
+      //   // for(dd = 0; dd < d; dd++) {
+      //   acc = 0.0;
+      //   for (unsigned int ii = 0; ii < dd; ii++) acc += vec_tmp_ll(ii) * chol_VarY.at(dd, ii);
+      //   vec_tmp_ll(dd) = (yObs_adj(dd) - meanY(dd) - acc) / chol_VarY_diag(dd);
+      // }
+      // ll_out_tmp += arma::sum(arma::square(vec_tmp_ll));
+      //
+      // 
+      //
+      //
+      //
+      //
+      ll_out_tmp += log(arma::det(VarY));
+      ll_out_tmp += arma::sum((yObsAdj - meanY).t() * arma::inv(VarY) * (yObsAdj - meanY));
+    }
+  // 
+  // part1 <- -(TT*dimY - MissingsObsTotal) /2 * log(2*pi)
+  //   
+  //   llOUT <- part1 - 0.5 * part2
+  // if(isFALSE(LOG)) {
+  //   llOUT <- exp(llOUT)
+  // } else if(!isTRUE(LOG) || isFALSE(LOG)) {
+  //   stop("Wrong argument type for 'LOG': must be logical either TRUE or FALSE.")
+  // }
+  // return(llOUT)
+  // period t+1 quantities for next iteration
     if (PDSTORE) {
       xtt1STORE.col(t + 1)   = xtt1;
       Ptt1STORE.slice(t + 1) = Ptt1;
     }
   }
-  if (PDSTORE) {
+  if (PDSTORE & !LLVALUE) {
     return(Rcpp::List::create(Rcpp::Named("mfdEXP") = xtt,
                               Rcpp::Named("mfdVAR") = Ptt,
                               Rcpp::Named("pddEXP") = xtt1STORE,
                               Rcpp::Named("pddVAR") = Ptt1STORE));
     
+  } if (LLVALUE) {
+    // ll_out = ll_out_tmp;
+    // ll_out = -0.5 * ll_out_tmp - 0.5 * (TT * dimY - missing_obs_total) * log(2.0 * arma::datum::pi);
+    //
+    //
+    //
+    //
+    //
+    ll_out = -(TT*dimY - missing_obs_total) /2 * log(2.0 * arma::datum::pi) - 0.5 * ll_out_tmp;
+    return(Rcpp::List::create(Rcpp::Named("mfdEXP") = xtt,
+                              Rcpp::Named("mfdVAR") = Ptt,
+                              Rcpp::Named("kfLLH") = ll_out));
   } else {
     return(Rcpp::List::create(Rcpp::Named("mfdEXP") = xtt,
                               Rcpp::Named("mfdVAR") = Ptt));
