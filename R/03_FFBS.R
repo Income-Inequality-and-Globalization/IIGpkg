@@ -1,3 +1,28 @@
+compute_FFBS_cpp <- function(yObs, uReg, wReg,
+                             num_fac, num_y, N_num_y, 
+                             TT, NN,
+                             VhatArray_A, Phi,
+                             B, C, D, Q, R,
+                             initX, initU, initP, 
+                             PDSTORE) {
+  KF <- kf_ff(yObs,
+              wReg,
+              num_fac,
+              N_num_y,
+              TT,
+              initX, 
+              initP,
+              Phi, 
+              C,
+              D, 
+              Q,
+              R,
+              PDSTORE,
+              LLVALUE = FALSE)
+  return(bs(TT = TT, nfac = num_fac,
+            Phi = Phi, Q = Q,
+            filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
+}
 compute_FFBS <- function(yObs, uReg, wReg,
                          num_fac, num_y, N_num_y, 
                          TT, NN,
@@ -22,10 +47,27 @@ compute_FFBS <- function(yObs, uReg, wReg,
       A = Phi, B = B, C = C, D = D,
       Q = Q, R = R, x00 = initX,
       u00 = initU, P00 = initP, PDSTORE = PDSTORE)
+    # KF <- kf_ff(yObs,
+    #       wReg,
+    #       num_fac,
+    #       N_num_y,
+    #       TT,
+    #       initX, 
+    #       initP,
+    #       Phi, 
+    #       C,
+    #       D, 
+    #       Q,
+    #       R,
+    #       PDSTORE,
+    #       LLVALUE)
     # Backward Sampling and return
     return(GibbsSSM_f(TT = TT, nfac = num_fac,
                       Phi = Phi, Q = Q,
                       filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
+    # return(bs(TT = TT, nfac = num_fac,
+    #    Phi = Phi, Q = Q,
+    #    filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
   } else {
     stopifnot(`Arg. 'try_catch_errors' must be a named list` = 
       all(names(try_catch_errors) %in% c("fSTORE", " BSTORE", "ASTORE",
@@ -71,6 +113,118 @@ compute_FFBS <- function(yObs, uReg, wReg,
                           errorMsg = msg_error_kf,
                           initials = try_catch_errors$initials)
                         )
+      saveRDS(out_error_kf, file = storePath_kf)
+      stop("KF produced numerical errors.")
+    }
+    return(GibbsSSM_f(TT = TT, nfac = num_fac, Phi = Phi, Q = Q,
+                      filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
+    # return(list(f = try_catch_errors$fSTORE,
+    # B = try_catch_errors$BSTORE,
+    # D = try_catch_errors$DSTORE,
+    # A = ASTORE, 
+    # blockCount = block_count, errorMsg = msg_error_kf))
+    #
+    #
+    #
+    #
+    #
+    # ident_block <- FALSE # wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin steht. War vom alten Sampler, um die identifizierenden Restriktionen einzuhalten.
+    # Backward Sampling
+    # try({KF <-RcppSMCkalman::kfMFPD(yObs = yObs, uReg = uReg, wReg = wReg,
+    #                                                      dimX = num_fac, dimY = Nnpara, TT = TT,
+    #                                                      A = Phi, B = NULL, C = B, D = c_,
+    #                                                      Q = Q, R = VhatArrayBdiagByTime, x00 = initX,
+    #                                                     u00 = initU, P00 = initP, PDSTORE = F)})
+    # if(inherits(KF, "try-error")){
+    #   print("Fehler")
+    #   break
+    # }
+    # }
+  }
+}
+compute_FFBS2 <- function(yObs, uReg, wReg,
+                          num_fac, num_y, N_num_y, 
+                          TT, NN,
+                          R, Phi,
+                          B, C, D, Q, 
+                          initX, initU, initP, 
+                          PDSTORE, try_catch_errors = NULL) {
+  # if (!ident_block) {
+  # Vhat Array (mit Adjustmentmatrix A) bzgl. der Zeit sortiert
+  if (is.null(try_catch_errors)) {
+    # Kalman-Filer
+    KF <- RcppSMCkalman::kfMFPD(
+      yObs = yObs, uReg = uReg, wReg = wReg,
+      dimX = num_fac, dimY = N_num_y, TT = TT,
+      A = Phi, B = B, C = C, D = D,
+      Q = Q, R = R, x00 = initX,
+      u00 = initU, P00 = initP, PDSTORE = PDSTORE)
+    # KF <- kf_ff(yObs,
+    #       wReg,
+    #       num_fac,
+    #       N_num_y,
+    #       TT,
+    #       initX, 
+    #       initP,
+    #       Phi, 
+    #       C,
+    #       D, 
+    #       Q,
+    #       R,
+    #       PDSTORE,
+    #       LLVALUE = FALSE)
+    # Backward Sampling and return
+    return(GibbsSSM_f(TT = TT, nfac = num_fac,
+                      Phi = Phi, Q = Q,
+                      filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
+    # return(bs(TT = TT, nfac = num_fac,
+    #    Phi = Phi, Q = Q,
+    #    filt_f = KF$mfdEXP, filt_P = KF$mfdVAR))
+  } else {
+    stopifnot(`Arg. 'try_catch_errors' must be a named list` = 
+                all(names(try_catch_errors) %in% c("fSTORE", " BSTORE", "ASTORE",
+                                                   "block_count", "initials",
+                                                   "storePath_adj", "storePath_kfe",
+                                                   "store_count", "iter")))
+    invisible(
+      capture.output(
+        KF <- tryCatch(
+          {
+            RcppSMCkalman::kfMFPD(
+              yObs = yObs, uReg = uReg, wReg = wReg,
+              dimX = num_fac, dimY = N_num_y, TT = TT,
+              A = Phi, B = B, C = C, D = D,
+              Q = Q, R = R, x00 = initX,
+              u00 = initU, P00 = initP, PDSTORE = PDSTORE
+            )
+          },
+          error = function(e) {e$message}
+        )
+      )
+    )
+    # Speichert moegliche Fehlermeldung des Kalman-Filter und die Zwischenergebnisse zum Zeitpunkt des Fehlers zurueck
+    if (is.character(KF)) {
+      msg_error_kf <- KF
+      if (try_catch_errors$store_count == 0) {
+        dir.create(try_catch_errors$storePath_adj, recursive = TRUE)
+      }
+      storePath_kf <- get_store_path_kf_error_iter(
+        try_catch_errors$storePath_kfe, try_catch_errors$iter
+      )
+      out_error_kf <- list(
+        f = try_catch_errors$fSTORE,
+        B = try_catch_errors$BSTORE)
+      if (isTRUE(VdiagEst)) {
+        out_error_kf <- c(out_error_kf, list(V = try_catch_errors$VSTORE))
+      } else if (isFALSE(VdiagEst)) {
+        out_error_kf <- c(out_error_kf, list(A = try_catch_errors$ASTORE))
+      }
+      out_error_kf <- c(out_error_kf,
+                        list(
+                          blockCount = try_catch_errors$block_count,
+                          errorMsg = msg_error_kf,
+                          initials = try_catch_errors$initials)
+      )
       saveRDS(out_error_kf, file = storePath_kf)
       stop("KF produced numerical errors.")
     }
