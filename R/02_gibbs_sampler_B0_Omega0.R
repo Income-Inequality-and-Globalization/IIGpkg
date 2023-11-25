@@ -32,25 +32,20 @@ mu_sampler <- function(NN, npara, nreg,
   D0vec <- mu0_sim[-(1:((njointfac + 1) * npara))]
   D0 <- replicate(NN, matrix(D0vec, nrow = npara, ncol = nreg))
 
-  if (njointfac != 0) stop("Not yet implemented.")
-  # if (njointfac != 0) {
-  #   idioFac <- B0vec[-(1:npara)]
-  #   if (type == "countryidio_nomu") {
-  #     idioFac <- c(idioFac, 0)
-  #   }
-  # 
-  #   jointFac <- matrix(B0vec[1:(npara * njointfac)], ncol = njointfac)
-  # } else {
-  #   idioFac <- B0vec
-  # }
-  # 
-  # if (njointfac != 0) {
-  #   B0 <- replicate(cbind(jointFac, diag(idioFac)), NN)
-  # } else {
-  #   B0 <- diag(idioFac)
-  # }
-  idioFac <- B0vec
-  B0 <- diag(idioFac)
+  if (njointfac == 1) {
+    idioFac <- B0vec[-(1:npara)]
+    # if (type == "countryidio_nomu") {
+    #   idioFac <- c(idioFac, 0)
+    # }
+    jointFac <- matrix(B0vec[1:(npara * njointfac)], ncol = njointfac)
+    B0 <- cbind(jointFac, diag(idioFac))
+  } else if (njointfac == 0) {
+    idioFac <- B0vec
+    B0 <- diag(idioFac)
+  } else {
+    stop("Not yet implemented.")
+  }
+  
   B0 <- replicate(NN, B0)
   return(list(B0 = B0, D0 = D0))
 }
