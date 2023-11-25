@@ -84,7 +84,7 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
     # if (is.null(prior_list)) {
     #   OmegaLoad0 <- OmegaLoad0Scale * diag(npara * (p_joint + npara))
     # } else {
-      OmegaLoad0 <- OmegaLoad0Scale * diag((p_joint + npara))
+      OmegaLoad0 <- OmegaLoad0Scale * diag((npara * (p_joint + 1)))
     # }
   } else if (type == "countryidio") {
     p <- N + p_joint
