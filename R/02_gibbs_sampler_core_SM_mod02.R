@@ -111,7 +111,7 @@ GibbsSSM_2 <- function(itermax = 15000,
     sampleH  <- TRUE
   }
   initials <- as.list(environment())
-  # DEBUG_ITER <- 464
+  DEBUG_ITER <- 103
   Vhat             <- set_scale_Vhat(Vhat, incObsOld, incObsNew)
   store_count      <- 0 # zaehlt wie oft bereits zwischengespeichert wurde
   SIMULATE_FACTORS <- set_simulate_factors(fPost)
@@ -195,14 +195,13 @@ GibbsSSM_2 <- function(itermax = 15000,
   tmp_ir <-  get_identificiation_restrictions(type = type,
                                               num_joint_fac = njointfac,
                                               num_y = num_y,
-                                              num_reg = nreg,
-                                              i = 2)
+                                              num_reg = nreg)
   upper <- tmp_ir$upper
   lower <- tmp_ir$lower
 
   # storePath Anpassung
   store_paths <- set_store_path_subdir(
-    storePath, sampleV, sampleA,
+    storePath, sampleV, sampleA, sampleH,
     initials, Vstart, covScale, njointfac,
     w_reg_spec, Omega0_legacy, incObsNew
   )
@@ -220,6 +219,18 @@ GibbsSSM_2 <- function(itermax = 15000,
   # einzuhalten:
   block_count <- 0 
   # Gibbs-Iteration:
+  # load("kf_test2.RData")
+  # load("kf_test.RData")
+  browser()
+  SIMULATE_FACTORS <- TRUE
+  # fPost_true <- all_true_vals$f_simul
+  fPost_true <- NULL
+  # A <- all_true_vals$A_means
+  # A <- diag(nrow(A))
+  # B <- all_true_vals$B_means
+  B[, 1] <- 1; diag(B[, 2:31]) <- 1; #B[which(B != 0)] <- 0.5 # 
+  # D <- all_true_vals$D_means
+  # D[which(D != 0)] <- 0.5
   for (iter in seq_len(itermax)) {
     # if (iter == DEBUG_ITER) browser()
     # Erweiterung das Vhat-Arrays um die Adjustmentmatrix A
@@ -228,39 +239,69 @@ GibbsSSM_2 <- function(itermax = 15000,
                                          NN, TT, NN_TT, num_y)
     #### GIBBS PART: Sampling of the latent factors (FFBS)
     if (SIMULATE_FACTORS) {
-      fPost <- compute_FFBS(yObs = yObs, uReg = uReg, wReg = wReg,
-                            num_fac = num_fac, num_y = num_y, N_num_y = N_num_y,
-                            TT = TT, NN = NN,
-                            VhatArray_A = VhatArray_A, Phi = Phi,
-                            B = NULL, C = B, D = D, Q = Q,
-                            initX = initX, initU = initU, initP = initP,
-                            PDSTORE = FALSE,
-                            try_catch_errors = NULL) #,
-                            # try_catch_errors =
-                            #   list(storePath_adj = storePath_adj,
-                            #        store_count = store_count,
-                            #        fSTORE = fSTORE, 
-                            #        BSTORE = BSTORE,
-                            #        ASTORE = ASTORE,
-                            #        storePath_kfe = storePath_kfe,
-                            #        block_count = block_count, 
-                            #        initials = initials,
-                            #        iter = iter))
+      # R <- bdiagByTime(
+      #   VhatArray_A = VhatArray_A,
+      #   npara = num_y,
+      #   N = NN,
+      #   TT = TT,
+      #   Nnpara = N_num_y
+      # )
+      # fPost <- compute_FFBS2(yObs = yObs, uReg = uReg, wReg = wReg,
+      #                        num_fac = num_fac, num_y = num_y, N_num_y = N_num_y,
+      #                        TT = TT, NN = NN,
+      #                        R = R, Phi = Phi,
+      #                        B = NULL, C = B, D = D, Q = Q,
+      #                        initX = initX, initU = initU, initP = initP,
+      #                        PDSTORE = FALSE,
+      #                        try_catch_errors = NULL) #,
+      # try_catch_errors =
+      #   list(storePath_adj = storePath_adj,
+      #        store_count = store_count,
+      #        fSTORE = fSTORE,
+      #        BSTORE = BSTORE,
+      #        ASTORE = ASTORE,
+      #        storePath_kfe = storePath_kfe,
+      #        block_count = block_count,
+      #        initials = initials,
+      #        iter = iter))
+      fPost <- ffbs(yObs, wReg,
+                    num_fac, N_num_y, TT,
+                    initX, initP,
+                    Phi, B, D, Q, VhatArray_A,
+                    FALSE)
+      # fPost[2:31, ] <- fPost_true[2:31, ]
+      # fPost[1, ] <- fPost_true[1, ]
       fSTORE[, , iter] <- fPost
+      plot_mcmc_ffbs(f_stored = fSTORE,
+                     mm = iter,
+                     f_trues = fPost_true,
+                     options_f = list(
+                             grid = c(4, 4),
+                             id_f = 1:16),
+                     options_p = list(
+                             break_mm = 10000,
+                             pause = 0.1))
     } else {
-      fSTORE[, , iter] <- fPost
+      fPost <- fPost_true
+      fSTORE[, , iter] <- fPost_true
     }
     ##### GIBBS PART: Sampling of loadings (on latent factors) and partial
     ##### effects (on regressors)
-    B_post_all <- sample_B_full(yObs, availableObs_crossSection, 
-                                fPost, VhatArray_A, w_reg_info,
-                                # invOmega0 = invOmega0, 
-                                # invOmega0_B0_D0 = invOmega0_B0_D0,
-                                Omega0 = Omega0, B0 = B0, D0 = D0,
-                                id_f, selectR, lower, upper, 
-                                NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
-                                type)
+    B_post_all <- sample_B_full_cpp(yObs, availableObs_crossSection,
+                                    fPost, VhatArray_A, w_reg_info,
+                                    Omega0 = Omega0, B0 = B0, D0 = D0,
+                                    id_f, selectR, lower, upper,
+                                    NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
+                                    type, 
+                                    B_trues = all_true_vals$B_means,
+                                    D_trues = all_true_vals$D_means)
                                 # if (sampleH),)
+    # B_post_all <- sample_B_full(yObs, availableObs_crossSection,
+    #                             fPost, VhatArray_A, w_reg_info,
+    #                             Omega0 = Omega0, B0 = B0, D0 = D0,
+    #                             id_f, selectR, lower, upper,
+    #                             NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
+    #                             type)
     DSTORE[, , iter] <- B_post_all$Dregs
     DiSTORE          <- B_post_all$Dregs_i # if (sampleH)
     BSTORE[, , iter] <- B_post_all$Bfacs
@@ -308,11 +349,13 @@ GibbsSSM_2 <- function(itermax = 15000,
                                    shape0, rate0, Psi0, nu0)
         ASTORE[, , iter, ] <- A_countryArray
       } else {
+        # browser()
         A <- sample_A(countryA, diagA, scaleA,
                       u, VhatSqrt,
                       NN, TT, num_y, TT_num_y,
                       NN_TT_avail, availableObs_crossSection,
                       shape0, rate0, Psi0, nu0)
+        # A <- all_true_vals$A_means
         ASTORE[, , iter] <- A
       }
     }
@@ -339,7 +382,8 @@ GibbsSSM_2 <- function(itermax = 15000,
                                         block_count,
                                         msg_error_kf,
                                         initials)
-  return(out_list)
+  out_list <- new_GibbsOutputIIG(out_list)
+  return(new_GibbsOutputIIG(out_list))
 }
 ############################################################################
 ## GIBBS sampler Iteration ENDE
