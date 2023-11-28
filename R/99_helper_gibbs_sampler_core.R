@@ -381,9 +381,8 @@ sample_A <- function(countryA, diagA, scaleA,
 }
 compute_B_post_full <- function(availableObs, 
                                 invOmega0, B0_D0,
-                                # invOmega_B0_D0,
-                                # Omega0,
-                                fPost, w_regs, Viarray, yiObs, selectR,
+                                fPost, w_regs, 
+                                Viarray, yiObs, selectR,
                                 try_catch_errors) {
   B_Omega <- compute_Omega1(invOmega0,
                             availableObs,
@@ -395,7 +394,6 @@ compute_B_post_full <- function(availableObs,
   B_mean <- compute_B_mean(B_Omega,
                            invOmega0,
                            B0_D0,
-                           # invOmega_B0_D0,
                            availableObs, selectR,
                            fPost, w_regs,
                            yiObs,  Viarray)
@@ -466,7 +464,7 @@ compute_Sigma_adjust <- function(Omega) {
   # Sigma <- 0.5 * (selectR %*% Omega1 %*% t(selectR)) + 0.5 * t(selectR %*% Omega1 %*% t(selectR))
 }
 get_identificiation_restrictions <- function(type, num_joint_fac,
-                                             num_y, num_reg, i) {
+                                             num_y, num_reg) {
   ## Identifikationsrestriktionen fuer die Ladungen
   # Dselect <- diag(6)
   if (type == "allidio") {
@@ -475,15 +473,26 @@ get_identificiation_restrictions <- function(type, num_joint_fac,
       lower <- c(rep(0, num_y), rep(-Inf, num_y * num_reg))
       # muss fuer gemeinsamen faktor angepasst werden
       upper <- rep(Inf, num_y + num_y * num_reg)
+    } else if (num_joint_fac == 1) {
+      # lower bound for factors
+      lower <- c(rep(0, num_y), rep(-Inf, num_y * num_reg))
+      lower_first <- c(0, rep(-Inf, num_y - 1), lower)
+      lower_rest  <- c(rep(-Inf, num_y), lower)
+      lower <- rbind(lower_first, lower_rest)
+      # upper bound for factors
+      upper <- rep(Inf, 2 * num_y + num_y * num_reg)
+      upper <- rbind(upper, upper)
+      # lower_first <- c(0, rep() rep(-Inf, 2), rep(0, 3))
+      # if (i == 1) {
+      #   #   Dselect <- Dselect[-c(2,3),]
+      #   lower <- c(0, rep(-Inf, 2), rep(0, 3))
+      # } else {
+      #   # Dselect <- Dselect[-c(1,2,3),]
+      #   lower <- c(rep(-Inf, 3), rep(0, 3))
+      # }
+      # upper <- rep(Inf, 6)
     } else {
-      if (i == 1) {
-        #   Dselect <- Dselect[-c(2,3),]
-        lower <- c(0, rep(-Inf, 2), rep(0, 3))
-      } else {
-        # Dselect <- Dselect[-c(1,2,3),]
-        lower <- c(rep(-Inf, 3), rep(0, 3))
-      }
-      upper <- rep(Inf, 6)
+      stop("Not yet implemented.")
     }
   } else if (type == "countryidio") {
     if (i == 1) {
@@ -508,7 +517,7 @@ get_identificiation_restrictions <- function(type, num_joint_fac,
   }
   return(list(upper = upper, lower = lower))
 }
-sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y, LEGACY = TRUE) {
+sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num_y, LEGACY = FALSE) {
   # BDsamp <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma)$samp
   # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
   # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
@@ -516,13 +525,22 @@ sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num
   
   # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma )$samp
   # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma )$samp
+  # browser()
   if (isTRUE(LEGACY)) {
     Bsamp_full <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper,
                                    means = mean_B_full, sigma = sigma_B_full)$samp
+    
   } else {
-    Bsamp_full <- tmvtnorm::rtmvnorm(1, mean = mean_B_full,
-                                     sigma = sigma_B_full,
-                                     lower = lower, upper = upper)
+    # Bsamp_full <- tmvtnorm::rtmvnorm(1, mean = mean_B_full,
+    #                                  sigma = sigma_B_full,
+    #                                  lower = lower, upper = upper)
+    Bsamp_full <- tmvtnsim:::rtmvnormcpp(mean = matrix(mean_B_full, ncol = ncol(sigma_B_full)),
+                                         sigma = sigma_B_full,
+                                         blc = diag(ncol(sigma_B_full)),
+                                         lower = matrix(lower, ncol = ncol(sigma_B_full)),
+                                         upper = matrix(upper, ncol = ncol(sigma_B_full)),
+                                                        init = matrix(0, ncol = ncol(sigma_B_full)),
+                                                        burn = 10)
   }
     
   get_BD_samp(Bsamp_full, num_jnt_fac, num_y)
@@ -574,7 +592,6 @@ compute_invOmega0_B0_D0 <- function(invOmega0, B0, D0) {
   return(out)
 }
 get_B <- function(Bjoint, Bidio, num_fac_jnt, NN, num_y, type) {
-  # if (!ident_block) {
   if (type == "allidio") {
     if (num_fac_jnt != 0) {
       B <- cbind(Bjoint, diag(c(Bidio)))
@@ -621,9 +638,75 @@ get_id_wreg <- function(num_w_reg, NN) {
   }
   out_id
 }
+sample_B_full_cpp <- function(yObs, availableObs_crossSection, 
+                              fPost, VhatArray_A, w_reg_info,
+                              Omega0, B0, D0,
+                              id_f, selectR, lower, upper, 
+                              NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
+                              type, B_trues, D_trues) {
+  # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
+  Bjoint <- matrix(rep(0, N_num_y * num_fac_jnt), ncol = num_fac_jnt)
+  # Ergebnis-Matrix fuer die idiosynkratischen Ladungen (wird spaeter befuellt)
+  Bidio   <- matrix(rep(0, N_num_y), ncol = NN)
+  nregs   <- w_reg_info$nregs
+  Dregs   <- matrix(0, N_num_y, NN * nregs)
+  Dregs_i <- array(0, dim = c(num_y, nregs, NN))
+  invOmega0_i <- solve(Omega0)
+  upper_taken <- upper
+  lower_taken <- lower
+  for (i in 1:NN) {
+    if (num_fac_jnt > 0) {
+      bound_id <- 2
+      if (i == 1) {
+        bound_id <- 1
+      }
+      upper_taken <- upper[bound_id, ]
+      lower_taken <- lower[bound_id, ]
+    }
+    # Vhat Array for cross-sectional unit (country) i
+    Viarray <- VhatArray_A[, , (1 + (i - 1) * TT):(i * TT)]
+    # yObs for cross-sectional unit (country) i
+    yiObs <- yObs[(1 + num_y * (i - 1)):(num_y * i), ]
+    # availableObs <- which(!is.na(yObs[1 + num_y * (i-1),]))
+    availableObs <- which(availableObs_crossSection[i, ])
+    f_post_i <- fPost[id_f[, i], ]
+    # invOmega0_B0_D0_i <- invOmega0_B0_D0[[i]]
+    B0_D0_i  <- c(B0[, , i], D0[, , i])
+    w_regs_i <- w_reg_info$w_reg[w_reg_info$id_reg[, i], ]
+    B_D_samp <-  sample_B_D_cpp(availableObs, invOmega0_i, B0_D0_i,
+                                f_post_i, w_regs_i, Viarray, yiObs,
+                                selectR, 
+                                upper = upper_taken,
+                                lower = lower_taken,
+                                num_fac_jnt, num_y)
+    Dsamp <- B_D_samp$Dsamp
+    Bsamp_jnt <- B_D_samp$Bsamp_jnt
+    Bsamp_idi <- B_D_samp$Bsamp_idi
+    # Bsamp_jnt <- B_trues[(i - 1) * 3 + 1:3, 1]
+    # Bsamp_idi <- diag(B_trues[, 1:30])[(i - 1) * 3 + 1:3]
+    # Bsamp_idi <- diag(B_trues[, 2:31])[(i - 1) * 3 + 1:3]
+    if (nregs != 0) {
+      # Dsamp <- D_trues[(1 + num_y * (i - 1)):(i * num_y),
+      #       (1 + nregs * (i - 1)):(i * nregs)]
+      Dregs[(1 + num_y * (i - 1)):(i * num_y),
+            (1 + nregs * (i - 1)):(i * nregs)] <- Dsamp
+      Dregs_i[, , i] <- Dsamp
+    }
+    if (num_fac_jnt != 0) {
+      Bjoint[((i - 1) * num_y + 1):(i * num_y), ] <- Bsamp_jnt
+    }
+    Bidio[, i] <- Bsamp_idi
+  }
+  Bfacs <- get_B(Bjoint, Bidio, num_fac_jnt = num_fac_jnt,
+                 NN = NN, num_y = num_y, type = type)
+  Bfacs_i <- makeBi(npara = num_y, N = NN, p = num_par_all,
+                    p_joint = num_fac_jnt, B_stack = Bfacs,
+                    type = type)
+  return(list(Bfacs = Bfacs, Dregs = Dregs, 
+              Bfacs_i = Bfacs_i, Dregs_i = Dregs_i))
+}
 sample_B_full <- function(yObs, availableObs_crossSection, 
                           fPost, VhatArray_A, w_reg_info,
-                          # invOmega0, invOmega0_B0_D0,
                           Omega0, B0, D0,
                           id_f, selectR, lower, upper, 
                           NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
@@ -635,7 +718,15 @@ sample_B_full <- function(yObs, availableObs_crossSection,
   nregs   <- w_reg_info$nregs
   Dregs   <- matrix(0, N_num_y, NN * nregs)
   Dregs_i <- array(0, dim = c(num_y, nregs, NN))
+  invOmega0_i <- solve(Omega0)
+  upper_taken <- upper
+  lower_taken <- lower
   for (i in 1:NN) {
+    if (num_fac_jnt > 0) {
+      bound_id <- min(i, 2)
+      upper_taken <- upper[bound_id, ]
+      lower_taken <- lower[bound_id, ]
+    }
     # Vhat Array for cross-sectional unit (country) i
     Viarray <- VhatArray_A[, , (1 + (i - 1) * TT):(i * TT)]
     # yObs for cross-sectional unit (country) i
@@ -646,11 +737,9 @@ sample_B_full <- function(yObs, availableObs_crossSection,
     # invOmega0_B0_D0_i <- invOmega0_B0_D0[[i]]
     B0_D0_i  <- c(B0[, , i], D0[, , i])
     w_regs_i <- w_reg_info$w_reg[w_reg_info$id_reg[, i], ]
-    invOmega0_i <- solve(Omega0)
     B_post <- compute_B_post_full(availableObs = availableObs,
                                   invOmega0 = invOmega0_i,
                                   B0_D0 = B0_D0_i,
-                                  # invOmega_B0_D0 = invOmega0_B0_D0_i,
                                   fPost = f_post_i,
                                   w_regs = w_regs_i,
                                   Viarray = Viarray,
@@ -666,7 +755,8 @@ sample_B_full <- function(yObs, availableObs_crossSection,
     bmean <- B_post$B_mean
     Sigma <- B_post$B_Sigma
     B_D_samp <- sample_B_D(mean_B_full = bmean, Sigma,
-                           upper = upper, lower = lower,
+                           upper = upper_taken,
+                           lower = lower_taken,
                            num_jnt_fac = num_fac_jnt,
                            num_y = num_y)
     Dsamp <- B_D_samp$Dsamp
