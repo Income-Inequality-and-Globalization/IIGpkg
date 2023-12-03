@@ -57,7 +57,8 @@
 
 GibbsSSM_2_old <- function(
   itermax = 15000,identmax = 5000, npara, nreg, njointfac, yObs, c_, D, D0, B, Phi, Q , type = "allidio", initX, initP, initU, wRegSpec, wReg, uReg = NULL,
-  B0, 
+  B0,
+  #
   Vhat, incObsOld = 100000, incObsNew = 100000, covScale, VhatDiagScale, VhatDiagScale_start = NULL,
   VdiagEst, alpha0, beta0, countryA, A, scaleA, diagA, Psi0, nu0, shape0, rate0, storePath = "none",
   fPost, sampleA, identification = T, storeUnit = 10000) {
@@ -88,9 +89,12 @@ GibbsSSM_2_old <- function(
   #cSTORE <- matrix(rep(0,Nnpara*itermax), ncol = itermax)
   BSTORE <- array(0, dim = c(Nnpara,nfac,itermax)) # speichert die Gibbs-Zuege der Ladungen auf die latenten Faktoren
   uSTORE <- array(0, dim = c(Nnpara, TT, itermax) )
+  #
+  #
 
   if(nreg != 0){
     DSTORE <- array(0, dim = c(Nnpara,N * nreg,itermax)) # speichert die Koeffizienten der Makroregressor-Koeffizienten
+    # DiSTORE ....
     dimOmega0 <- dim(Omega0)[1]
     OmegaD0 <- Omega0[dimOmega0, dimOmega0] # speichert Startwert der Priorvarianz fuer die Makroregressor-Koeffizienten. Da ich Omega0 immer diagonal waehle und fuer jeden Makroregressor-Koeffizienten die gleiche Varianz waehle, reicht es hier einen Parameter zu speichern.
   }else{

@@ -1,14 +1,13 @@
-
-# source("GibbsSSM_2.R")
-# 
-
-
-
-
-
-Gibbs2_SM_SA_sampler <- function(p_joint, B_par, D_par, nreg, OmegaLoad0Scale, OmegaReg0Scale, countryA,  A_diag, nu0, Psi0, shape0, rate0, yObs, wRegSpec, wReg, Vhat, incObsOld = 100000, incObsNew = 100000, covScale = 1, VhatDiagScale, VhatDiagScale_start, VdiagEst, alpha0, beta0, N, TT,storePath,itermax, scaleA, diagA, sampleA, identification, type = "allidio"){
+Gibbs2_SM_SA_sampler <- function(
+  p_joint, B_par, D_par,
+  nreg,
+  #
+  OmegaLoad0Scale, OmegaReg0Scale, 
+  countryA, A_diag, nu0, Psi0, shape0, rate0, yObs, wRegSpec, wReg, Vhat,
+  incObsOld = 100000, incObsNew = 100000, covScale = 1, VhatDiagScale,
+  VhatDiagScale_start, VdiagEst, alpha0, beta0, N, TT,storePath,itermax,
+  scaleA, diagA, sampleA, identification, type = "allidio"){
   
-
   npara <- 3
   if(type == "allidio"){
     p <- npara * N + p_joint

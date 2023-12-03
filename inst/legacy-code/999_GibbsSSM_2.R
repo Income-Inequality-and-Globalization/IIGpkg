@@ -139,11 +139,14 @@ GibbsSSM_2 <- function(
   
   if(storePath != "none" & !missing(storePath)){
     if(VdiagEst){
-      storePath_adj <- paste0(storePath,"/","cs",covScale, "_pj" ,njointfac,"_Reg",wRegSpec ,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,"_A",initials$A[1,1], "_Psi",initials$Psi0[1,1],"_nu",initials$nu0,"_IO",incObsNew)
+      storePath_adj <- paste0(storePath,"/","cs",covScale, "_pj" ,njointfac,"_Reg",wRegSpec ,"_B",round(initials$B0[1,1,1],2),
+        "_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,"_A",initials$A[1,1], "_Psi",initials$Psi0[1,1],"_nu",initials$nu0,"_IO",incObsNew)
     }else if(sampleA){
-      storePath_adj <- paste0(storePath,"/","cs",covScale, "_pj" ,njointfac,"_Reg",wRegSpec,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,"_A",initials$A[1,1], "_Psi",initials$Psi0[1,1],"_nu",initials$nu0,"_IO",incObsNew)
+      storePath_adj <- paste0(storePath,"/","cs",covScale, "_pj" ,njointfac,"_Reg",wRegSpec,"_B",round(initials$B0[1,1,1],2),
+        "_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,"_A",initials$A[1,1], "_Psi",initials$Psi0[1,1],"_nu",initials$nu0,"_IO",incObsNew)
     }else{
-      storePath_adj <- paste0(storePath,"/","cs",covScale,"_pj",njointfac,"_Reg",wRegSpec,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,"_IO",incObsNew)
+      storePath_adj <- paste0(storePath,"/","cs",covScale,"_pj",njointfac,"_Reg",wRegSpec,"_B",round(initials$B0[1,1,1],2),
+        "_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,"_IO",incObsNew)
     }
   }
   
@@ -200,10 +203,12 @@ GibbsSSM_2 <- function(
       }
       if(VdiagEst){
         saveRDS(list(f = fSTORE, B = BSTORE, V = VSTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials)
-                , file = paste0(storePath_adj,"/","B",round(initials$B0[1,1,1],2),"_Omega",initials$Omega0[1,1],"_V",initials$Vhat[1,1,1], "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,"_error",iter,".rds") )
+                , file = paste0(storePath_adj,"/","B",round(initials$B0[1,1,1],2),"_Omega",initials$Omega0[1,1],
+                  "_V",initials$Vhat[1,1,1], "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,"_error",iter,".rds") )
       }else{
         saveRDS(list(f = fSTORE, B = BSTORE, A = ASTORE, blockCount = blockCount, errorMsg = errorMsg, initials = initials)
-                , file = paste0(storePath_adj,"/","B",round(initials$B0[1,1,1],2),"_Omega",initials$Omega0[1,1],"_A",initials$A[1,1], "_Psi",initials$Psi0[1,1],"_nu0",initials$nu0,"_IO",incObsNew,"_error",iter,".rds") )
+                , file = paste0(storePath_adj,"/","B",round(initials$B0[1,1,1],2),"_Omega",initials$Omega0[1,1],
+                  "_A",initials$A[1,1], "_Psi",initials$Psi0[1,1],"_nu0",initials$nu0,"_IO",incObsNew,"_error",iter,".rds") )
       }
       return(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, blockCount = blockCount, errorMsg =errorMsg))
       }
@@ -223,7 +228,7 @@ GibbsSSM_2 <- function(
     Bjoint <- matrix(rep(0, Nnpara * njointfac), ncol = njointfac)
     Bidio <- matrix(rep(0, Nnpara), ncol = N)
 
-    for(i in 1:N){
+    for(i in 1:N) {
       Viarray <-  VhatArray_A[,,(1 + (i-1) * TT):(i * TT)]
       yiObs <- yObs[(1 + npara * (i-1)):(npara * i),]
       #availableObs <- which(!is.na(yObs[1 + npara * (i-1),]))
@@ -253,7 +258,8 @@ GibbsSSM_2 <- function(
                                 dir.create(storePath_adj, recursive = T)
                                 storeCount <- storeCount + 1
                               }
-                              saveRDS(invOmega1, file =paste0(storePath_adj,"/","invOmega1_","pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Omega",initials$Omega0[1,1],"_A",initials$A[1,1],"_Psi",initials$Psi0[1,1],"_nu0",initials$nu0,"_IO",incObsNew,"_",iter))
+                              saveRDS(invOmega1, file =paste0(storePath_adj,"/","invOmega1_","pj",njointfac,"_B",round(initials$B0[1,1,1],2),
+                                "_Omega",initials$Omega0[1,1],"_A",initials$A[1,1],"_Psi",initials$Psi0[1,1],"_nu0",initials$nu0,"_IO",incObsNew,"_",iter))
                               }
                             #browser()
                             solve(selectR %*% invOmega1 %*% t(selectR), tol = 0)
@@ -486,13 +492,16 @@ GibbsSSM_2 <- function(
       }
       if(VdiagEst){
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, BD0STORE = BD0STORE, Omega0STORE = Omega0STORE, blockCount = blockCount,  errorMsg = errorMsg, initials = initials)
-                , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",OmegaD0,"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
+                , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",OmegaD0,
+                  "_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
       }else if(sampleA){
       saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, BD0STORE = BD0STORE, Omega0STORE = Omega0STORE, blockCount = blockCount,  errorMsg = errorMsg, initials = initials)
-              , file = paste0(storePath_adj,"/","cs",covScale, "_pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,"_A",initials$A[1,1], "_Psi",initials$Psi0[1,1],"_nu",initials$nu0,"_IO",incObsNew,".rds") )
+              , file = paste0(storePath_adj,"/","cs",covScale, "_pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,
+                "_A",initials$A[1,1], "_Psi",initials$Psi0[1,1],"_nu",initials$nu0,"_IO",incObsNew,".rds") )
       }else{
         saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, A = ASTORE, BD0STORE = BD0STORE, Omega0STORE = Omega0STORE, blockCount = blockCount,  errorMsg = errorMsg, initials = initials)
-                , file = paste0(storePath_adj,"/","cs",covScale,"_pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,"_IO",incObsNew,".rds") )
+                , file = paste0(storePath_adj,"/","cs",covScale,"_pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D0[1,1,1],"_OmD",OmegaD0,
+                  "_IO",incObsNew,".rds") )
       }
     }
     
