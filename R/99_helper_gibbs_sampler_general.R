@@ -8,7 +8,7 @@ set_reg_specification <- function(wRegSpec) {
   if (missing(wRegSpec)) wRegSpec <- 0
   wRegSpec
 }
-set_store_path_subdir <- function(store_path, V_DIAG_EST, SAMPLE_A,
+set_store_path_subdir <- function(store_path, SAMPLE_V, SAMPLE_A, SAMPLE_H,
                                   init_set, V_start, cov_scale, num_joint_fac,
                                   w_reg_spec, Omega_D0, inc_obs_new) {
   if (store_path == "none") {
@@ -33,26 +33,37 @@ set_store_path_subdir <- function(store_path, V_DIAG_EST, SAMPLE_A,
   # jeden Makroregressor-Koeffizienten die gleiche Varianz waehle, reicht es
   # hier einen Parameter zu speichern.
   if (store_path != "none" & !missing(store_path)) {
-    if (V_DIAG_EST || SAMPLE_A) {
+    store_path_adj <- base_adj
+    if (SAMPLE_V || SAMPLE_A) {
       store_path_adj <- paste0(
-        base_adj,
+        store_path_adj,
         "_A", init_set$A[1, 1],
         "_Psi", init_set$Psi0[1, 1],
-        "_nu", init_set$nu0,
-        "_IO", inc_obs_new
+        "_nu", init_set$nu0
       )
-    } else {
-      store_path_adj <- paste0(
-        base_adj,
-        "_IO",
-        inc_obs_new
+    } 
+    if (SAMPLE_H) {
+      store_path_adj <- file.path(
+        store_path_adj, 
+        paste0(
+          "mu_b0_", init_set$prior_list$hyperpriors$mu_b0[1], "_",
+          "Sigma_b0_", init_set$prior_list$hyperpriors$Sigma_b0[1, 1], "_",
+          "alpha_b0_", init_set$prior_list$hyperpriors$alpha_b0[1], "_",
+          "beta_b0_", init_set$prior_list$hyperpriors$beta_b0[1]
+        )
       )
     }
+    store_path_adj <- paste0(
+      store_path_adj,
+      "_IO",
+      inc_obs_new
+    )
   }
   # if (is.null(store_path_adj)) stop("HIT ME IN MY FACE")
   store_path_rds <- get_store_path_rds(store_path_adj,
-                                       V_DIAG_EST,
+                                       SAMPLE_V,
                                        SAMPLE_A,
+                                       SAMPLE_H,
                                        init_set,
                                        V_start,
                                        cov_scale,
@@ -68,20 +79,18 @@ set_store_path_subdir <- function(store_path, V_DIAG_EST, SAMPLE_A,
     "_Psi", init_set$Psi0[1, 1],
     "_nu0", init_set$nu0,
     "_IO", inc_obs_new)
-  store_path_kfe <- get_store_path_kf_error_base(V_DIAG_EST,
+  store_path_kfe <- get_store_path_kf_error_base(SAMPLE_V,
                                                  store_path_adj,
                                                  init_set, 
                                                  inc_obs_new)
-  # STORE WITH uSTORE:
-  # saveRDS(list(f = fSTORE, B = BSTORE, D = DSTORE, V = VSTORE, u = uSTORE, blockCount = block_count,  errorMsg = errorMsg, initials = initials)
-  #         , file = paste0(storePath_adj,"/", "pj",njointfac,"_B",round(initials$B0[1,1,1],2),"_Om",initials$Omega0[1,1],"_D",initials$D[1,1,1],"_OmD",Omega0[dim(Omega0)[1], dim(Omega0)[1]],"_V",Vstart, "_alpha",initials$alpha0,"_beta",initials$beta0,"_IO",incObsNew,".rds") )
   return(list(store_path_adj = store_path_adj,
               store_path_rds = store_path_rds,
               store_path_omg = store_path_omg,
-              store_path_kfe = store_path_kfe))
+              store_path_kfe = store_path_kfe)
+         )
 }
 get_store_path_rds <- function(store_path_adj,
-                               V_DIAG_EST, SAMPLE_A,
+                               SAMPLE_V, SAMPLE_A, SAMPLE_H,
                                init_set, V_start,
                                cov_scale, num_joint_fac, Omega_D0,
                                inc_obs_new) {
@@ -93,16 +102,26 @@ get_store_path_rds <- function(store_path_adj,
                                 "_D", init_set$D0[1, 1, 1],
                                 "_OmD", Omega_D0[dim(Omega_D0)[1], dim(Omega_D0)[1]])
   )
-  if (V_DIAG_EST) {
+  if (SAMPLE_V) {
     base_path <- paste0(base_path,
                         "_V", V_start,
                         "_alpha", init_set$alpha0,
                         "_beta", init_set$beta0)
-  } else if (SAMPLE_A) {
+  }
+  if (SAMPLE_A) {
     base_path <- paste0(base_path,
                        "_A", init_set$A[1, 1],
                        "_Psi", init_set$Psi0[1, 1],
                        "_nu", init_set$nu0)
+  }
+  if (SAMPLE_H) {
+    base_path <- paste0(
+      base_path,
+      "mu_b0_", init_set$prior_list$hyperpriors$mu_b0[1], "_",
+      "Sigma_b0_", init_set$prior_list$hyperpriors$Sigma_b0[1, 1], "_",
+      "alpha_b0_", init_set$prior_list$hyperpriors$alpha_b0[1], "_",
+      "beta_b0_", init_set$prior_list$hyperpriors$beta_b0[1]
+    )
   }
   paste0(base_path, "_IO", inc_obs_new, ".rds")
 }
@@ -194,4 +213,47 @@ get_initials <- function(envir_list) {
   # alpha_b0 <- prior_list$hyperpriors$alpha_b0
   # beta_b0  <- prior_list$hyperpriors$beta_b0
   return(envir_list_out)
+}
+plot_mcmc_ffbs <- function(f_stored, mm, 
+                           f_trues = NULL,
+                           options_f =list(
+                             grid = c(3,2),
+                             id_f = 1:6),
+                           options_p = list(
+                             break_mm = 50,
+                             pause = 0.4)
+                           ) {
+  if (mm != 1 && (mm %% options_p$break_mm != 0)) return(invisible(NULL))
+  f_test <- f_stored[, ,  ceiling(mm / 2):mm]
+  f_test_mean <- apply(f_test, c(1,2), mean)
+  f_test_sd   <- apply(f_test, c(1,2), sd)
+  if (is.na(f_test_sd[1,1])) f_test_sd[] <- 1
+
+  par(mfrow = options_f$grid)
+  for (tt in options_f$id_f) {
+    t_taken_loc <- tt
+    ci_lower <- f_test_mean[t_taken_loc, ] - 1.96*f_test_sd[t_taken_loc, ]
+    ci_upper <- f_test_mean[t_taken_loc, ] + 1.96*f_test_sd[t_taken_loc, ]
+    if (!is.null(f_trues)) {
+      ylim_min <- min(min(ci_lower), min(f_trues[t_taken_loc, ]))
+      ylim_max <- max(max(ci_upper), max(f_trues[t_taken_loc, ]))
+    } else {
+      ylim_min <- min(ci_lower)
+      ylim_max <- max(ci_upper)
+    }
+    plot(f_test_mean[t_taken_loc, ], type = "l",
+         ylim = c(ylim_min, ylim_max),
+         ylab = paste0("fac. No. ", tt), xlab = "t",
+         col = "blue")
+    if (!is.null(f_trues)) {
+      lines(f_trues[t_taken_loc, ], col = "green")
+    }
+    lines(ci_lower, col = "blue", lty = "dashed")
+    lines(ci_upper, col = "blue", lty = "dashed")
+  }
+  mtext("Factors ----- blue: filtered wit 95%-CI ----- green: true",
+        side = 3, line = -2, outer = TRUE)
+  par(mfrow = c(1, 1))
+  if (!is.null(options_p$pause)) Sys.sleep(options_p$pause)
+  return(invisible(NULL))
 }
