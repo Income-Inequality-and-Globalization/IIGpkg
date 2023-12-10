@@ -25,29 +25,61 @@ rtnormcpp <- function(mean, sd, lower, upper) {
     .Call(`_IIGpkg_rtnormcpp`, mean, sd, lower, upper)
 }
 
-#' Sum in the inverse of the posterior variance for loadings/partial effects
+#' Sample gkh-style (from truncated normal)
 #'
-#' @param invOmega0 inverse prior matrix
 #' @param availableObs available observations
-#' @param id_f `integer` (sequence); index for selection of correct factors
-#' @param fPost backward sampled states (FFBS output)
+#' @param invOmega0 inverse prior matrix
+#' @param invOmega0_B0_D0 inverse prior matrix multiplied by B0,D0
+#' @param fPost matrix of factors (backward sampled states via FFBS)
 #' @param w_regs regressor matrix
 #' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
+#' @param yiObs matrix of obersevations
+#' @param selectR selector matrix for missing y
 #'
-#' @return summation of kronecker products of appropriate dimension
+#' @return a list of two elements, the first being the posterior mean and the 
+#'    second the VCM matrix for sampling
 #'
-compute_B_mean_cpp <- function(Omega, invOmega_B0_D0, availableObs, selectR, fPost, w_regs, yiObs, Viarray) {
-    .Call(`_IIGpkg_compute_B_mean_cpp`, Omega, invOmega_B0_D0, availableObs, selectR, fPost, w_regs, yiObs, Viarray)
+sample_B_D_cpp <- function(availableObs, invOmega0, B0_D0, fPost, w_regs, Viarray, yiObs, selectR, lower, upper, num_jnt_fac, num_y) {
+    .Call(`_IIGpkg_sample_B_D_cpp`, availableObs, invOmega0, B0_D0, fPost, w_regs, Viarray, yiObs, selectR, lower, upper, num_jnt_fac, num_y)
+}
+
+#' Helper to separate joint, idiosyncratic and regressor samples
+#'
+#' @param draw full sample draw from truncated normal
+#' @param num_jnt_fac an integer giving the number of joint factors
+#' @param num_y integer giving the number of components in the measurements
+#'
+#' @return a list of thre elements, the first being the idiosyncratic factors,
+#'    the second being the common factor part and the last being the regressors
+#'
+get_BD_sample <- function(draw, num_jnt_fac, num_y) {
+    .Call(`_IIGpkg_get_BD_sample`, draw, num_jnt_fac, num_y)
 }
 
 #' Sum in the inverse of the posterior variance for loadings/partial effects
 #'
-#' @param invOmega0 inverse prior matrix
-#' @param availableObs available observations
-#' @param id_f `integer` (sequence); index for selection of correct factors
-#' @param fPost backward sampled states (FFBS output)
-#' @param w_regs regressor matrix
-#' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
+#' @inheritParams sample_B_D_cpp
+#'
+#' @return a list of two elements, the first being the posterior mean and the 
+#'    second the VCM matrix for sampling
+#'
+compute_B_post_full_cpp <- function(availableObs, invOmega0, B0_D0, fPost, w_regs, Viarray, yiObs, selectR) {
+    .Call(`_IIGpkg_compute_B_post_full_cpp`, availableObs, invOmega0, B0_D0, fPost, w_regs, Viarray, yiObs, selectR)
+}
+
+#' Sum in the inverse of the posterior variance for loadings/partial effects
+#'
+#' @inheritParams sample_B_D_cpp
+#'
+#' @return summation of kronecker products of appropriate dimension
+#'
+compute_B_mean_cpp <- function(Omega, invOmega0, B0_D0, availableObs, selectR, fPost, w_regs, yiObs, Viarray) {
+    .Call(`_IIGpkg_compute_B_mean_cpp`, Omega, invOmega0, B0_D0, availableObs, selectR, fPost, w_regs, yiObs, Viarray)
+}
+
+#' Sum in the inverse of the posterior variance for loadings/partial effects
+#'
+#' @inheritParams sample_B_D_cpp
 #'
 #' @return summation of kronecker products of appropriate dimension
 #'
@@ -67,11 +99,69 @@ sum_ff_kron_v <- function(availableObs, fPost, w_regs, Viarray) {
 
 #' Sum in the inverse of the posterior variance for loadings/partial effects
 #'
-#' @inheritParams compute_Omega1_cpp
+#' @inheritParams sample_B_D_cpp
 #'
 #' @return summation of kronecker products of appropriate dimension
 #'
 sum_f_y_v <- function(availableObs, fPost, w_regs, yiObs, Viarray) {
     .Call(`_IIGpkg_sum_f_y_v`, availableObs, fPost, w_regs, yiObs, Viarray)
+}
+
+ffbs <- function(yObs, wReg, dimX, dimY, TT, x00, P00, A, C, D, Q, R_reordered, PDSTORE) {
+    .Call(`_IIGpkg_ffbs`, yObs, wReg, dimX, dimY, TT, x00, P00, A, C, D, Q, R_reordered, PDSTORE)
+}
+
+kf_ff <- function(yObs, wReg, dimX, dimY, TT, x00, P00, A, C, D, Q, R, PDSTORE, LLVALUE) {
+    .Call(`_IIGpkg_kf_ff`, yObs, wReg, dimX, dimY, TT, x00, P00, A, C, D, Q, R, PDSTORE, LLVALUE)
+}
+
+#' Backward Sampling based Kalman-Filter Output
+#'
+#' @param TT time
+#' @param nfac Number of factors
+#' @param Phi phi param
+#' @param Q VCM part
+#' @param filt_f Means of filtering distribution from Kalman-Filter
+#' @param filt_P Variances of filtering distribution from Kalman-Filter
+#'
+#' @return posterior filtered states
+bs <- function(TT, nfac, Phi, Q, filt_f, filt_P) {
+    .Call(`_IIGpkg_bs`, TT, nfac, Phi, Q, filt_f, filt_P)
+}
+
+compute_mat_reg <- function(mat, reg) {
+    .Call(`_IIGpkg_compute_mat_reg`, mat, reg)
+}
+
+compute_Xtt_1 <- function(A, xtt) {
+    .Call(`_IIGpkg_compute_Xtt_1`, A, xtt)
+}
+
+compute_Ptt_1 <- function(A, Ptt, Q) {
+    .Call(`_IIGpkg_compute_Ptt_1`, A, Ptt, Q)
+}
+
+compute_Lt <- function(C, Ptt1, R) {
+    .Call(`_IIGpkg_compute_Lt`, C, Ptt1, R)
+}
+
+compute_Kt <- function(Ptt1, C) {
+    .Call(`_IIGpkg_compute_Kt`, Ptt1, C)
+}
+
+compute_kG <- function(yObs, C, xtt1, DwReg) {
+    .Call(`_IIGpkg_compute_kG`, yObs, C, xtt1, DwReg)
+}
+
+compute_Xtt <- function(xtt1, Kt, Lt, kGain) {
+    .Call(`_IIGpkg_compute_Xtt`, xtt1, Kt, Lt, kGain)
+}
+
+compute_Ptt <- function(Ptt1, Kt, Lt, C, R) {
+    .Call(`_IIGpkg_compute_Ptt`, Ptt1, Kt, Lt, C, R)
+}
+
+compute_b_diag_by_time <- function(V_hat_array_A, num_y, NN, TT) {
+    .Call(`_IIGpkg_compute_b_diag_by_time`, V_hat_array_A, num_y, NN, TT)
 }
 
