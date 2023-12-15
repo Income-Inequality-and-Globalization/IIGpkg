@@ -7,7 +7,7 @@
 compute_B_post_full_cpp(
   availableObs,
   invOmega0,
-  invOmega_B0_D0,
+  B0_D0,
   fPost,
   w_regs,
   Viarray,

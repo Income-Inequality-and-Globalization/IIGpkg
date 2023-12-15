@@ -6,7 +6,8 @@
 \usage{
 compute_B_mean_cpp(
   Omega,
-  invOmega_B0_D0,
+  invOmega0,
+  B0_D0,
   availableObs,
   selectR,
   fPost,
@@ -16,17 +17,19 @@ compute_B_mean_cpp(
 )
 }
 \arguments{
+\item{invOmega0}{inverse prior matrix}
+
 \item{availableObs}{available observations}
 
-\item{fPost}{backward sampled states (FFBS output)}
+\item{selectR}{selector matrix for missing y}
+
+\item{fPost}{matrix of factors (backward sampled states via FFBS)}
 
 \item{w_regs}{regressor matrix}
 
+\item{yiObs}{matrix of obersevations}
+
 \item{Viarray}{VCOV array (npara x npara x TT) of cross-sectional unit i}
-
-\item{invOmega0}{inverse prior matrix}
-
-\item{id_f}{`integer` (sequence); index for selection of correct factors}
 }
 \value{
 summation of kronecker products of appropriate dimension

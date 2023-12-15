@@ -11,13 +11,13 @@ compute_Omega1_cpp(invOmega0, availableObs, selectR, fPost, w_regs, Viarray)
 
 \item{availableObs}{available observations}
 
-\item{fPost}{backward sampled states (FFBS output)}
+\item{selectR}{selector matrix for missing y}
+
+\item{fPost}{matrix of factors (backward sampled states via FFBS)}
 
 \item{w_regs}{regressor matrix}
 
 \item{Viarray}{VCOV array (npara x npara x TT) of cross-sectional unit i}
-
-\item{id_f}{`integer` (sequence); index for selection of correct factors}
 }
 \value{
 summation of kronecker products of appropriate dimension
