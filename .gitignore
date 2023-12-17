@@ -16,6 +16,7 @@ plot_functions_ACF.R
 IIGpkg.Rproj
 tests
 data
-inst
+inst/legacy-code
+inst/legacy-output
 figures
 /.quarto/
