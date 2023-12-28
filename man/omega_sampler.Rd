@@ -13,10 +13,6 @@ omega_sampler(NN, B_i, D_i, B0, D0, alpha_b0, beta_b0, selectR)
 
 \item{D_i}{D-matrices factorized per i}
 
-\item{B0}{B0 samples}
-
-\item{D0}{D0 samples}
-
 \item{alpha_b0}{hyperprior parameter}
 
 \item{beta_b0}{hyperprior parameter}
