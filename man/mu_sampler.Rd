@@ -9,8 +9,6 @@ mu_sampler(
   npara,
   nreg,
   njointfac,
-  B0,
-  D0,
   B_i,
   D_i,
   invOmega0,
@@ -28,10 +26,6 @@ mu_sampler(
 \item{nreg}{number of regressors}
 
 \item{njointfac}{number of joint factors}
-
-\item{B0}{B0 samples}
-
-\item{D0}{D0 samples}
 
 \item{B_i}{B-matrices factorized per i}
 
