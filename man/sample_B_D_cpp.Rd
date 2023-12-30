@@ -7,14 +7,16 @@
 sample_B_D_cpp(
   availableObs,
   invOmega0,
-  invOmega_B0_D0,
+  B0_D0,
   fPost,
   w_regs,
   Viarray,
   yiObs,
   selectR,
   lower,
-  upper
+  upper,
+  num_jnt_fac,
+  num_y
 )
 }
 \arguments{
