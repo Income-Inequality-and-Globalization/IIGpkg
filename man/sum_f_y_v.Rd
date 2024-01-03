@@ -9,9 +9,11 @@ sum_f_y_v(availableObs, fPost, w_regs, yiObs, Viarray)
 \arguments{
 \item{availableObs}{available observations}
 
-\item{fPost}{backward sampled states (FFBS output)}
+\item{fPost}{matrix of factors (backward sampled states via FFBS)}
 
 \item{w_regs}{regressor matrix}
+
+\item{yiObs}{matrix of obersevations}
 
 \item{Viarray}{VCOV array (npara x npara x TT) of cross-sectional unit i}
 }
