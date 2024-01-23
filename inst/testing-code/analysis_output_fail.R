@@ -60,8 +60,8 @@ tmvtnsim:::rtmvnormcpp(mean = matrix(mean, ncol = ncol(Sigma)),
 
 
 
-colMeans(out_test2)
-apply(out_test2, 2, sd)
+# colMeans(out_test2)
+# apply(out_test2, 2, sd)
 
 colMeans(out_test_new_01)
 apply(out_test_new_01, 2, sd)
