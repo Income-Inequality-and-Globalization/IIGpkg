@@ -1,7 +1,36 @@
-# PKG_LIBS = -lmpfr -lgmp
-# PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
-# PKG_CPPFLAGS = -I../inst/include
-# PKG_CXXFLAGS += -O0
-# CXX_STD = CXX11
+# Set the version of the compiler; most often not needed so left blank
+VER=
+# Sets CCACHE as a plugin variable for the compiler to use
+CCACHE=ccache # CCACHE=g++
+# This compiler is now used in the following languages
+CC=$(CCACHE) gcc$(VER)
+CXX=$(CCACHE) g++$(VER)
+CXX11=$(CCACHE) g++$(VER)
+CXX14=$(CCACHE) g++$(VER)
+CXX17=$(CCACHE) g++$(VER)
+CXX20=$(CCACHE) g++$(VER)
+CXX23=$(CCACHE) g++$(VER)
+FC=$(CCACHE) gfortran$(VER)
+F77=$(CCACHE) gfortran$(VER)
+
+# Now we set common flags for all above compilers (for ease)
+# I. Debugger friendly flags
+# COMMON_FLAGS= -g -O0
+# II. alternative debugger friendly but optimized common flags:
+# COMMON_FLAGS= -g -Og -Wall -Wextra -pedantic -fsanitize=address
+# III. High Performance Flags
+COMMON_FLAGS= -O3 -march=native -flto -funroll-loops
+# Do not use 'Address Sanitizer' in general; but possible
+# LDFLAGS= -fsanitize=address
+
+CXXFLAGS= $(COMMON_FLAGS)
+CXX11FLAGS= $(COMMON_FLAGS)
+CXX14FLAGS= $(COMMON_FLAGS)
+CXX17FLAGS= $(COMMON_FLAGS)
+CXX20FLAGS= $(COMMON_FLAGS)
+CXX23FLAGS= $(COMMON_FLAGS)
+# Usually no need for setting this flag but possible; see my R notes
+# PKG_CXXFLAGS= $(COMMON_FLAGS)
+
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
 PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
