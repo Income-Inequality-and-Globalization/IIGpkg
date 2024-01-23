@@ -10,11 +10,15 @@ generate_measures_me <- function(out_gibbs) {
   TT <- dim(out_test$f)[2]
   MM <- dim(out_test$B)[3]
 
-  out_mu <- array(0, dim = c(NN_num_para, TT, MM))
+  par_post_estim <- array(0, dim = c(NN_num_para, TT, MM))
   for (mm in seq_len(MM)) {
-    out_mu[, , mm] <- B[, , mm] %*% f[, , mm] + D[, , mm] %*% wRegs
+    par_post_estim[, , mm] <- B[, , mm] %*% f[, , mm] + D[, , mm] %*% wRegs
     progress_any(mm, MM)
   }
-  out_mu <- exp(out_mu)
-  return(list(B = B, f = f, D = D, wRegs = wRegs, mu = out_mu))
+  par_post_estim <- exp(par_post_estim)
+  a_post  <- get_par_post_estim(par_post_estim, name_par = "q")
+  q_post  <- get_par_post_estim(par_post_estim, name_par = "q")
+  mu_post <- get_par_post_estim(par_post_estim, name_par = "mu")
+  return(list(B = B, f = f, D = D, wRegs = wRegs,
+              par_post_estim = par_post_estim))
 }
