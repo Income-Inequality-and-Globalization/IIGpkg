@@ -1,4 +1,7 @@
-generate_measures_me <- function(out_gibbs, const_num_para = 3) {
+generate_measures_me <- function(out_gibbs,
+                                 transformation_infos,
+                                 const_num_para = 3) {
+  if (missing(transformation_infos)) stop("Arg. missing.")
   validate_GibbsOutputIIG(out_gibbs)
 
   B <- get_cnt_me_B(out_gibbs$B)
@@ -16,15 +19,25 @@ generate_measures_me <- function(out_gibbs, const_num_para = 3) {
     par_post_estim[, , mm] <- B[, , mm] %*% f[, , mm] + D[, , mm] %*% wRegs
     progress_any(mm, MM)
   }
-  par_post_estim <- exp(par_post_estim)
+  par_post_estim <- f_back_transform(par_post_estim,
+                                     transformation_infos$centering,
+                                     transformation_infos$scaling)
   a_post  <- get_par_post_estim(par_post_estim, par_name = "a")
   q_post  <- get_par_post_estim(par_post_estim, par_name = "q")
   mu_post <- get_par_post_estim(par_post_estim, par_name = "mu")
 
   mu_info <- compute_mu_info(mu_post)
-  browser()
   gini_info <- compute_gini_info(a_post, q_post)
   return(list(B = B, f = f, D = D, wRegs = wRegs,
               par_post_estim = par_post_estim,
               mu_info = mu_info, gini_info = gini_info))
+}
+f_back_transform <- function(post_estim, values_centering, values_scaling) {
+  # nr <- dim(post_estim)[1]
+  # nc <- dim(post_estim)[2]
+  MM <- dim(post_estim)[3]
+  for (mm in seq_len(MM)) {
+    post_estim[, , mm] <- post_estim[, , mm] * values_scaling + values_centering
+  }
+  return(exp(post_estim))
 }
