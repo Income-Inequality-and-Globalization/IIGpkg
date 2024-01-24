@@ -6,14 +6,21 @@ firstObs_center <- function(x){
   nonNA_index <- which(!is.na(x))[1]
   x - x[nonNA_index]
 }
-
+firstObs_center_values <- function(x){
+  x[which(!is.na(x))[1]]
+}
 standardize <- function(x){
   x/sd(x, na.rm = TRUE)
+}
+standardized_values <- function(x){
+  sd(x, na.rm = TRUE)
 }
 
 
 # GMM Ergebnisse (Parameter-Schaetzungen) mit Jahr 2021
-results_GMM_2021 <- tibble(read.table("./data/input/data_coef_covariates.txt",header = TRUE))
+pth_base_data <- "./data/input/data-sm"
+pth_data_covr <- file.path(pth_base_data, "data_coef_covariates.txt")
+results_GMM_2021 <- tibble(read.table(pth_data_covr,header = TRUE))
 # GMM Ergebnisse (Kovarianzen) mit Jahr 2021
 VCOV_array_country_2021 <- readRDS("./data/input/VarianceArray_by_country.rds")
 # 2021 wird entfernt, das es fuer alle Laender fehlt.
@@ -106,8 +113,10 @@ standardize_VCOV <- function(VCOV_array, TT, N, sd_vec, npara){
 VCOV_array_country_pd <- standardize_VCOV(VCOV_array_country_pd, TT, N, sd_yObs, npara)
 
 
-yObs_centered <- t(apply(yObs,1,firstObs_center))
-yObs <- t(apply(yObs_centered,1,standardize))
+yObs_centered <- t(apply(yObs, 1, firstObs_center))
+yObs_centered_values <- t(apply(yObs, 1, firstObs_center_values))
+yObs <- t(apply(yObs_centered, 1, standardize))
+yObs_standardization <- t(apply(yObs_centered, 1, standardized_values))
 
 
 

@@ -13,7 +13,9 @@ standardize <- function(x){
 
 
 # GMM Ergebnisse (Parameter-Schaetzungen) mit Jahr 2021
-results_GMM_2021 <- tibble(read.table("./data/input/data_coef_covariates.txt",header = TRUE))
+pth_base_data <- "./data/input/data-sm"
+pth_data_covr <- file.path(pth_base_data, "data_coef_covariates.txt")
+results_GMM_2021 <- tibble(read.table(pth_data_covr,header = TRUE))
 # GMM Ergebnisse (Kovarianzen) mit Jahr 2021
 VCOV_array_country_2021 <- readRDS("./data/input/VarianceArray_by_country.rds")
 # 2021 wird entfernt, das es fuer alle Laender fehlt.
