@@ -1,7 +1,17 @@
+get_cnt_par_post_estim <- function(NN,
+                                   num_pars = 3,
+                                   names_para = c("a", "q", "mu"),
+                                   TT, MM) {
+  out_post_estim <- array(0, dim = c(NN * num_pars, TT, MM))
+  dimnames(out_post_estim) <- list(get_cnt_names_NN(names_para, num_pars, NN),
+                                   get_cnt_names_TT(TT),
+                                   get_cnt_names_dimMM(MM))
+  return(out_post_estim)
+}
 get_cnt_me_B <- function(out_B,
                          NN = 10,
                          num_pars = 3,
-                         names_para = c("a", "b", "mu")) {
+                         names_para = c("a", "q", "mu")) {
   nms_rw <- get_cnt_names_NN(names_para, num_pars, NN)
   nms_cl <- get_cnt_names_facs(names_para, num_pars, NN)
   nms_mm <- get_cnt_names_dimMM(dim(out_B)[3])
@@ -12,7 +22,7 @@ get_cnt_me_B <- function(out_B,
 get_cnt_me_f <- function(out_f,
                          NN = 10,
                          num_pars = 3,
-                         names_para = c("a", "b", "mu")) {
+                         names_para = c("a", "q", "mu")) {
   nms_rw <- get_cnt_names_facs(names_para, num_pars, NN)
   nms_cl <- get_cnt_names_TT(ncol(out_f))
   nms_mm <- get_cnt_names_dimMM(dim(out_f)[3])
@@ -23,7 +33,7 @@ get_cnt_me_f <- function(out_f,
 get_cnt_me_D <- function(out_D,
                          NN = 10,
                          num_pars = 3,
-                         names_para = c("a", "b", "mu")) {
+                         names_para = c("a", "q", "mu")) {
   nms_rw <- get_cnt_names_NN(names_para, num_pars, NN)
   nms_cl <- get_cnt_names_NN(names_para, num_pars, NN)
   nms_mm <- get_cnt_names_dimMM(dim(out_D)[3])
@@ -34,7 +44,7 @@ get_cnt_me_D <- function(out_D,
 get_cnt_me_wRegs <- function(out_wRegs,
                              NN = 10,
                              num_pars = 3,
-                             names_para = c("a", "b", "mu")) {
+                             names_para = c("a", "q", "mu")) {
   nms_rw <- get_cnt_names_NN(names_para, num_pars, NN)
   nms_cl <- get_cnt_names_TT(ncol(out_wRegs))
 
