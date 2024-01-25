@@ -1,3 +1,36 @@
+#' Process Covariance Array
+#'
+#' This function processes a 3D array representing country-period specific 
+#' covariance matrices. It symmetrizes the matrices and optionally converts 
+#' them into diagonal matrices.
+#'
+#' @param VCOV_array Initial 3D array of covariance matrices.
+#' @param npara Number of parameters (default: 3).
+#' @param N Number of countries.
+#' @param TT Total number of years.
+#' @param Diag_VCOV Boolean flag to convert matrices into diagonal form (default: FALSE).
+#' @return A processed 3D array of covariance matrices.
+#' @export
+process_covariance_array <- function(VCOV_array, npara, N, TT, Diag_VCOV = FALSE) {
+  # Symmetrize the covariance matrices
+  VCOV_array_pd <- array(apply(VCOV_array, 3,
+                               function(x) {
+                                 x/2 + t(x)/2
+                                }
+                               ),
+                         c(npara, npara, N * TT))
+  # Convert to diagonal matrices if Diag_VCOV is TRUE
+  if (Diag_VCOV) {
+    VCOV_array_pd <- array(apply(VCOV_array_pd, 3, 
+                                 function(x) {
+                                   diag(diag(x))
+                                  }
+                                ),
+                           c(npara, npara, N * TT))
+  }
+  return(VCOV_array_pd)
+}
+
 #' Group Data Attributes
 #'
 #' This function calculates unique years and countries from a dataset and 
