@@ -1,3 +1,34 @@
+#' Group Data Attributes
+#'
+#' This function calculates unique years and countries from a dataset and 
+#' creates a matrix of country-parameter combinations.
+#'
+#' @param data_gmm A data frame containing at least the columns 'year' and 'country'.
+#' @return A list containing years, total number of years (TT), countries, 
+#'         total number of countries (N), and a name matrix (nameMat).
+#' @export
+get_data_meta_attributes <- function(data_gmm) {
+  # Unique years and their count
+  years <- unique(data_gmm$year)
+  TT <- length(years)
+
+  # Unique countries and their count
+  countries <- unique(data_gmm$country)
+  N <- length(countries)
+
+  # Creating a matrix for country-parameter combinations
+  npara <- 3
+  nameMat <- cbind(rep(countries, each = npara), rep(c("a", "q", "mu"), N))
+
+  # Returning the results as a list
+  return(list(years = years,
+              TT = TT,
+              npara = npara,
+              countries = countries,
+              N = N,
+              nameMat = nameMat))
+}
+
 #' Remove Specific Year Data and Save
 #'
 #' This function reads a dataset, filters out a specified year (default 2021),
@@ -20,8 +51,6 @@ remove_year_and_save <- function(pth_base_data = "./data/input/data-sm",
                  dplyr::filter(year != year_to_remove)
   saveRDS(GMM_by_year, file = file.path(pth_base_data, save_file))
 }
-
-
 #' Center values by the first non-NA observation
 #'
 #' This function centers the values in a vector by subtracting the first non-NA 
