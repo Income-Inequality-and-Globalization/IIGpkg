@@ -1,3 +1,47 @@
+#' Adjust Covariance Matrix with Logarithmic Transformation
+#'
+#' This function adjusts a 3D array of covariance matrices using logarithmic 
+#' transformations of the observation data. It symmetrizes the adjusted matrices.
+#'
+#' @param VCOV_array Initial 3D array of covariance matrices.
+#' @param npara Number of parameters.
+#' @param N Number of countries.
+#' @param TT Total number of years.
+#' @param yObs_log Logarithmically transformed observation data.
+#' @return A 3D array of adjusted and symmetrized covariance matrices.
+#' @export
+log_adj_VCOV <- function(VCOV_array, npara, N, TT, yObs_log) {
+  yObs_inv <- 1 / yObs_log
+  ArrayTimeCountry <- array(yObs_inv, c(npara, 1, N * TT))
+  MatCountryTime <- ArrayTimeCountry[, , c(sapply(0:(N - 1), \(x) (x + seq(1, (TT - 1) * N + 1, N))))]
+  VCOV_log_list <- lapply(1:(N * TT), \(x) diag(MatCountryTime[, x]) %*% VCOV_array[, , x] %*% diag(MatCountryTime[, x]))
+  VCOV_log_array <- array(unlist(VCOV_log_list), dim = c(npara, npara, TT * N))
+  array(apply(VCOV_log_array, 3, function(x) {x / 2 + t(x) / 2}), c(npara, npara, N * TT))
+}
+
+#' Standardize Covariance Matrices
+#'
+#' This function standardizes a 3D array of covariance matrices using the 
+#' standard deviations of the logarithmically transformed observation data.
+#'
+#' @param VCOV_array A 3D array of covariance matrices to be standardized.
+#' @param TT Total number of years.
+#' @param N Number of countries.
+#' @param sd_vec_y Vector of standard deviations for each parameter and country.
+#' @param npara Number of parameters.
+#' @return A 3D array of standardized covariance matrices.
+#' @export
+standardize_VCOV <- function(VCOV_array, TT, N, sd_vec_y, npara) {
+  V_adj_array <- array(0, dim = c(npara, npara, TT * N))
+  for (i in 1:N) {
+    V_adj <- diag(1 / sd_vec_y[((i - 1) * npara + 1):(i * npara)])
+    V_select <- VCOV_array[, , ((i - 1) * TT + 1):(i * TT)]
+    adj_array <- array(apply(V_select, 3, \(x) V_adj %*% x %*% V_adj), dim = c(npara, npara, TT))
+    V_adj_array[, , ((i - 1) * TT + 1):(i * TT)] <- adj_array
+  }
+  return(V_adj_array)
+}
+
 #' Process Observation Data
 #'
 #' This function processes observation data from a dataset, performing log 
