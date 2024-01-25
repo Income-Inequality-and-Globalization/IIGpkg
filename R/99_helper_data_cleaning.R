@@ -1,3 +1,49 @@
+#' Process Observation Data
+#'
+#' This function processes observation data from a dataset, performing log 
+#' transformation, centering, standardization, and calculating standard deviations.
+#'
+#' @param data_GMM A data frame with columns 'a', 'q', 'est_mean', 'country', and 'year'.
+#' @param npara Number of parameters (default: 3).
+#' @param TT Total number of years.
+#' @param countries Vector of unique countries.
+#' @param years Vector of unique years.
+#' @return A list containing various transformations of the observation data.
+#'
+#' @export
+process_observation_data <- function(data_GMM, npara, TT, countries, years) {
+  # Create the unadjusted observation matrix
+  yObs_unadj <- matrix(t(data_GMM %>% dplyr::select(a, q, est_mean)), ncol = TT)
+  rownames(yObs_unadj) <- rep(countries, each = npara)
+  colnames(yObs_unadj) <- years
+
+  # Log transformation
+  yObs_log <- log(yObs_unadj)
+
+  # Centering and standardization
+  yObs_log_centered <- t(apply(yObs_log, 1, firstObs_center))
+  yObs_log_centered_values <- t(apply(yObs_log, 1, firstObs_center_values))
+  yObs_log_centered_standardized <- t(apply(yObs_log_centered, 1, standardize))
+  yObs_standardized_values <- t(apply(yObs_log_centered, 1, standardized_values))
+
+  # Standard deviation
+  sd_yObs_log <- apply(yObs_log, 1, sd, na.rm = TRUE)
+  # Return all variables as a list
+  return(
+    list(
+      data = list(
+        yObs_unadj = yObs_unadj,
+        yObs_log = yObs_log, 
+        yObs_log_centered = yObs_log_centered, 
+        yObs_log_centered_standardized = yObs_log_centered_standardized),
+      data_values = list(
+        yObs_log_centered_values = yObs_log_centered_values,
+        yObs_standardized_values = yObs_standardized_values, 
+        sd_yObs_log = sd_yObs_log)
+      )
+  )
+}
+
 #' Process Covariance Array
 #'
 #' This function processes a 3D array representing country-period specific 
