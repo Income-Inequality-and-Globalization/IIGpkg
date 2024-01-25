@@ -1,3 +1,27 @@
+#' Remove Specific Year Data and Save
+#'
+#' This function reads a dataset, filters out a specified year (default 2021),
+#' and saves the filtered dataset as an RDS file.
+#'
+#' @param pth_base_data Base path for data files (default: "./data/input/data-sm").
+#' @param data_file Name of the data file (default: "data_coef_covariates.txt").
+#' @param save_file Name of the file to save the filtered data (default: "data_coef_covariates_2020.rds").
+#' @param year_to_remove Year to be removed from the dataset (default: 2021).
+#' @return None
+#' @export
+remove_year_and_save <- function(pth_base_data = "./data/input/data-sm",
+                                 data_file = "data_coef_covariates.txt",
+                                 save_file = "data_coef_covariates_2020.rds",
+                                 year_to_remove = 2021) {
+  pth_data_covr <- file.path(pth_base_data, data_file)
+  results_GMM <- tibble::tibble(read.table(pth_data_covr, header = TRUE))
+  GMM_by_year <- results_GMM %>% 
+                 dplyr::arrange(year) %>% 
+                 dplyr::filter(year != year_to_remove)
+  saveRDS(GMM_by_year, file = file.path(pth_base_data, save_file))
+}
+
+
 #' Center values by the first non-NA observation
 #'
 #' This function centers the values in a vector by subtracting the first non-NA 
