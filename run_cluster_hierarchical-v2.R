@@ -1,146 +1,84 @@
+rm(list = ls())
 library(tidyverse)
 library(IIGpkg)
 # source("plot_functions_ACF.R")
 # Data --------------------------------------------------------------------
-firstObs_center <- function(x){
-  nonNA_index <- which(!is.na(x))[1]
-  x - x[nonNA_index]
-}
-firstObs_center_values <- function(x){
-  x[which(!is.na(x))[1]]
-}
-standardize <- function(x){
-  x/sd(x, na.rm = TRUE)
-}
-standardized_values <- function(x){
-  sd(x, na.rm = TRUE)
-}
-
-
 # GMM Ergebnisse (Parameter-Schaetzungen) mit Jahr 2021
-pth_base_data <- "./data/input/data-sm"
-pth_data_covr <- file.path(pth_base_data, "data_coef_covariates.txt")
-results_GMM_2021 <- tibble(read.table(pth_data_covr,header = TRUE))
-# GMM Ergebnisse (Kovarianzen) mit Jahr 2021
-VCOV_array_country_2021 <- readRDS("./data/input/VarianceArray_by_country.rds")
-# 2021 wird entfernt, das es fuer alle Laender fehlt.
-#### aus Datensatz entefernen und Befehl loeschen
-VCOV_array_country <- VCOV_array_country_2021[, , which(results_GMM_2021$year != 2021)] 
+pth_base_data    <- "./data/input/data-sm"
+# remove_year_and_save(pth_base_data,
+#                      data_file = "data_coef_covariates.txt",
+#                      save_file = "data_coef_covariates_2020.rds",
+#                      year_to_remove = 2021)
+# GMM Ergebnisse (Kovarianzen) nur bis 2020
+pth_data_covr           <- file.path(pth_base_data, "data_coef_covariates_2020.rds")
+pth_data_vcov           <- file.path(pth_base_data, "VarianceArray_by_country_2020.rds")
+GMM_by_year             <- readRDS(file = pth_data_covr)
+VCOV_array_country_2020 <- readRDS(pth_data_vcov)
 
-GMM_by_year <- results_GMM_2021 %>% arrange(year) %>% filter(year != 2021)
-years <- unique(GMM_by_year$year)
-TT <- length(years)
-npara <- 3
+data_meta_info <- get_data_meta_attributes(GMM_by_year)
+countries      <- data_meta_info$countries
+nameMat        <- data_meta_info$nameMat
+npara          <- data_meta_info$npara
+years          <- data_meta_info$years
+TT             <- data_meta_info$TT
+N              <- data_meta_info$N
 
-countries <- unique(GMM_by_year$country)
-N <- length(countries)
-nameMat <- cbind(rep(countries, each = npara), rep(c("a","q","mu"), N))
-
-VCOV_array_country_pd <- array(apply(VCOV_array_country,3,function(x){x/2 + t(x)/2 }),  c(npara, npara, N * TT)) 
-
-Diag_VCOV <- FALSE
-
-if (Diag_VCOV) {
-  VCOV_array_country_pd <-  array(apply(VCOV_array_country_pd,3,\(x) diag(diag(x)) ), c(npara, npara, N * TT))
-}
-yObs <- matrix(t(GMM_by_year %>%  select(a,q,est_mean)), ncol= TT)
-rownames(yObs) <- rep(countries, each = npara)
-colnames(yObs) <- years
+VCOV_array_country_pd <- process_covariance_array(VCOV_array_country_2020,
+                                                  npara,
+                                                  N,
+                                                  TT)
+tmplist_dt <- process_observation_data(GMM_by_year, 
+                                       npara,
+                                       TT,
+                                       countries,
+                                       years)
+# Get various data sets: un-adjusted version, in logs, in logs and centered, 
+# and finally in logs, centered and standardized:
+yObs_unadj                     <- tmplist_dt$data$yObs_unadj
+yObs_log                       <- tmplist_dt$data$yObs_log
+yObs_log_centered              <- tmplist_dt$data$yObs_log_centered
+yObs_log_centered_standardized <- tmplist_dt$data$yObs_log_centered_standardized
+# Get the values used for above transformations
+yObs_log_centered_values <- tmplist_dt$data_values$yObs_log_centered_values
+yObs_standardization     <- tmplist_dt$data_values$yObs_standardized_values 
+sd_yObs_log              <- tmplist_dt$data_values$sd_yObs_log
+# Adjust the measurement VCOV matrix (`A`) to this log- and other transformation
+VCOV_array_country_pd <- VCOV_array_country_pd %>%
+  log_adj_VCOV(npara, N, TT, yObs_unadj) %>%
+  standardize_VCOV(TT, N, sd_yObs_log, npara)
 
 regs <- c("cpi_change", "unemployment", "gdp_ppp")
-lregs <- length(regs) # Anzahl der verfuegbaren Regressoren (= 3)
-reg_combs <- lapply(1:lregs, \(x) combn(regs, x)) # Alle Kombinationsmoeglichkeiten der Regressoren
-ncombs <- sum(sapply(1:lregs, \(x)choose(3,x))) # Anzahl der Regressorkombinationen (= 7)
-wRegCombsList <- vector("list", ncombs) # Liste der Regressormatrizen fuer alle Kombinationen (wird in der foor-loop befüllt)
-nameRegList <- vector("list", ncombs) # Alle Kombinationsmoeglichkeiten der Regressoren (wie reg_combs, aber als Liste mit 7 Elementen) (wird in der foor-loop befüllt)
-
-ii <- 1
-for (i in 1:length(reg_combs)){
-   for (j in 1:ncol(reg_combs[[i]])){
-      wReg <- matrix(t(GMM_by_year %>%  select(paste(reg_combs[[i]][,j]) )), ncol= TT)
-      wReg_centered <- t(apply(wReg,1,firstObs_center))
-      wReg <- t(apply(wReg_centered,1,standardize))
-      wReg[is.na(wReg)] <- 0
-      rownames(wReg) <- rep(countries, each = nrow(reg_combs[[i]]))
-      colnames(wReg) <- years
-      nameRegList[[ii]] <- as.character(sapply(paste(reg_combs[[i]][,j]), \(x) substr(x,1,7) ))
-      wRegCombsList[[ii]] <- wReg
-      ii <- ii + 1
-      rm(wReg)
-   }
-}
-rm(ii)
-
-
-
-
-
-  
-
-# Log ---------------------------------------------------------------------
-
-yObs_unadj <- yObs
-yObs <- log(yObs)
-
-VCOV_logAdj <- function(npara, N, TT, yObs, VCOV_array){
-  yObs_inv <- 1/yObs
-  ArrayTimeCountry <- array(yObs_inv, c(npara,1, N*TT ))
-  MatCountryTime <-  ArrayTimeCountry[,,c(sapply(0:(N-1),\(x)(x+seq(1,(TT-1)*N+1,N))))]
-  VCOV_log_list <- lapply(1:(N*TT),\(x) diag(MatCountryTime[,x]) %*% VCOV_array[,,x] %*% diag(MatCountryTime[,x])  ) 
-  VCOV_log_array <-  array(unlist(VCOV_log_list), dim = c(npara,npara,TT*N))
-  array(apply(VCOV_log_array,3,function(x){x/2 + t(x)/2 }),  c(npara, npara, N * TT))
-}
-
-VCOV_array_country_pd <- VCOV_logAdj(npara, N, TT, yObs_unadj, VCOV_array_country_pd)
-
-
-
-sd_yObs <- apply(yObs, 1, sd, na.rm = TRUE)
-
-standardize_VCOV <- function(VCOV_array, TT, N, sd_vec, npara){
-  V_adj_array <- array(0, dim = c(npara, npara, TT*N))
-  
-  for(i in 1:N){
-    V_adj <- diag(1 / sd_vec[((i-1)*npara + 1):(i * npara )])
-    V_select <- VCOV_array[,,((i-1) * TT + 1):(i * TT)]
-    adj_array <-  array(apply(V_select, 3, \(x) V_adj %*% x %*% V_adj), dim = c(npara, npara, TT))
-    V_adj_array[,,((i-1) * TT + 1):(i * TT)] <- adj_array
-  }
-  
-  return(V_adj_array)
-}
-
-VCOV_array_country_pd <- standardize_VCOV(VCOV_array_country_pd, TT, N, sd_yObs, npara)
-
-
-yObs_centered <- t(apply(yObs, 1, firstObs_center))
-yObs_centered_values <- t(apply(yObs, 1, firstObs_center_values))
-yObs <- t(apply(yObs_centered, 1, standardize))
-yObs_standardization <- t(apply(yObs_centered, 1, standardized_values))
+tmplist_rg <- generate_regressor_combinations(GMM_by_year,
+                                              regs,
+                                              TT,
+                                              countries,
+                                              years) 
+nameRegList   <- tmplist_rg$nameRegList
+wRegCombsList <- tmplist_rg$wRegCombsList
 
 
 
 n_cluster <- 12
 #B_par_values <- c(1, 2, 5, 10)
 #B_par_values <- c(2)
-B_par_values <- c(0.1,1,5)
-Omega0LoadScale_values <- c(0.001,0.1,1,5)
+B_par_values <- c(0.1, 1, 5)
+Omega0LoadScale_values <- c(0.001, 0.1, 1, 5)
 
 D_par_values <- c(0, 1, 5)
-Omega0RegScale_values <- c(0.001,1,5)
+Omega0RegScale_values <- c(0.001, 1, 5)
 
-sampleA_values <- c(F,T)
+sampleA_values <- c(FALSE, TRUE)
 #p_joint <- c(0,1)
 #covScale_values <- c(0, 0.01, 0.2,0.5,1)
-covScale_values <- c(1,25,50,100)
-Adiag_values <- c(F,T)
+covScale_values <- c(1, 25, 50, 100)
+Adiag_values <- c(FALSE, TRUE)
 
 wReg_values <- c(7)
 
 nu0 <- 7
 nu0_values <- c(7, 60, 500, 1000)
-Psi0 <- 2.5*diag(3)
-Psi0_values <- c(1,500,1000) 
+Psi0 <- 2.5 * diag(3)
+Psi0_values <- c(1, 500, 1000) 
 IncObsNew_values <- c(5000)
 
 # mu_b0_par <- 0 
@@ -161,20 +99,26 @@ beta0 <- 0.5
 
 p_joint <- 0
 
-#grid <- expand.grid(B_par_values, Omega0Scale_values, A_diag_values)
-#grid <- expand.grid(B_par_values, Omega0Scale_values, sampleA_values)
-#grid <- expand.grid(B_par_values, Omega0Scale_values, covScale_values)
+# grid <- expand.grid(B_par_values, Omega0Scale_values, A_diag_values)
+# grid <- expand.grid(B_par_values, Omega0Scale_values, sampleA_values)
+# grid <- expand.grid(B_par_values, Omega0Scale_values, covScale_values)
 B_par_values <- 1
 D_par_values <- 1
 wReg_values <- 7
 Omega0LoadScale_values <- 1000
 Omega0RegScale_values <- 1000
-grid <- expand.grid(Omega0LoadScale_values, Omega0RegScale_values, nu0_values,Psi0_values, wReg_values, D_par_values,B_par_values)
-index_grid <- matrix(1:dim(grid)[1], ncol=n_cluster,byrow=T)
+grid <- expand.grid(Omega0LoadScale_values,
+                    Omega0RegScale_values,
+                    nu0_values,
+                    Psi0_values,
+                    wReg_values,
+                    D_par_values,
+                    B_par_values)
+index_grid <- matrix(1:dim(grid)[1], ncol = n_cluster,byrow = TRUE)
 
 
-itermax <- 200000
-burnin <- 100000
+itermax <- 20
+burnin <- 1
 
 # storePath_vec <- c("D:/Gibbs_SM_SA_Tower/Results/Vhat_countryA_stand/Estimates", "D:/Gibbs_SM_SA_Tower/Results/Vhat_countryAdiag_stand/Estimates") 
 # plotPath_vec <- c("D:/Gibbs_SM_SA_Tower/Results/Vhat_countryA_stand/Plots", "D:/Gibbs_SM_SA_Tower/Results/Vhat_countryAdiag_stand/Plots")
@@ -188,10 +132,12 @@ plotPath <- file.path(path, "Plots")
 dir.create(plotPath)
 
 RegIncl <- TRUE
-
 VdiagEst <- FALSE
 VhatDiagScale <- FALSE
-if(VdiagEst & !VhatDiagScale){VCOV_array_country_pd <- array(rep(diag(npara), N * TT ), c(npara, npara, N*TT))}
+if (VdiagEst & !VhatDiagScale) {
+  VCOV_array_country_pd <- array(rep(diag(npara), N * TT ),
+                                 c(npara, npara, N*TT))
+}
 
 set.seed(123)
 # cluster_specifications <- list(
@@ -216,7 +162,7 @@ set.seed(123)
 jj <- 12
 # parallel::clusterExport(
 #   cl,
-#   c("yObs", "wRegCombsList", "grid", "jj", "shape0", "rate0", 
+#   c("yObs_log_centered_standardized", "wRegCombsList", "grid", "jj", "shape0", "rate0", 
 #     "VCOV_array_country_pd", "VhatDiagScale", "VdiagEst",
 #     "alpha0", "beta0",
 #     "N","TT",
@@ -243,7 +189,7 @@ jj <- 12
 #       Psi0 = x$Psi0, # diag(3) * 57, # grid[jj, 4], # 27,# grid[jj, 4],
 #       shape0 = shape0,
 #       rate0 = rate0,
-#       yObs = yObs,
+#       yObs = yObs_log_centered_standardized,
 #       wRegSpec = grid[jj, 5],
 #       wReg = wRegCombsList[[grid[jj, 5]]],
 #       Vhat = VCOV_array_country_pd,
@@ -307,7 +253,7 @@ out <- IIGpkg::Gibbs2_SM_SA_sampler(
       Psi0 = spec_01$Psi0, # diag(3) * 57, # grid[jj, 4], # 27,# grid[jj, 4],
       shape0 = shape0,
       rate0 = rate0,
-      yObs = yObs,
+      yObs = yObs_log_centered_standardized,
       wRegSpec = grid[jj, 5],
       wReg = wRegCombsList[[grid[jj, 5]]],
       Vhat = VCOV_array_country_pd,
@@ -320,21 +266,32 @@ out <- IIGpkg::Gibbs2_SM_SA_sampler(
       beta0 = beta0,
       N = N,
       TT = TT,
-      storePath = storePath,
+      storePath = ".", #storePath,
       itermax = itermax,
       scaleA = FALSE,
       diagA = FALSE,
       sampleA = TRUE,
       identification = TRUE,
       type = type)
-IIGpkg::save_Gibbs_plots(
-  Gibbs = out$Gibbs2_SM_SA,
-  burnin = burnin,
-  path = plotPath,
-  nameMat = nameMat,
-  nameReg = nameRegList[[out$Gibbs2_SM_SA$initials$wRegSpec]],
-  njointfac = out$Gibbs2_SM_SA$initials$njointfac,
-  type = type,
-  predictionCI = TRUE,
-  onlyY = FALSE,
-  hierachPrior = TRUE)
+
+testme <- readRDS("./cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi27_nu7/mu_b0_0_Sigma_b0_100_alpha_b0_5_beta_b0_6_IO5000/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi27_nu7mu_b0_0_Sigma_b0_100_alpha_b0_5_beta_b0_6_IO5000.rds")
+test1 <- identical(out$Gibbs2_SM_SA$f, testme$f)
+test2 <- identical(out$Gibbs2_SM_SA$B, testme$B)
+test3 <- identical(out$Gibbs2_SM_SA$D, testme$D)
+test4 <- identical(out$Gibbs2_SM_SA$A, testme$A)
+test5 <- identical(out$Gibbs2_SM_SA$V, testme$V)
+test6 <- identical(out$Gibbs2_SM_SA$BD0STORE, testme$BD0STORE)
+test7 <- identical(out$Gibbs2_SM_SA$Omega0STORE, testme$Omega0STORE)
+stopifnot(all(c(test1, test2, test3, test4, test5, test6, test7)))
+rm(list = c("test1", "test2", "test3", "test4", "test5", "test6", "test7"))
+# IIGpkg::save_Gibbs_plots(
+#   Gibbs = out$Gibbs2_SM_SA,
+#   burnin = burnin,
+#   path = plotPath,
+#   nameMat = nameMat,
+#   nameReg = nameRegList[[out$Gibbs2_SM_SA$initials$wRegSpec]],
+#   njointfac = out$Gibbs2_SM_SA$initials$njointfac,
+#   type = type,
+#   predictionCI = TRUE,
+#   onlyY = FALSE,
+#   hierachPrior = TRUE)
