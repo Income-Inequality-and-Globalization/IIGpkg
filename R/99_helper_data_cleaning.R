@@ -169,10 +169,10 @@ remove_year_and_save <- function(pth_base_data = "./data/input/data-sm",
                                  year_to_remove = 2021) {
   pth_data_covr <- file.path(pth_base_data, data_file)
   results_GMM <- tibble::tibble(read.table(pth_data_covr, header = TRUE))
-  GMM_by_year <- results_GMM %>% 
+  data_GMM <- results_GMM %>% 
                  dplyr::arrange(year) %>% 
                  dplyr::filter(year != year_to_remove)
-  saveRDS(GMM_by_year, file = file.path(pth_base_data, save_file))
+  saveRDS(data_GMM, file = file.path(pth_base_data, save_file))
 }
 #' Center values by the first non-NA observation
 #'
