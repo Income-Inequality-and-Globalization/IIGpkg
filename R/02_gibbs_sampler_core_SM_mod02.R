@@ -221,7 +221,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Gibbs-Iteration:
   # load("kf_test2.RData")
   # load("kf_test.RData")
-  browser()
+  # browser()
   SIMULATE_FACTORS <- TRUE
   # fPost_true <- all_true_vals$f_simul
   fPost_true <- NULL
