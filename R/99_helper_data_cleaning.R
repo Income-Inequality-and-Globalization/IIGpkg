@@ -1,3 +1,43 @@
+#' Generate Regressor Combinations
+#'
+#' This function generates all possible combinations of given regressors and 
+#' creates standardized matrices for each combination.
+#'
+#' @param data_GMM A data frame containing the regressor data.
+#' @param regs Vector of regressor names.
+#' @param TT Total number of years.
+#' @param countries Vector of unique countries.
+#' @param years Vector of unique years.
+#' 
+#' @return A list containing two elements: wRegCombsList and nameRegList.
+#' @export
+generate_regressor_combinations <- function(data_GMM, regs, TT, countries, years) {
+  lregs <- length(regs)
+  reg_combs <- lapply(1:lregs, \(x) combn(regs, x, simplify = FALSE))
+  ncombs <- sum(sapply(reg_combs, length))
+
+  wRegCombsList <- vector("list", ncombs)
+  nameRegList <- vector("list", ncombs)
+
+  ii <- 1
+  for (i in 1:length(reg_combs)) {
+    for (j in 1:length(reg_combs[[i]])) {
+      selected_regressors <- reg_combs[[i]][[j]]
+      wReg <- matrix(t(data_GMM %>% dplyr::select(tidyselect::all_of(selected_regressors))), ncol = TT)
+      wReg_centered <- t(apply(wReg, 1, firstObs_center))
+      wReg <- t(apply(wReg_centered, 1, standardize))
+      wReg[is.na(wReg)] <- 0
+      rownames(wReg) <- rep(countries, each = length(selected_regressors))
+      colnames(wReg) <- years
+      nameRegList[[ii]] <- substr(selected_regressors, 1, 7)
+      wRegCombsList[[ii]] <- wReg
+      ii <- ii + 1
+    }
+  }
+
+  return(list(wRegCombsList = wRegCombsList, nameRegList = nameRegList))
+}
+
 #' Adjust Covariance Matrix with Logarithmic Transformation
 #'
 #' This function adjusts a 3D array of covariance matrices using logarithmic 
