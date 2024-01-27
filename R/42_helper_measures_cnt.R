@@ -61,8 +61,9 @@ get_cnt_names_NN <- function(nms_pars, num_pars, NN) {
   paste0(nms_pars, "_", "NN_", seq_NN)
 }
 get_cnt_names_TT <- function(TT) {
-  seq_TT <- seq(from = 1, to = TT, by = 1)
-  paste0("tt_", formatC(seq_TT, digits = 1, format = "d", flag = "0"))
+  # seq_TT <- seq(from = 1, to = TT, by = 1)
+  # paste0("tt_", formatC(seq_TT, digits = 1, format = "d", flag = "0"))
+  seq(from = 2000, to = 2000 + TT - 1, by = 1)
 }
 get_cnt_seq_NN <- function(num_pars, NN) {
   formatC(rep(1:NN, each = num_pars), digits = 1, format = "d", flag = "0")
