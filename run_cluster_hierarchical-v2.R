@@ -5,7 +5,7 @@ library(IIGpkg)
 # Data --------------------------------------------------------------------
 # GMM Ergebnisse (Parameter-Schaetzungen) mit Jahr 2021
 pth_base_data    <- "./data/input/data-sm"
-# remove_year_and_save(pth_base_data,
+# data_raw_update_and_save(pth_base_data,
 #                      data_file = "data_coef_covariates.txt",
 #                      save_file = "data_coef_covariates_2020.rds",
 #                      year_to_remove = 2021)
