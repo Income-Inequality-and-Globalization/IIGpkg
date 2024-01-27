@@ -13,7 +13,8 @@ compute_gini_info <- function(out_a, out_q, ki_prob = 0.95) {
       out_gini[nn, tt, c(2, 3)] <- quantile(vec_tmp, probs = c(ki_upp, ki_low))
     }
   }
-  dimnames(out_gini) <- list(rownames(out_a),
+  new_rn <- sub("^a_", "", rownames(out_a))
+  dimnames(out_gini) <- list(new_rn,
                              colnames(out_a),
                              c("mean", "ki_upp", "ki_low"))
   return(out_gini)
