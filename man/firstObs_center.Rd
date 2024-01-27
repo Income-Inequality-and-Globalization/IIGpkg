@@ -10,7 +10,8 @@ firstObs_center(x)
 \item{x}{A numeric vector.}
 }
 \value{
-A numeric vector with values centered around the first non-NA observation.
+A numeric vector with values centered around the first non-NA
+  observation.
 }
 \description{
 This function centers the values in a vector by subtracting the first non-NA 
