@@ -22,7 +22,11 @@ Imports:
     crayon,
     gert,
     quarto,
-    rstudioapi
+    rstudioapi,
+    tibble,
+    dplyr,
+    ggplot2,
+    magrittr
 LinkingTo:
     Rcpp,
     RcppArmadillo
