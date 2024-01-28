@@ -2,10 +2,10 @@
 #'
 #' @param out_gibbs the Gibbs output as an object of class `GibbsOutputIIG`
 #' @param transformation_infos the centering and standardizing vectors for the
-#'    `y-measurement` data as a vector for all countries (long index) and all 
-#'    parameters (short index) e.g. a vector of length `30` (`3 x 10`, for ten 
+#'    `y-measurement` data as a vector for all countries (long index) and all
+#'    parameters (short index) e.g. a vector of length `30` (`3 x 10`, for ten
 #'    countries)
-#' @param const_num_para numeric value giving the number of parameters in the 
+#' @param const_num_para numeric value giving the number of parameters in the
 #'    model
 #'
 #' @return a named list of computed measures
