@@ -15,7 +15,8 @@ process_covariance_array(VCOV_array, npara, N, TT, Diag_VCOV = FALSE)
 
 \item{TT}{Total number of years.}
 
-\item{Diag_VCOV}{Boolean flag to convert matrices into diagonal form (default: FALSE).}
+\item{Diag_VCOV}{Boolean flag to convert matrices into diagonal form
+(default: FALSE).}
 }
 \value{
 A processed 3D array of covariance matrices.
