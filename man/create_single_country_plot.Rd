@@ -27,11 +27,11 @@ create_single_country_plot(data_long, data_info, measure_info, estim_infos)
 
 \item{estim_infos}{A list containing information about the estimations:
 \itemize{
-  \item \code{col_mean}: The name of the column in \code{data_long}
+  \item \code{mean}: The name of the column in \code{data_long}
   representing the mean value estimate.
-  \item \code{col_ki_upp}: The name of the column in \code{data_long}
+  \item \code{ki_upp}: The name of the column in \code{data_long}
   representing the upper confidence band estimate.
-  \item \code{col_ki_low}: The name of the column in \code{data_long}
+  \item \code{ki_low}: The name of the column in \code{data_long}
   representing the lower confidence band estimate.
 }}
 }

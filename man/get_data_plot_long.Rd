@@ -29,15 +29,6 @@ specified variable(s).
 \details{
 This function transforms the data into a long format, which is particularly
 useful for ggplot2 visualizations. It allows for the selection of specific
-variables to be reshaped, making it versatile for various types of data beyond
-just Gini coefficients.
-}
-\examples{
-\dontrun{
-# Example usage with Gini coefficients
-data_long_ginis <- get_data_gini_long(data_raw,
-                                      ginis_to_use,
-                                      "gini_type",
-                                      "gini_value")
-}
+variables to be reshaped, making it versatile for various types of data
+beyond just Gini coefficients.
 }

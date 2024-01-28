@@ -4,42 +4,33 @@
 \alias{data_plot_processing}
 \title{Read and Preprocess Data}
 \usage{
-data_plot_processing(
-  out_measures,
-  pth_data,
-  names_measures,
-  names_var_remove = NULL,
-  scale_values = 1
-)
+data_plot_processing(out_measures, pth_data, names_measures, scale_values = 1)
 }
 \arguments{
-\item{out_measures}{an array of estimated measure-coefficient values: rownmaes
-give the country (in the same order as the dataset), colnames the time, and
-the third dimension has the Bayesian a-posteriori mean, lower and upper
-confidence band values. The measure values can be Ginis, or the expectaion
-as estimated from the Bayesian parameter samples a-posteriori.}
+\item{out_measures}{an array of estimated measure-coefficient values:
+rownmaes give the country (in the same order as the dataset), colnames the
+time, and the third dimension has the Bayesian a-posteriori mean, lower and
+upper confidence band values. The measure values can be Ginis, or the
+expectaion as estimated from the Bayesian parameter samples a-posteriori.}
 
 \item{pth_data}{The path to the data file which appended by content of the
-of the first argument (ie. transform the arrary to the data format and 
+of the first argument (ie. transform the arrary to the data format and
 add its content as new variables)}
 
-\item{names_measures}{A named list or vector specifying the column names to be 
-created in the dataset for each type of measure. It must include names for 
-"mean", "ki_low", and "ki_upp", corresponding to the Bayesian a-posteriori 
-mean, lower confidence band, and upper confidence band values, respectively. 
-The names are used to dynamically create and assign these measures to the 
-appropriate columns in the dataset. For example, names_measures could be 
-set as `list(mean = "gini_mean", ki_low = "gini_ki_low", 
-ki_upp = "gini_ki_upp")`.}
+\item{names_measures}{A named list or vector specifying the column names to
+be created in the dataset for each type of measure. It must include names
+for "mean", "ki_low", and "ki_upp", corresponding to the Bayesian
+a-posteriori mean, lower confidence band, and upper confidence band values,
+respectively. The names are used to dynamically create and assign these
+measures to the appropriate columns in the dataset. For example,
+names_measures could be set as `list(mean = "gini_mean", ki_low =
+"gini_ki_low", ki_upp = "gini_ki_upp")`.}
 
-\item{scale_values}{A numeric value used to scale the measure values extracted
-from `out_measures`. This scaling factor is applied to the mean, lower, and 
-upper confidence band values. It allows for adjusting the measure values 
-according to the desired scale (e.g., converting proportions to percentages).
-Default is 1 (no scaling).}
-
-\item{var_name_remove}{The name of the variables to be removed from the
-dataset, if necessary.}
+\item{scale_values}{A numeric value used to scale the measure values
+extracted from `out_measures`. This scaling factor is applied to the mean,
+lower, and upper confidence band values. It allows for adjusting the
+measure values according to the desired scale (e.g., converting proportions
+to percentages). Default is 1 (no scaling).}
 }
 \value{
 A tibble with the specified variable removed, and the output measure
@@ -47,6 +38,6 @@ A tibble with the specified variable removed, and the output measure
 }
 \description{
 Reads data from a specified `path` and `filename`, and preprocesses it by
-removing specified variables, and adding output measures from a suitable 
+removing specified variables, and adding output measures from a suitable
 array (`out_measures`).
 }
