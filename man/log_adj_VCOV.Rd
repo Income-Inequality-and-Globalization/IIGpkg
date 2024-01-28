@@ -22,5 +22,6 @@ A 3D array of adjusted and symmetrized covariance matrices.
 }
 \description{
 This function adjusts a 3D array of covariance matrices using logarithmic 
-transformations of the observation data. It symmetrizes the adjusted matrices.
+transformations of the observation data. It symmetrizes the adjusted
+matrices.
 }
