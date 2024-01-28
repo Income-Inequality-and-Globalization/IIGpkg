@@ -7,7 +7,8 @@
 get_data_meta_attributes(data_gmm)
 }
 \arguments{
-\item{data_gmm}{A data frame containing at least the columns 'year' and 'country'.}
+\item{data_gmm}{A data frame containing at least the columns 'year' and
+'country'.}
 }
 \value{
 A list containing years, total number of years (TT), countries, 
