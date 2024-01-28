@@ -7,7 +7,8 @@
 process_observation_data(data_GMM, npara, TT, countries, years)
 }
 \arguments{
-\item{data_GMM}{A data frame with columns 'a', 'q', 'est_mean', 'country', and 'year'.}
+\item{data_GMM}{A data frame with columns 'a', 'q', 'est_mean', 'country',
+and 'year'.}
 
 \item{npara}{Number of parameters (default: 3).}
 
@@ -21,6 +22,7 @@ process_observation_data(data_GMM, npara, TT, countries, years)
 A list containing various transformations of the observation data.
 }
 \description{
-This function processes observation data from a dataset, performing log 
-transformation, centering, standardization, and calculating standard deviations.
+This function processes observation data from a dataset, performing log
+transformation, centering, standardization, and calculating standard
+deviations.
 }
