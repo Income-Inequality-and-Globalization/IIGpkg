@@ -18,17 +18,14 @@ generate_measures_me <- function(out_gibbs,
 
   scale_vals <- transformation_infos$scaling
   centr_vals <- transformation_infos$centering
+  names_regs <- transformation_infos$names_regs
+  KK         <- length(names_regs)
 
-  B <- get_cnt_me_B(out_gibbs$B)
-  f <- get_cnt_me_f(out_gibbs$f)
-  D <- get_cnt_me_D(out_gibbs$D)
-  wRegs <- get_cnt_me_wRegs(out_gibbs$initials$wReg)
-
-  # D_mu <- get_subset_par(D, par_name = "mu",
-  #                        SUBS_ROWS = TRUE,
-  #                        SUBS_COLS = TRUE)
-  # B_a <- get_subset_par(B, par_name = "a", SUBS_ROWS = TRUE, SUBS_COLS = TRUE)
-  # B_q <- get_subset_par(B, par_name = "q", SUBS_ROWS = TRUE, SUBS_COLS = TRUE)
+  B     <- get_cnt_me_B(out_gibbs$B)
+  f     <- get_cnt_me_f(out_gibbs$f)
+  D     <- get_cnt_me_D(out_gibbs$D)
+  wRegs <- get_cnt_me_wRegs(out_gibbs$initials$wReg, names_regs)
+  WR    <- get_cnt_me_WR(wRegs, names_regs)
 
   NN_num_para <- dim(out_gibbs$B)[1]
   NN <- NN_num_para / const_num_para
@@ -36,26 +33,39 @@ generate_measures_me <- function(out_gibbs,
   MM <- dim(out_gibbs$B)[3]
 
   par_post_estim <- get_cnt_par_post_estim(NN = NN, TT = TT, MM = MM)
+  post_me <- get_cnt_par_me_estim(NN, names_regs, TT, MM)
   for (mm in seq_len(MM)) {
     par_post_estim[, , mm] <- B[, , mm] %*% f[, , mm] + D[, , mm] %*% wRegs
+    for (kk in seq_len(KK)) {
+      post_me[, , mm, kk] <- B[, , mm] %*% f[, , mm] + D[, , mm] %*% WR[, , kk]
+    }
     progress_any(mm, MM)
   }
   par_post_estim_bt <- f_back_transform(par_post_estim, centr_vals, scale_vals)
-  a_post_bt  <- get_subset_par(par_post_estim_bt, par_name = "a")
-  q_post_bt  <- get_subset_par(par_post_estim_bt, par_name = "q")
-  mu_post_bt <- get_subset_par(par_post_estim_bt, par_name = "mu")
+  a_post_bt    <- get_subset_par(par_post_estim_bt, par_name = "a")
+  q_post_bt    <- get_subset_par(par_post_estim_bt, par_name = "q")
+  mu_post_bt   <- get_subset_par(par_post_estim_bt, par_name = "mu")
+  mu_info_TT   <- compute_mu_info(mu_post_bt)
+  gini_info_TT <- compute_gini_info(a_post_bt, q_post_bt)
 
-  # browser()
-  mu_info <- compute_mu_info(mu_post_bt)
-  # mu_me_info <- compute_mu_me_info(mu_post_bt, scale_vals, D_mu)
-  gini_info <- compute_gini_info(a_post_bt, q_post_bt)
-  # browser()
-  return(list(mu_info = mu_info,
-              gini_info = gini_info))
+  out_mu_info_KK <- vector("list", length = KK)
+  names(out_mu_info_KK) <- names_regs
+  out_gini_info_KK <- vector("list", length = KK)
+  names(out_gini_info_KK) <- names_regs
+  for (kk in 1:3) {
+    tmp_me_bt <- f_back_transform(post_me[, , , kk], centr_vals, scale_vals)
+    a_post_bt <- get_subset_par(tmp_me_bt, par_name = "a")
+    q_post_bt <- get_subset_par(tmp_me_bt, par_name = "q")
+    m_post_bt <- get_subset_par(tmp_me_bt, par_name = "mu")
+    out_mu_info_KK[[kk]]   <- compute_mu_info(m_post_bt)
+    out_gini_info_KK[[kk]] <- compute_gini_info(a_post_bt, q_post_bt)
+  }
+  return(list(mu_info_TT = mu_info_TT,
+              gini_info_TT = gini_info_TT,
+              mu_info_KK = out_mu_info_KK,
+              gini_info_KK = out_gini_info_KK))
 }
 f_back_transform <- function(post_estim, values_centering, values_scaling) {
-  # nr <- dim(post_estim)[1]
-  # nc <- dim(post_estim)[2]
   MM <- dim(post_estim)[3]
   for (mm in seq_len(MM)) {
     post_estim[, , mm] <- post_estim[, , mm] * values_scaling + values_centering
