@@ -20,11 +20,21 @@ compute_gini_info <- function(out_a, out_q, ki_prob = 0.95) {
   return(out_gini)
 }
 compute_gini_sm <- function(a, q, logarithm = FALSE) {
+  num_adj <- 0.99999
   rhs_top <- lgamma(q) + lgamma(2 * q - 1 / a)
   rhs_low <- lgamma(q - 1 / a) + lgamma(2 * q)
 
   out_gini_rhs_log <- rhs_top - rhs_low
   out_gini_rhs <- exp(out_gini_rhs_log)
+
+  if (any(out_gini_rhs >= 1)) {
+    out_gini_rhs[which(out_gini_rhs >= 1)] <- num_adj
+    # stop("Gini values numerically larger 1.")
+  }
+  if (any(out_gini_rhs <= 0)) {
+    out_gini_rhs[which(out_gini_rhs <= 0)] <- 1 - num_adj
+    # stop("Gini values numerically smaller 0.")
+  }
   if (isFALSE(logarithm)) return(1 - out_gini_rhs)
   if (isTRUE(logarithm)) return(log(1 - out_gini_rhs))
 }
