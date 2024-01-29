@@ -56,15 +56,34 @@ get_cnt_me_D <- function(out_D,
   return(out_D)
 }
 get_cnt_me_wRegs <- function(out_wRegs,
+                             names_regs = NULL,
                              NN = 10,
                              num_pars = 3,
                              names_para = c("a", "q", "mu")) {
-  nms_rw <- get_cnt_names_NN(names_para, num_pars, NN)
+  nms_rw <- get_cnt_names_regs(names_regs, num_pars, NN)
   nms_cl <- get_cnt_names_TT(ncol(out_wRegs))
-
   rownames(out_wRegs) <- nms_rw
   colnames(out_wRegs) <- nms_cl
   return(out_wRegs)
+}
+get_cnt_me_WR  <- function(wRegs, names_regs = NULL) {
+  if (is.null(names_regs)) stop("Arg. 'names_regs' missing.")
+  KK <- length(names_regs)
+  TT <- ncol(wRegs)
+  NN_num_par <- nrow(wRegs)
+  # get mean values for each row
+  wRegs_means <- apply(wRegs, 1, mean)
+  # fill output array with mean values
+  out_WR <- array(wRegs_means, dim = c(NN_num_par, TT, KK))
+  # fill output array with sorted values at specific rows to get a baseline grid
+  for (kk in seq_len(KK)) {
+    id_row_kk <- which(grepl(names_regs[kk], rownames(wRegs)))
+    for (row_kk in id_row_kk) {
+      out_WR[row_kk, , kk] <- sort(wRegs[row_kk, ])
+    }
+  }
+  dimnames(out_WR) <- list(rownames(wRegs), colnames(wRegs), names_regs)
+  return(out_WR)
 }
 get_cnt_names_facs <- function(nms_pars, num_pars, NN) {
   seq_NN <- get_cnt_seq_NN(num_pars, NN)
