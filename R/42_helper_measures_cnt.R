@@ -86,3 +86,7 @@ get_cnt_names_dimMM <- function(MM) {
   seq_MM <- seq(from = 1, to = MM, by = 1)
   paste0("MM_", seq_MM)
 }
+get_cnt_names_regs <- function(names_regs, num_pars, NN) {
+  seq_NN <- get_cnt_seq_NN(num_pars, NN)
+  paste0("NN_", seq_NN, "_", names_regs)
+}
