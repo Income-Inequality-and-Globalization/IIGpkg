@@ -26,17 +26,14 @@
 #' @export
 generate_country_plots <- function(pth_data,
                                    output_measure,
+                                   output_regs_grid = NULL,
                                    vars_to_use,
                                    settings,
                                    name_measure = NULL,
                                    PLOT = TRUE) {
-  name_measure <- paste0(name_measure, "_")
-  names_measures <- list(
-    mean = paste0(name_measure, "mean"),
-    ki_low = paste0(name_measure, "ki_low"),
-    ki_upp = paste0(name_measure, "ki_upp")
-  )
+  names_measures <- get_names_measures(name_measure)
   data_to_plot <- get_data_measure_plots(output_measure,
+                                         output_regs_grid,
                                          pth_data,
                                          vars_to_use,
                                          names_measures,
@@ -44,12 +41,16 @@ generate_country_plots <- function(pth_data,
 
   unique_countries <- unique(data_to_plot$country)
   list_plots_per_country <- list()
-  for (country in unique_countries[-c(length(unique_countries))]) {
-    list_plots_per_country[[country]] <- create_single_country_plot(
+  for (cntry in unique_countries[-c(length(unique_countries))]) {
+    list_plots_per_country[[cntry]] <- create_single_country_plot(
       data_long = data_to_plot,
-      data_info = list(
-        name_country = country,
-        y_lab = settings$y_lab
+      name_country = cntry,
+      plot_info = list(
+        x_var = settings$x_var,
+        y_lab = settings$y_lab,
+        x_lab = settings$x_lab,
+        X_TRN = settings$X_TRANSFORMED,
+        ADD_KI = settings$ADD_KI
       ),
       measure_info = list(
         vals = "value",
@@ -95,10 +96,15 @@ generate_country_plots <- function(pth_data,
 #' @return A tibble with the specified variable removed, and the output measure
 #'   variables added
 data_plot_processing <- function(out_measures,
+                                 out_regs,
                                  pth_data,
+                                 vars_to_use,
                                  names_measures,
-                                 scale_values = 1) {
+                                 settings) {
   data_raw <- read.csv(file.path(pth_data)) %>% tibble::as_tibble()
+  
+  scale_values <- get_default_scale_measre(settings$scale_measure)
+  reg_name_tkn <- settings$x_var
 
   measure_mean_01 <- get_measure_vals(out_measures, "mean", scale_values)
   measure_ki_l_02 <- get_measure_vals(out_measures, "ki_low", scale_values)
@@ -106,12 +112,69 @@ data_plot_processing <- function(out_measures,
   data_raw[names_measures$mean]   <- measure_mean_01
   data_raw[names_measures$ki_low] <- measure_ki_l_02
   data_raw[names_measures$ki_upp] <- measure_ki_u_03
+
+  country_list <- unique(data_raw$country)
+  year_list <- unique(data_raw$year)
+  data_regs <- get_tibble_regs_grid(out_regs,
+                                    reg_name_tkn,
+                                    country_list,
+                                    year_list)
+
+  vars_required <- c(unlist(names_measures, use.names = FALSE), 
+                     vars_to_use,
+                     reg_name_tkn)
+  data_raw <- data_raw %>%
+    dplyr::select("country", "year", tidyr::all_of(vars_required))
+  if (!is.null(data_regs)) {
+    data_raw <- data_raw %>% 
+      get_sorted_reg("country", reg_name_tkn) %>%
+      dplyr::full_join(data_regs, by = c("country", "year"))
+    data_raw$year <- NULL
+  }
   return(data_raw)
 }
 get_measure_vals <- function(out_msr, name_var, scl_val = 1) {
   as.vector(t(out_msr[, , name_var])) * scl_val
 }
+get_default_scale_measre <- function(scl_msr) {
+  if (is.null(scl_msr)) return(1)
+  scl_msr
+}
+get_sorted_reg <- function(df, name_country_col, reg_to_sort) {
+  unq_countries   <- unique(df[[name_country_col]])
+  reg_sorted <- numeric(nrow(df))  # Initialize a vector for sorted values
 
+  for (cntry in unq_countries) {
+    id_rows <- which(df[[name_country_col]] == cntry)
+    reg_sorted[id_rows] <- sort(df[[reg_to_sort]][id_rows], na.last = TRUE)
+  }
+  df[[reg_to_sort]] <- reg_sorted
+  return(df)
+}
+
+get_tibble_regs_grid <- function(regs_grid,
+                                 reg_name = NULL,
+                                 country_list,
+                                 year_list) {
+  if (is.null(regs_grid) || is.null(reg_name)) return(NULL)
+  reg_names_avail <- dimnames(regs_grid)[[3]]
+  stopifnot(reg_name %in% reg_names_avail)
+
+  id_regs  <- which(grepl(reg_name, dimnames(regs_grid)[[1]]))
+  regs_out <- tibble::as_tibble(t(regs_grid[id_regs, , reg_name]))
+  colnames(regs_out) <- country_list
+  regs_out$year <- year_list
+  reg_name_trns <- paste0(reg_name, "_transformed")
+  regs_out <- regs_out %>% 
+    tidyr::pivot_longer(cols = !"year",
+                        names_to = "country",
+                        values_to = reg_name_trns)
+  regs_out <- regs_out %>% 
+    dplyr::select("country", "year", reg_name_trns) %>%
+    dplyr::arrange(country, year)
+    
+  return(regs_out)
+}
 #' Reshape Data to Long Format
 #'
 #' Reshapes the data into a long format suitable for ggplot2, focusing on
@@ -153,6 +216,9 @@ get_data_plot_long <- function(data_raw, var_to_use, nms_to, vals_to) {
 #'   dataset based on the estimated measures.
 #' @param pth_data_gmm The path to the data file, which is used by the
 #'   `data_plot_processing` function to read and preprocess the data.
+#' @param data_regs_grid an array of dimension `(NN x num_par) x TT x KK` where
+#'   the third  dimension gives the number of regressors (the second time and
+#'   the first a is cross section )
 #' @param vars_to_use A character vector specifying the variable names to be
 #'   included in the long format data. These are the variables that will be
 #'   reshaped and used for plotting.
@@ -168,14 +234,17 @@ get_data_plot_long <- function(data_raw, var_to_use, nms_to, vals_to) {
 #'
 #' @export
 get_data_measure_plots <- function(data_estim,
+                                   output_regs_grid,
                                    pth_data_gmm,
                                    vars_to_use,
                                    names_to_use,
                                    settings) {
   data_processed <- data_plot_processing(data_estim,
+                                         output_regs_grid,
                                          pth_data_gmm,
+                                         vars_to_use,
                                          names_to_use,
-                                         settings$scale_transform)
+                                         settings)
   data_long <- get_data_plot_long(data_processed,
                                   vars_to_use,
                                   "type",
@@ -189,7 +258,8 @@ get_data_measure_plots <- function(data_estim,
 #' values over years.
 #'
 #' @param data_long The data in long format.
-#' @param data_info A list containing information about the data and plot:
+#' @param name_country character giving the name of the country for the plot
+#' @param plot_info A list containing information about the data and plot:
 #'   \itemize{
 #'     \item \code{name_country}: character giving the name of the country for
 #'     which the plot will be generated.
@@ -215,23 +285,32 @@ get_data_measure_plots <- function(data_estim,
 #' @return A ggplot object.
 #' @export
 create_single_country_plot <- function(data_long,
-                                       data_info,
+                                       name_country,
+                                       plot_info,
                                        measure_info,
                                        estim_infos) {
-  data_long2 <- data_long[data_long$country == data_info$name_country, ]
+  data_long2 <- data_long[data_long$country == name_country, ]
   measure_color <- "blue"
   ribbon_color <- "grey"
 
-  out_plot <- ggplot2::ggplot(data_long2, ggplot2::aes(x = year)) +
+  x_reg <- plot_info$x_var
+  if (is.null(x_reg)) x_reg <- "year"
+  if (!is.null(x_reg)) {if (isTRUE(plot_info$X_TRN)) paste0(x_reg, "_transformed")}
+  out_plot <- ggplot2::ggplot(data_long2, ggplot2::aes_string(x = x_reg)) +
     ggplot2::geom_point(ggplot2::aes_string(y = measure_info$vals,
                                             color = measure_info$types)) +
     ggplot2::geom_line(ggplot2::aes_string(y = estim_infos$mean),
-                                           color = measure_color) +
-    ggplot2::geom_ribbon(ggplot2::aes_string(ymax = estim_infos$ki_upp,
-                                             ymin = estim_infos$ki_low),
-                         fill = ribbon_color, alpha = 0.25) +
-    ggplot2::labs(title = data_info$name_country,
-                  y = data_info$y_lab) +
+                                           color = measure_color)
+  if (isTRUE(plot_info$ADD_KI)) {
+    out_plot <- out_plot + 
+      ggplot2::geom_ribbon(ggplot2::aes_string(ymax = estim_infos$ki_upp,
+                                               ymin = estim_infos$ki_low),
+                           fill = ribbon_color,
+                           alpha = 0.25)
+  }
+  out_plot <- out_plot + 
+    ggplot2::labs(title = name_country,
+                  y = plot_info$y_lab) +
     ggthemes::theme_tufte() +
     ggplot2::theme(legend.position = "none") +
     ggplot2::scale_colour_brewer(palette = "Dark2")
