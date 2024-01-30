@@ -28,3 +28,9 @@ get_regex_par <- function(par_name) {
   if (par_name == "q") return("q")
   if (par_name == "mu") return("mu")
 }
+get_names_measures <- function(nm_measure = NULL) {
+  nm_measure <- paste0(nm_measure, "_")
+  list(mean = paste0(nm_measure, "mean"),
+       ki_low = paste0(nm_measure, "ki_low"),
+       ki_upp = paste0(nm_measure, "ki_upp"))
+}
