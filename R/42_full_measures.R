@@ -27,8 +27,8 @@ generate_measures_me <- function(out_gibbs,
   wRegs <- get_cnt_me_wRegs(out_gibbs$initials$wReg, names_regs)
   WR    <- get_cnt_me_WR(wRegs, names_regs)
 
-  NN_num_para <- dim(out_gibbs$B)[1]
-  NN <- NN_num_para / const_num_para
+  NN_num_par <- dim(out_gibbs$B)[1]
+  NN <- NN_num_par / const_num_para
   TT <- dim(out_gibbs$f)[2]
   MM <- dim(out_gibbs$B)[3]
 
@@ -63,7 +63,9 @@ generate_measures_me <- function(out_gibbs,
   return(list(mu_info_TT = mu_info_TT,
               gini_info_TT = gini_info_TT,
               mu_info_KK = out_mu_info_KK,
-              gini_info_KK = out_gini_info_KK))
+              gini_info_KK = out_gini_info_KK,
+              regressor_grid_transformed = WR,
+              regressor_grid_original = NULL))
 }
 f_back_transform <- function(post_estim, values_centering, values_scaling) {
   MM <- dim(post_estim)[3]
