@@ -52,7 +52,7 @@ generate_measures_me <- function(out_gibbs,
   names(out_mu_info_KK) <- names_regs
   out_gini_info_KK <- vector("list", length = KK)
   names(out_gini_info_KK) <- names_regs
-  for (kk in 1:3) {
+  for (kk in 1:KK) {
     tmp_me_bt <- f_back_transform(post_me[, , , kk], centr_vals, scale_vals)
     a_post_bt <- get_subset_par(tmp_me_bt, par_name = "a")
     q_post_bt <- get_subset_par(tmp_me_bt, par_name = "q")
