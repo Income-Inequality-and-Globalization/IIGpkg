@@ -7,6 +7,7 @@
 generate_country_plots(
   pth_data,
   output_measure,
+  output_regs_grid = NULL,
   vars_to_use,
   settings,
   name_measure = NULL,

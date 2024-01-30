@@ -4,7 +4,14 @@
 \alias{data_plot_processing}
 \title{Read and Preprocess Data}
 \usage{
-data_plot_processing(out_measures, pth_data, names_measures, scale_values = 1)
+data_plot_processing(
+  out_measures,
+  out_regs,
+  pth_data,
+  vars_to_use,
+  names_measures,
+  settings
+)
 }
 \arguments{
 \item{out_measures}{an array of estimated measure-coefficient values:

@@ -4,12 +4,20 @@
 \alias{create_single_country_plot}
 \title{Create Plot for a Given Country}
 \usage{
-create_single_country_plot(data_long, data_info, measure_info, estim_infos)
+create_single_country_plot(
+  data_long,
+  name_country,
+  plot_info,
+  measure_info,
+  estim_infos
+)
 }
 \arguments{
 \item{data_long}{The data in long format.}
 
-\item{data_info}{A list containing information about the data and plot:
+\item{name_country}{character giving the name of the country for the plot}
+
+\item{plot_info}{A list containing information about the data and plot:
 \itemize{
   \item \code{name_country}: character giving the name of the country for
   which the plot will be generated.

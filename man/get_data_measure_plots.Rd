@@ -6,6 +6,7 @@
 \usage{
 get_data_measure_plots(
   data_estim,
+  output_regs_grid,
   pth_data_gmm,
   vars_to_use,
   names_to_use,
@@ -32,6 +33,10 @@ created in the dataset for each type of measure, used in the
 \item{settings}{A list containing settings for data processing. This should
 include at least `scale_transform`, a numeric value used to scale the
 measure values in `data_plot_processing`.}
+
+\item{data_regs_grid}{an array of dimension `(NN x num_par) x TT x KK` where
+the third  dimension gives the number of regressors (the second time and
+the first a is cross section )}
 }
 \value{
 A tibble in long format, suitable for plotting, containing the
