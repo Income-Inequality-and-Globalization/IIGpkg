@@ -70,24 +70,54 @@ get_cnt_me_wRegs <- function(out_wRegs,
   colnames(out_wRegs) <- nms_cl
   return(out_wRegs)
 }
-get_cnt_me_WR  <- function(wRegs, names_regs = NULL) {
+get_cnt_me_WR  <- function(wRegs, names_regs = NULL, grid_length, cutoff_num) {
   if (is.null(names_regs)) stop("Arg. 'names_regs' missing.")
   KK <- length(names_regs)
-  TT <- ncol(wRegs)
+  GG <- grid_length
   NN_num_par <- nrow(wRegs)
+  TT <- ncol(wRegs)
+  # out_WR <- array(wRegs, dim = c(NN_num_par, TT, GG, KK))
   # get mean values for each row
   wRegs_means <- apply(wRegs, 1, mean)
   # fill output array with mean values
-  out_WR <- array(wRegs_means, dim = c(NN_num_par, TT, KK))
+  out_WR <- array(wRegs_means, dim = c(NN_num_par, TT, GG, KK))
   # fill output array with sorted values at specific rows to get a baseline grid
   for (kk in seq_len(KK)) {
     id_row_kk <- which(grepl(names_regs[kk], rownames(wRegs)))
     for (row_kk in id_row_kk) {
-      out_WR[row_kk, , kk] <- sort(wRegs[row_kk, ])
+      out_WR[row_kk, , , kk] <- get_single_reg_grid(
+        wRegs[row_kk, ],
+        grid_length,
+        cutoff_num)
     }
   }
-  dimnames(out_WR) <- list(rownames(wRegs), colnames(wRegs), names_regs)
+  dimnames(out_WR) <- list(rownames(wRegs),
+                           get_cnt_names_TT(TT),
+                           get_cnt_names_GG(GG),
+                           names_regs)
   return(out_WR)
+}
+get_single_reg_grid <- function(vals, grid_length, cutoff_num) {
+  TT <- length(vals)
+  out_reg_grid <- matrix(0, nrow = TT, ncol = grid_length)
+  for (tt in seq_len(TT)) {
+    out_reg_grid[tt, ] <- get_grid_vals(vals, grid_length, cutoff_num)
+  }
+  return(out_reg_grid)
+}
+get_grid_vals <- function(value, grid_length, cutoff) {
+  if (grid_length == 1) return(value)
+  if (!is.null(cutoff)) {
+    vals_srt <- sort(value)
+    from_low <- 1:cutoff
+    from_upp <- length(vals_srt):(length(vals_srt) - cutoff + 1)
+    vals_tkn <- vals_srt[-c(from_low, from_upp)]
+  } else {
+    vals_tkn <- value
+  }
+  v_max <- max(vals_tkn)
+  v_min <- min(vals_tkn)
+  seq(from = v_min, to = v_max, length.out = grid_length)
 }
 get_cnt_names_facs <- function(nms_pars, num_pars, NN) {
   seq_NN <- get_cnt_seq_NN(num_pars, NN)
@@ -98,9 +128,11 @@ get_cnt_names_NN <- function(nms_pars, num_pars, NN) {
   paste0(nms_pars, "_", "NN_", seq_NN)
 }
 get_cnt_names_TT <- function(TT) {
-  # seq_TT <- seq(from = 1, to = TT, by = 1)
-  # paste0("tt_", formatC(seq_TT, digits = 1, format = "d", flag = "0"))
   seq(from = 2000, to = 2000 + TT - 1, by = 1)
+}
+get_cnt_names_GG <- function(GG) {
+  seq_GG <- seq(from = 1, to = GG, by = 1)
+  paste0("gg_", formatC(seq_GG, digits = 1, format = "d", flag = "0"))
 }
 get_cnt_seq_NN <- function(num_pars, NN) {
   formatC(rep(1:NN, each = num_pars), digits = 1, format = "d", flag = "0")
