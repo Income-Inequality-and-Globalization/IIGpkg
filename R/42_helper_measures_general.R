@@ -1,21 +1,25 @@
 get_subset_par <- function(out_post_all,
                            par_name,
+                           dim_out,
                            SUBS_ROWS = TRUE,
-                           SUBS_COLS = FALSE,
-                           id_keep_cols = NULL,
-                           id_keep_rows = NULL) {
+                           SUBS_COLS = FALSE
+                           # id_keep_cols = NULL,
+                           # id_keep_rows = NULL
+                           ) {
   stopifnot(`Invalid argument 'par_name'.` = par_name %in% c("a", "q", "mu"))
   if (SUBS_ROWS) {
     row_names_par <- rownames(out_post_all)
     id_taken <- find_id_par_name_all(par_name, row_names_par)
-    if (!is.null(id_keep_rows)) id_taken <- sort(c(id_taken, id_keep_rows))
-    out_post_all <- out_post_all[id_taken, , ]
+    # if (!is.null(id_keep_rows)) id_taken <- sort(c(id_taken, id_keep_rows))
+    if (dim_out == 3) out_post_all <- out_post_all[id_taken, , , drop = FALSE]
+    if (dim_out == 4) out_post_all <- out_post_all[id_taken, , , , drop = FALSE]
   }
   if (SUBS_COLS) {
     col_names_par <- colnames(out_post_all)
     id_taken <- find_id_par_name_all(par_name, col_names_par)
-    if (!is.null(id_keep_cols)) id_taken <- sort(c(id_taken, id_keep_cols))
-    out_post_all <- out_post_all[, id_taken, ]
+    # if (!is.null(id_keep_cols)) id_taken <- sort(c(id_taken, id_keep_cols))
+    if (dim_out == 3) out_post_all <- out_post_all[, id_taken, , drop = FALSE]
+    if (dim_out == 4)  out_post_all <- out_post_all[, id_taken, , , drop = FALSE]
   }
   return(out_post_all)
 }
