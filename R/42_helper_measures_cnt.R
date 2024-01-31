@@ -48,11 +48,12 @@ get_cnt_me_f <- function(out_f,
   return(out_f)
 }
 get_cnt_me_D <- function(out_D,
+                         names_regs,
                          NN = 10,
                          num_pars = 3,
                          names_para = c("a", "q", "mu")) {
   nms_rw <- get_cnt_names_NN(names_para, num_pars, NN)
-  nms_cl <- get_cnt_names_NN(names_para, num_pars, NN)
+  nms_cl <- get_cnt_names_regs(names_regs, num_pars, NN)
   nms_mm <- get_cnt_names_dimMM(dim(out_D)[3])
 
   dimnames(out_D) <- list(nms_rw, nms_cl, nms_mm)
