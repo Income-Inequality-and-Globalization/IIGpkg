@@ -63,11 +63,11 @@ Rcpp::List kf_ff(const arma::mat& yObs,
   arma::mat xtt1 = compute_Xtt_1(A, x00);
   arma::mat Ptt1 = compute_Ptt_1(A, P00, Q);
   
-  double logDetVarY;
+  // double logDetVarY;
   double ll_out_tmp;
   double ll_out;
-  double dim_tmp;
-  double acc;
+  // double dim_tmp;
+  // double acc;
   double missing_obs_total;
   arma::uvec indices_nan_total = arma::find_nan(yObs);
   arma::vec vec_tmp_ll;
@@ -82,11 +82,11 @@ Rcpp::List kf_ff(const arma::mat& yObs,
   }
   //
   if (LLVALUE) {
-    logDetVarY = 0;
+    // logDetVarY = 0;
     ll_out_tmp = 0;
     ll_out = 0;
-    dim_tmp = 0;
-    acc = 0;
+    // dim_tmp = 0;
+    // acc = 0;
     missing_obs_total = indices_nan_total.size();
   }
   //
