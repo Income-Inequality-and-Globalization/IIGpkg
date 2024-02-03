@@ -59,6 +59,22 @@ get_cnt_me_D <- function(out_D,
   dimnames(out_D) <- list(nms_rw, nms_cl, nms_mm)
   return(out_D)
 }
+get_cnt_me_D_uncertainty <- function(D_mat, names_regs, KK, MM) {
+  nrows_tkn  <- nrow(D_mat)
+  ncols_tkn  <- ncol(D_mat)
+  num_MM_tkn <- dim(D_mat)[[3]]
+  D_avg <- array(apply(D_mat, c(1, 2), mean), dim = c(nrows_tkn, ncols_tkn, num_MM_tkn))
+  D_out <- array(0, dim = c(dim(D_avg), KK))
+  for (kk in seq_len(KK)) {
+    for (mm in seq_len(MM)) {
+      id_cols_uncertain <- get_id_D_uncertain(colnames(D_mat), names_regs[kk])
+      D_out[, , mm, kk] <- get_D_uncertain(D_mat, D_avg, mm, id_cols_uncertain)
+    }
+  }
+  browser()
+  dimnames(D_out) <- list(dimnames(D_mat), get_cnt_names_plain(names_regs, KK))
+  return(D_out)
+}
 get_cnt_me_wRegs <- function(out_wRegs,
                              names_regs = NULL,
                              NN = 10,
