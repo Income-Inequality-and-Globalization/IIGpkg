@@ -161,3 +161,6 @@ get_cnt_names_regs <- function(names_regs, num_pars, NN) {
   seq_NN <- get_cnt_seq_NN(num_pars, NN)
   paste0("NN_", seq_NN, "_", names_regs)
 }
+get_cnt_names_plain <- function(names_regs, KK) {
+  paste0("KK_", formatC(seq_len(KK), digits = 1, format = "d", flag = "0"), "_", names_regs)
+}
