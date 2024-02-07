@@ -1,10 +1,10 @@
 #' Class generator for Gibbs output
 #'
 #' @param x output object (a named list) as returned via
-#'     [IIGpkg::Gibbs2_SM_SA_sampler] and [IIGpkg::GibbsSSM_2]
+#'   [IIGpkg::Gibbs2_SM_SA_sampler] and [IIGpkg::GibbsSSM_2]
 #'
 #' @return an object of type `GibbsOutputIIG` which is a named list; see the 
-#'    return value of [IIGpkg::GibbsSSM_2] for details.
+#'   return value of [IIGpkg::GibbsSSM_2] for details.
 #' @export
 new_GibbsOutputIIG <- function(x = vector("list")) {
   validate_GibbsOutputIIG(x)
@@ -20,12 +20,45 @@ validate_GibbsOutputIIG <- function(x) {
                                         "initials"))))
   return(invisible(NULL))
 }
+#' Subset Gibbs output with smaller than total Monte Carlo size
+#'
+#' Some of the Gibbs outputs are very large and it is not always necessary to 
+#' use all of the Monte Carlo draws. Hence, by passing a numeric vector sequence
+#' number `MM_seq` in the range of total Monte Carlo draws, we can subset the
+#' output for all parameters thus making the object smaller in size and related
+#' computations (Bayesian averages or confidence bands) faster to compute.
+#'
+#' @inheritParams new_GibbsOutputIIG
+#' @param MM_seq numeric vector; vector of Monte Carlo indices to keep which 
+#'   should be in the interval between 1 and the total number of draws (of the
+#'   container objects stored in  `x`)
+#' 
+#' @return same as `x` but with the Monte Carlo draws taken from the range in
+#'    `MM_seq`
+#' @export
+subset_GibbsOutputIIG <- function(x, MM_seq = NULL) {
+  validate_GibbsOutputIIG(x)
+  if (is.null(MM_seq)) stop("Arg. 'MM' missing or NULL; must be numeric")
+  MM_MAX_seq <- seq_len(dim(x$f)[3])
+  stopifnot(`Arg. 'MM_seq' sequence not in range` = all(MM_seq %in% MM_MAX_seq))
+
+  x   <- x
+  x$f <- x$f[, , MM_seq]
+  x$B <- x$B[, , MM_seq]
+  x$D <- x$D[, , MM_seq]
+  x$A <- x$A[, , MM_seq]
+  x$V <- x$V[, MM_seq]
+  x$BD0STORE    <- x$BD0STORE[, MM_seq]
+  x$Omega0STORE <- x$Omega0STORE[, MM_seq]
+
+  return(new_GibbsOutputIIG(x))
+}
 #' Summary of Gibbs output
 #' 
 #' A table with true values (if they exist), Monte Carlo means, confidence
 #' bands, and an indicator if the true value lies in the CI.
 #'
-#' @param x object of class `GibbsOutputIIG`
+#' @inheritParams new_GibbsOutputIIG
 #' @param true_vals a list of object containing the true values
 #' @param options a list of options:
 #'   * `nrows_out`: number of rows to print for summary
@@ -33,7 +66,7 @@ validate_GibbsOutputIIG <- function(x) {
 #'   * `ci_val`: value of confidence band; default is 1.96 for 95\%
 #'
 #' @return pure side effect functions but returns invisibly a list of the 
-#'    different outputs that are printed to the screen
+#'   different outputs that are printed to the screen
 #' @export
 summary.GibbsOutputIIG <- function(x, true_vals = NULL, burnin = NULL,
                                    options = list(nrows_out = 9999,
