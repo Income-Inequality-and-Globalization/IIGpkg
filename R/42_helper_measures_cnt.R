@@ -123,13 +123,13 @@ get_single_reg_grid <- function(vals, grid_length, cutoff_num) {
 }
 get_grid_vals <- function(value, grid_length, cutoff) {
   if (grid_length == 1) return(value)
+  vals_srt <- sort(value)
   if (!is.null(cutoff)) {
-    vals_srt <- sort(value)
     from_low <- 1:cutoff
     from_upp <- length(vals_srt):(length(vals_srt) - cutoff + 1)
     vals_tkn <- vals_srt[-c(from_low, from_upp)]
   } else {
-    vals_tkn <- value
+    vals_tkn <- vals_srt
   }
   v_max <- max(vals_tkn)
   v_min <- min(vals_tkn)
