@@ -12,7 +12,7 @@ new_GibbsOutputIIG(x = vector("list"))
 }
 \value{
 an object of type `GibbsOutputIIG` which is a named list; see the 
-   return value of [IIGpkg::GibbsSSM_2] for details.
+  return value of [IIGpkg::GibbsSSM_2] for details.
 }
 \description{
 Class generator for Gibbs output

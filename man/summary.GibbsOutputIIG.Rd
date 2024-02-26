@@ -12,7 +12,8 @@
 )
 }
 \arguments{
-\item{x}{object of class `GibbsOutputIIG`}
+\item{x}{output object (a named list) as returned via
+[IIGpkg::Gibbs2_SM_SA_sampler] and [IIGpkg::GibbsSSM_2]}
 
 \item{true_vals}{a list of object containing the true values}
 
@@ -23,7 +24,7 @@
 }
 \value{
 pure side effect functions but returns invisibly a list of the 
-   different outputs that are printed to the screen
+  different outputs that are printed to the screen
 }
 \description{
 A table with true values (if they exist), Monte Carlo means, confidence
