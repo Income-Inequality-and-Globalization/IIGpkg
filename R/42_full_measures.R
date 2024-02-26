@@ -59,11 +59,9 @@ generate_measures_me <- function(out_gibbs,
   mu_info_TT   <- compute_mu_info(mu_post_bt)
   gini_info_TT <- compute_gini_info(a_post_bt, q_post_bt)
 
-  out_mu_info_KK <- vector("list", length = KK)
-  names(out_mu_info_KK) <- names_regs
-  out_gini_info_KK <- vector("list", length = KK)
-  names(out_gini_info_KK) <- names_regs
-
+  mu_info_KK   <- get_cnt_info_KK(KK, names_regs)
+  gini_info_KK <- get_cnt_info_KK(KK, names_regs)
+  
   for (kk in 1:KK) {
     post_me_kk <- abind::adrop(post_me[, , , , kk, drop = FALSE], 5)
     tmp_me_bt <- f_bt_me(post_me_kk, centr_vals, scale_vals)
@@ -74,13 +72,13 @@ generate_measures_me <- function(out_gibbs,
     q_post_bt <- get_subset_par(tmp_me_bt, par_name = "q", dim_out)
     m_post_bt <- get_subset_par(tmp_me_bt, par_name = "mu", dim_out)
 
-    out_mu_info_KK[[kk]]   <- compute_mu_info(m_post_bt)
-    out_gini_info_KK[[kk]] <- compute_gini_info(a_post_bt, q_post_bt)
+    mu_info_KK[[kk]]   <- compute_mu_info(m_post_bt)
+    gini_info_KK[[kk]] <- compute_gini_info(a_post_bt, q_post_bt)
   }
   return(list(mu_info_TT = mu_info_TT,
               gini_info_TT = gini_info_TT,
-              mu_info_KK = out_mu_info_KK,
-              gini_info_KK = out_gini_info_KK,
+              mu_info_KK = mu_info_KK,
+              gini_info_KK = gini_info_KK,
               regressor_grid_transformed = WR,
               regressor_grid_original = NULL))
 }
