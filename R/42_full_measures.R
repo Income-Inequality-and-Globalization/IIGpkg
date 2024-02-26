@@ -44,14 +44,15 @@ generate_measures_me <- function(out_gibbs,
     par_post_estim[, , mm] <- B[, , mm] %*% f[, , mm] + D[, , mm] %*% wRegs
     for (kk in seq_len(KK)) {
       for (gg in seq_len(GG)) {
-        browser()
         post_me[, , gg,  mm, kk] <- B_m %*% f_m + D_unc[ , , mm, kk] %*% WR[, , gg, kk]
       }
     }
     progress_any(mm, MM)
   }
   par_post_estim_bt <- f_bt_par(par_post_estim, centr_vals, scale_vals)
+
   dim_out <- length(dim(par_post_estim_bt))
+
   a_post_bt    <- get_subset_par(par_post_estim_bt, par_name = "a", dim_out)
   q_post_bt    <- get_subset_par(par_post_estim_bt, par_name = "q", dim_out)
   mu_post_bt   <- get_subset_par(par_post_estim_bt, par_name = "mu", dim_out)
@@ -62,13 +63,17 @@ generate_measures_me <- function(out_gibbs,
   names(out_mu_info_KK) <- names_regs
   out_gini_info_KK <- vector("list", length = KK)
   names(out_gini_info_KK) <- names_regs
+
   for (kk in 1:KK) {
-    tmp_me_bt <- f_bt_me(abind::adrop(post_me[, , , , kk, drop = FALSE], 5),
-                         centr_vals, scale_vals)
+    post_me_kk <- abind::adrop(post_me[, , , , kk, drop = FALSE], 5)
+    tmp_me_bt <- f_bt_me(post_me_kk, centr_vals, scale_vals)
+
     dim_out   <- length(dim(tmp_me_bt))
+
     a_post_bt <- get_subset_par(tmp_me_bt, par_name = "a", dim_out)
     q_post_bt <- get_subset_par(tmp_me_bt, par_name = "q", dim_out)
     m_post_bt <- get_subset_par(tmp_me_bt, par_name = "mu", dim_out)
+
     out_mu_info_KK[[kk]]   <- compute_mu_info(m_post_bt)
     out_gini_info_KK[[kk]] <- compute_gini_info(a_post_bt, q_post_bt)
   }
