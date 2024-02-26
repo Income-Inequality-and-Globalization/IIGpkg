@@ -135,6 +135,11 @@ get_grid_vals <- function(value, grid_length, cutoff) {
   v_min <- min(vals_tkn)
   seq(from = v_min, to = v_max, length.out = grid_length)
 }
+get_cnt_info_KK <- function(KK, names_regs) {
+  out_mu_info_KK <- vector("list", length = KK)
+  names(out_mu_info_KK) <- names_regs
+  return(out_mu_info_KK)
+}
 get_cnt_names_facs <- function(nms_pars, num_pars, NN) {
   seq_NN <- get_cnt_seq_NN(num_pars, NN)
   c("jF", paste0(paste0("iF", "_", nms_pars), paste0("_NN_", seq_NN)))
