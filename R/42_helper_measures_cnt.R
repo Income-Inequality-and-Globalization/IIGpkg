@@ -53,7 +53,7 @@ get_cnt_me_D <- function(out_D,
                          num_pars = 3,
                          names_para = c("a", "q", "mu")) {
   nms_rw <- get_cnt_names_NN(names_para, num_pars, NN)
-  nms_cl <- get_cnt_names_regs(names_regs, num_pars, NN)
+  nms_cl <- get_cnt_names_regs_NN(names_regs, num_pars, NN)
   nms_mm <- get_cnt_names_dimMM(dim(out_D)[3])
 
   dimnames(out_D) <- list(nms_rw, nms_cl, nms_mm)
@@ -63,16 +63,16 @@ get_cnt_me_D_uncertainty <- function(D_mat, names_regs, KK, MM) {
   nrows_tkn  <- nrow(D_mat)
   ncols_tkn  <- ncol(D_mat)
   num_MM_tkn <- dim(D_mat)[[3]]
-  D_avg <- array(apply(D_mat, c(1, 2), mean), dim = c(nrows_tkn, ncols_tkn, num_MM_tkn))
-  D_out <- array(0, dim = c(dim(D_avg), KK))
+  D_avg <- array(apply(D_mat, c(1, 2), mean), dim = c(nrows_tkn, ncols_tkn))
+  D_out <- array(0, dim = c(dim(D_avg), num_MM_tkn, KK))
   for (kk in seq_len(KK)) {
+    id_cols_unc <- get_col_reg_name(colnames(D_mat), names_regs[kk])
     for (mm in seq_len(MM)) {
-      id_cols_uncertain <- get_id_D_uncertain(colnames(D_mat), names_regs[kk])
-      D_out[, , mm, kk] <- get_D_uncertain(D_mat, D_avg, mm, id_cols_uncertain)
+      D_out[, , mm, kk] <- get_D_uncertain(D_mat[, , mm], D_avg, id_cols_unc)
     }
   }
-  browser()
-  dimnames(D_out) <- list(dimnames(D_mat), get_cnt_names_plain(names_regs, KK))
+  dn_from_D_mat <- dimnames(D_mat)
+  dimnames(D_out) <- c(dn_from_D_mat, list(get_cnt_names_regs(names_regs, KK)))
   return(D_out)
 }
 get_cnt_me_wRegs <- function(out_wRegs,
@@ -80,7 +80,7 @@ get_cnt_me_wRegs <- function(out_wRegs,
                              NN = 10,
                              num_pars = 3,
                              names_para = c("a", "q", "mu")) {
-  nms_rw <- get_cnt_names_regs(names_regs, num_pars, NN)
+  nms_rw <- get_cnt_names_regs_NN(names_regs, num_pars, NN)
   nms_cl <- get_cnt_names_TT(ncol(out_wRegs))
   rownames(out_wRegs) <- nms_rw
   colnames(out_wRegs) <- nms_cl
@@ -157,10 +157,13 @@ get_cnt_names_dimMM <- function(MM) {
   seq_MM <- seq(from = 1, to = MM, by = 1)
   paste0("MM_", seq_MM)
 }
-get_cnt_names_regs <- function(names_regs, num_pars, NN) {
+get_cnt_names_regs_NN <- function(names_regs, num_pars, NN) {
   seq_NN <- get_cnt_seq_NN(num_pars, NN)
   paste0("NN_", seq_NN, "_", names_regs)
 }
-get_cnt_names_plain <- function(names_regs, KK) {
-  paste0("KK_", formatC(seq_len(KK), digits = 1, format = "d", flag = "0"), "_", names_regs)
+get_cnt_names_regs <- function(names_regs, KK) {
+  paste0("KK_",
+         formatC(seq_len(KK), digits = 1, format = "d", flag = "0"),
+         "_",
+         names_regs)
 }
