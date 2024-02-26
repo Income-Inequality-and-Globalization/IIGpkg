@@ -99,7 +99,7 @@ get_cnt_me_WR  <- function(wRegs, names_regs = NULL, grid_length, cutoff_num) {
   out_WR <- array(wRegs_means, dim = c(NN_num_par, TT, GG, KK))
   # fill output array with sorted values at specific rows to get a baseline grid
   for (kk in seq_len(KK)) {
-    id_row_kk <- which(grepl(names_regs[kk], rownames(wRegs)))
+    id_row_kk <- get_col_reg_name(rownames(wRegs), names_regs[kk])
     for (row_kk in id_row_kk) {
       out_WR[row_kk, , , kk] <- get_single_reg_grid(
         wRegs[row_kk, ],
