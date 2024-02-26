@@ -21,7 +21,6 @@ compute_gini <- function(out_a, out_q, NN, TT, GG, ki_upp, ki_low) {
       for (tt in seq_len(TT)) {
         vec_tmp <- compute_gini_sm(out_a[nn, tt, ], out_q[nn, tt, ])
         out_gini[nn, tt, 1]  <- mean(vec_tmp)
-        browser()
         out_gini[nn, tt, c(2, 3)] <- quantile(vec_tmp, probs = c(ki_upp, ki_low))
       }
     }
