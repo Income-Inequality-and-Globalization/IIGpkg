@@ -2,25 +2,34 @@
 % Please edit documentation in R/42_plot_measures.R
 \name{get_single_plot_me}
 \alias{get_single_plot_me}
-\title{Plot Single Measure with Optional Confidence Intervals}
+\title{Plot Single Measure with Optional Confidence Intervals and Custom Title}
 \usage{
-get_single_plot_me(vals_to_plot, WITH_CI = FALSE)
+get_single_plot_me(vals_to_plot, settings = list(WITH_CI = FALSE, title = ""))
 }
 \arguments{
 \item{vals_to_plot}{Matrix where the first column contains the measure values
-to be plotted. If `WITH_CI` is TRUE, the second and third columns must
-contain the upper and lower confidence intervals, respectively.}
+to be plotted. If `WITH_CI` is TRUE within the settings list, the second
+and third columns must contain the upper and lower confidence intervals,
+respectively.}
 
-\item{WITH_CI}{Logical indicating whether to include confidence intervals in
-the plot. If FALSE, only the measure values are plotted. If TRUE, dashed
-lines represent the confidence intervals.}
+\item{settings}{A list of settings for the plot, including:
+\itemize{
+  \item `WITH_CI`: Logical indicating whether to include confidence intervals.
+  If FALSE, only the measure values are plotted. If TRUE, dashed lines
+  represent the confidence intervals.
+  \item `title`: The title of the plot. A string that will be displayed as
+  the main title of the plot.
+}}
 }
 \value{
-A plot is generated but not explicitly returned.
+A plot is generated with the specified parameters but not explicitly
+  returned. The plot includes measure values and, optionally, confidence
+  intervals, along with a custom title.
 }
 \description{
-This function generates a plot for a single measure, optionally including
-confidence intervals. It is designed to visualize the measure across a
-specified dimension, such as time, with the option to include upper and lower
-confidence intervals for more detailed analysis.
+This function generates a plot for a single measure, with the option to
+include confidence intervals for a detailed analysis. It visualizes the
+measure across a specified dimension, such as time. The function now
+supports customization including plot titles and the decision to include
+confidence intervals.
 }

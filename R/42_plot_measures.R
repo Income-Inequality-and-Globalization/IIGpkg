@@ -317,41 +317,117 @@ create_single_country_plot <- function(data_long,
 
   return(out_plot)
 }
-create_me_plots <- function(out_measures_info_KK,
-                                  var_name,
-                                  settings = list(mfrow = c(1, 1))) {
-  
-}
-#' Plot Single Measure with Optional Confidence Intervals
+#' Generate Individual Measure Plots for Multiple Regressors
 #'
-#' This function generates a plot for a single measure, optionally including
-#' confidence intervals. It is designed to visualize the measure across a
-#' specified dimension, such as time, with the option to include upper and lower
-#' confidence intervals for more detailed analysis.
+#' This function creates individual plots for each regressor within the
+#' specified measures. It iterates over each measure, generating plots for each
+#' point in the measure's dimension (e.g., time series data for multiple
+#' countries). The function supports the inclusion of confidence intervals
+#' based on the settings provided.
+#'
+#' @param out_measures_info_KK A list where each element is a three-dimensional
+#'   array of measure values for a specific regressor. The dimensions should
+#'   correspond to different entities (e.g., countries), time periods, and
+#'   measure statistics (mean, upper, and lower confidence intervals).
+#' @param reg_names Vector of character strings specifying the names of the
+#'   regressors for which plots will be generated. These names must correspond
+#'   to keys in `out_measures_info_KK`.
+#' @param settings List of settings for plot generation, including:
+#'   \itemize{
+#'     \item `mfrow`: A vector specifying the layout of plots in terms of rows
+#'     and columns.
+#'     \item `WITH_CI`: Logical indicating whether to include confidence
+#'     intervals in the plots. Defaults to TRUE.
+#'   }
+#'
+#' @return Generates plots for each specified regressor and measure combination
+#'   but does not explicitly return any value.
+#' @export
+create_me_plots_individual <- function(out_measures_info_KK,
+                                       reg_names,
+                                       settings = list(
+                                         name_measure = "Gini",
+                                         mfrow = c(4, 5),
+                                         WITH_CI = TRUE)) {
+  num_regs_me  <- length(reg_names)
+  info_on_plot <- dimnames(out_measures_info_KK[[reg_names[1]]])
+  
+  NN <- length(info_on_plot[[1]])
+  TT <- length(info_on_plot[[2]])
+  par(mfrow = settings$mfrow)
+  for (nn in seq_len(NN)) {
+    for (kk in seq_len(num_regs_me)) {
+      for (tt in 2:TT) {
+        vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, tt, , ]
+        get_single_plot_me(vals_to_plot,
+                           settings = list(
+                             WITH_CI = settings$WITH_CI,
+                             title = paste0("year: ", info_on_plot[[2]][tt])
+                             )
+                           )
+      }
+      mtext(paste0("Country: ",
+                   info_on_plot[[1]][nn],
+                   " -- reg: ",
+                   reg_names[kk]),
+            side = 3,
+            line = -1.5,
+            outer = TRUE)
+    }
+  }
+  par(mfrow = c(1, 1))
+}
+get_title_single_plot_me <- function() {
+  paste0()
+}
+#' Plot Single Measure with Optional Confidence Intervals and Custom Title
+#'
+#' This function generates a plot for a single measure, with the option to
+#' include confidence intervals for a detailed analysis. It visualizes the
+#' measure across a specified dimension, such as time. The function now
+#' supports customization including plot titles and the decision to include
+#' confidence intervals.
 #'
 #' @param vals_to_plot Matrix where the first column contains the measure values
-#'   to be plotted. If `WITH_CI` is TRUE, the second and third columns must
-#'   contain the upper and lower confidence intervals, respectively.
-#' @param WITH_CI Logical indicating whether to include confidence intervals in
-#'   the plot. If FALSE, only the measure values are plotted. If TRUE, dashed
-#'   lines represent the confidence intervals.
+#'   to be plotted. If `WITH_CI` is TRUE within the settings list, the second
+#'   and third columns must contain the upper and lower confidence intervals,
+#'   respectively.
+#' @param settings A list of settings for the plot, including:
+#'   \itemize{
+#'     \item `WITH_CI`: Logical indicating whether to include confidence intervals.
+#'     If FALSE, only the measure values are plotted. If TRUE, dashed lines
+#'     represent the confidence intervals.
+#'     \item `title`: The title of the plot. A string that will be displayed as
+#'     the main title of the plot.
+#'   }
 #'
-#' @return A plot is generated but not explicitly returned.
+#' @return A plot is generated with the specified parameters but not explicitly
+#'   returned. The plot includes measure values and, optionally, confidence
+#'   intervals, along with a custom title.
 #' @export
-get_single_plot_me <- function(vals_to_plot, WITH_CI = FALSE) {
-  if (isTRUE(WITH_CI)) {
+get_single_plot_me <- function(vals_to_plot,
+                               settings = list(
+                                 WITH_CI = FALSE,
+                                 title = "")
+                               ) {
+  if (isTRUE(settings$WITH_CI)) {
     min_y <- min(vals_to_plot)
     max_y <- max(vals_to_plot)
     
     mean_to_plot <- vals_to_plot[, 1]
     ki_upp       <- vals_to_plot[, 2]
     ki_low       <- vals_to_plot[, 3]
-    plot(mean_to_plot, type = "l", ylim = c(min_y, max_y))
+    plot(mean_to_plot, type = "l",
+         ylim = c(min_y, max_y),
+         main = settings$title)
     lines(ki_upp, col = "blue", lty = "dashed")
     lines(ki_low, col = "blue", lty = "dashed")
   } else {
     min_y <- min(vals_to_plot[, 1])
     max_y <- max(vals_to_plot[, 1])
-    plot(vals_to_plot[, 1], type = "l", ylim = c(min_y, max_y))
+    plot(vals_to_plot[, 1],
+         type = "l",
+         ylim = c(min_y, max_y),
+         main = settings$title)
   }
 }
