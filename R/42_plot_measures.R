@@ -317,3 +317,41 @@ create_single_country_plot <- function(data_long,
 
   return(out_plot)
 }
+create_me_plots <- function(out_measures_info_KK,
+                                  var_name,
+                                  settings = list(mfrow = c(1, 1))) {
+  
+}
+#' Plot Single Measure with Optional Confidence Intervals
+#'
+#' This function generates a plot for a single measure, optionally including
+#' confidence intervals. It is designed to visualize the measure across a
+#' specified dimension, such as time, with the option to include upper and lower
+#' confidence intervals for more detailed analysis.
+#'
+#' @param vals_to_plot Matrix where the first column contains the measure values
+#'   to be plotted. If `WITH_CI` is TRUE, the second and third columns must
+#'   contain the upper and lower confidence intervals, respectively.
+#' @param WITH_CI Logical indicating whether to include confidence intervals in
+#'   the plot. If FALSE, only the measure values are plotted. If TRUE, dashed
+#'   lines represent the confidence intervals.
+#'
+#' @return A plot is generated but not explicitly returned.
+#' @export
+get_single_plot_me <- function(vals_to_plot, WITH_CI = FALSE) {
+  if (isTRUE(WITH_CI)) {
+    min_y <- min(vals_to_plot)
+    max_y <- max(vals_to_plot)
+    
+    mean_to_plot <- vals_to_plot[, 1]
+    ki_upp       <- vals_to_plot[, 2]
+    ki_low       <- vals_to_plot[, 3]
+    plot(mean_to_plot, type = "l", ylim = c(min_y, max_y))
+    lines(ki_upp, col = "blue", lty = "dashed")
+    lines(ki_low, col = "blue", lty = "dashed")
+  } else {
+    min_y <- min(vals_to_plot[, 1])
+    max_y <- max(vals_to_plot[, 1])
+    plot(vals_to_plot[, 1], type = "l", ylim = c(min_y, max_y))
+  }
+}
