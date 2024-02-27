@@ -81,14 +81,17 @@ ig_moments <- function(alpha_taken, beta_taken) {
 }
 progress_any <- function(iter,
                          iter_max,
-                         settings = list(digits = 2,
+                         settings = list(digits = 0,
                                          repeat_every = 10)) {
   percentage_progress <- iter / iter_max * 100
   
-  check_print_progress_01 <- percentage_progress %% settings$repeat_every == 0 
-  check_print_progress_02 <- percentage_progress >= settings$repeat_every
-  if (check_print_progress_01 && check_print_progress_02) {
-    cat(crayon::green("Progress: "),
+  chunck_to_print  <- floor(iter_max / settings$repeat_every)
+  repeat_every_seq <- seq(from = chunck_to_print,
+                          to = iter_max,
+                          by = chunck_to_print)
+  check_print_progress <- iter %in% repeat_every_seq
+  if (check_print_progress) {
+    cat(crayon::green("Progress:"),
         crayon::yellow(
           paste0(round(percentage_progress, digits = settings$digits), "%.\n")))
   }
