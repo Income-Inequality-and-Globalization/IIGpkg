@@ -42,7 +42,6 @@ subset_GibbsOutputIIG <- function(x, MM_seq = NULL) {
   MM_MAX_seq <- seq_len(dim(x$f)[3])
   stopifnot(`Arg. 'MM_seq' sequence not in range` = all(MM_seq %in% MM_MAX_seq))
 
-  x   <- x
   x$f <- x$f[, , MM_seq]
   x$B <- x$B[, , MM_seq]
   x$D <- x$D[, , MM_seq]
