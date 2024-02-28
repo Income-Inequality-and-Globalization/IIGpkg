@@ -2,9 +2,12 @@
 % Please edit documentation in R/42_plot_measures.R
 \name{get_single_plot_me}
 \alias{get_single_plot_me}
-\title{Plot Single Measure with Optional Confidence Intervals and Custom Title}
+\title{Plot Single Measure with Optional Confidence Intervals, Custom Title, and Type}
 \usage{
-get_single_plot_me(vals_to_plot, settings = list(WITH_CI = FALSE, title = ""))
+get_single_plot_me(
+  vals_to_plot,
+  settings = list(WITH_CI = FALSE, title = "", type = "")
+)
 }
 \arguments{
 \item{vals_to_plot}{Matrix where the first column contains the measure values
@@ -16,20 +19,23 @@ respectively.}
 \itemize{
   \item `WITH_CI`: Logical indicating whether to include confidence intervals.
   If FALSE, only the measure values are plotted. If TRUE, dashed lines
-  represent the confidence intervals.
+  represent the confidence intervals. Cannot be TRUE when type is "line".
   \item `title`: The title of the plot. A string that will be displayed as
   the main title of the plot.
+  \item `type`: Character indicating the type of plot. Accepts "plot" for a
+  basic plot or "line" for a line plot. The option "line" cannot have
+  confidence intervals.
 }}
 }
 \value{
 A plot is generated with the specified parameters but not explicitly
   returned. The plot includes measure values and, optionally, confidence
-  intervals, along with a custom title.
+  intervals, along with a custom title and specified plot type.
 }
 \description{
 This function generates a plot for a single measure, with the option to
-include confidence intervals for a detailed analysis. It visualizes the
-measure across a specified dimension, such as time. The function now
-supports customization including plot titles and the decision to include
-confidence intervals.
+include confidence intervals for a detailed analysis, and allows customization
+of the plot type. It visualizes the measure across a specified dimension, such
+as time. The function supports customization including plot titles, the decision
+to include confidence intervals, and the type of plot (line or plot).
 }
