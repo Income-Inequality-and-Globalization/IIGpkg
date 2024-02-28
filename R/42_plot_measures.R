@@ -377,16 +377,96 @@ create_me_plots_individual <- function(out_measures_info_KK,
   }
   par(mfrow = c(1, 1))
 }
-get_title_single_plot_me <- function() {
-  paste0()
+#' Generate Time Series Plots for Multiple Regressors
+#'
+#' This function creates time series plots for each regressor across all
+#' entities within the specified measures. Unlike `create_me_plots_individual`,
+#' which generates plots for each time period separately, this function
+#' integrates time periods into a single plot per entity, facilitating a
+#' continuous time series visualization. Confidence intervals are not included
+#' in this visualization, focusing instead on the trend over time.
+#'
+#' @param out_measures_info_KK A list where each element is a three-dimensional
+#'   array of measure values for a specific regressor. The dimensions should
+#'   correspond to different entities (e.g., countries), time periods, and
+#'   measure statistics (mean values only, as confidence intervals are not
+#'   displayed).
+#' @param reg_names Vector of character strings specifying the names of the
+#'   regressors for which plots will be generated. These names must correspond
+#'   to keys in `out_measures_info_KK`.
+#' @param settings List of settings for plot generation, including:
+#'   \itemize{
+#'     \item `mfrow`: A vector specifying the layout of plots in terms of rows
+#'     and columns. This controls the arrangement of time series plots for
+#'     multiple entities.
+#'     \item `WITH_CI`: Logical indicating whether to include confidence
+#'     intervals in the plots. In this function, it is effectively ignored as
+#'     confidence intervals are not supported.
+#'   }
+#'
+#' @return Generates time series plots for each specified regressor and entity
+#'   combination but does not explicitly return any value. The function
+#'   emphasizes trend visualization over time for each entity across all
+#'   specified regressors.
+#' @export
+
+create_me_plots_time_series <- function(out_measures_info_KK,
+                                        reg_names,
+                                        settings = list(
+                                          name_measure = "",
+                                          plot_grid = c(3, 5))) {
+  num_regs_me  <- length(reg_names)
+  info_on_plot <- dimnames(out_measures_info_KK[[reg_names[1]]])
+  
+  NN <- length(info_on_plot[[1]])
+  TT <- length(info_on_plot[[2]])
+  title_nn <- substr(info_on_plot[[1]], 1, 5)
+
+  
+  y_lab     <- settings$name_measure
+  plot_grid <- settings$plot_grid
+
+  par(mfcol = settings$plot_grid)
+  for (nn in seq_len(NN)) {
+    for (kk in seq_len(num_regs_me)) {
+      vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, , , ]
+      min_max <- get_min_max_y_scale(vals_to_plot[, , 1])
+      get_single_plot_me(vals_to_plot[1, , ],
+                         settings = list(
+                           WITH_CI = FALSE,
+                           type = "plot",
+                           y_lab = y_lab,
+                           x_lab = reg_names[kk],
+                           title = title_nn[nn],
+                           min_max = min_max
+                         ))
+      for (tt in 2:TT) {
+        get_single_plot_me(vals_to_plot[tt, , ],
+                           settings = list(
+                             WITH_CI = FALSE,
+                             type = "line",
+                             title = NULL
+                             )
+                           )
+      }
+    }
+    if (nn %% plot_grid[2] == 0) {
+      mtext(paste0("Marginal effect on: ",
+                   settings$name_measure),
+            side = 3,
+            line = -1.5,
+            outer = TRUE) 
+    }
+  }
+  par(mfrow = c(1, 1))
 }
-#' Plot Single Measure with Optional Confidence Intervals and Custom Title
+#' Plot Single Measure with Optional Confidence Intervals, Custom Title, and Type
 #'
 #' This function generates a plot for a single measure, with the option to
-#' include confidence intervals for a detailed analysis. It visualizes the
-#' measure across a specified dimension, such as time. The function now
-#' supports customization including plot titles and the decision to include
-#' confidence intervals.
+#' include confidence intervals for a detailed analysis, and allows customization
+#' of the plot type. It visualizes the measure across a specified dimension, such
+#' as time. The function supports customization including plot titles, the decision
+#' to include confidence intervals, and the type of plot (line or plot).
 #'
 #' @param vals_to_plot Matrix where the first column contains the measure values
 #'   to be plotted. If `WITH_CI` is TRUE within the settings list, the second
@@ -396,38 +476,66 @@ get_title_single_plot_me <- function() {
 #'   \itemize{
 #'     \item `WITH_CI`: Logical indicating whether to include confidence intervals.
 #'     If FALSE, only the measure values are plotted. If TRUE, dashed lines
-#'     represent the confidence intervals.
+#'     represent the confidence intervals. Cannot be TRUE when type is "line".
 #'     \item `title`: The title of the plot. A string that will be displayed as
 #'     the main title of the plot.
+#'     \item `type`: Character indicating the type of plot. Accepts "plot" for a
+#'     basic plot or "line" for a line plot. The option "line" cannot have
+#'     confidence intervals.
 #'   }
 #'
 #' @return A plot is generated with the specified parameters but not explicitly
 #'   returned. The plot includes measure values and, optionally, confidence
-#'   intervals, along with a custom title.
+#'   intervals, along with a custom title and specified plot type.
+#'
 #' @export
 get_single_plot_me <- function(vals_to_plot,
                                settings = list(
                                  WITH_CI = FALSE,
-                                 title = "")
+                                 y_lab = "",
+                                 x_lab = "",
+                                 title = "",
+                                 min_max = c(0, 1),
+                                 type = "")
                                ) {
-  if (isTRUE(settings$WITH_CI)) {
-    min_y <- min(vals_to_plot)
-    max_y <- max(vals_to_plot)
-    
+  WITH_CI <- settings$WITH_CI
+  title   <- settings$title
+  type    <- settings$type
+  y_lab   <- settings$y_lab
+  x_lab   <- settings$x_lab
+  min_max <- settings$min_max
+  stopifnot(`Arg. type must be valid character.` = type %in% c("plot", "line"))
+  if (isTRUE(WITH_CI)) {
+    if (type == "line") stop("Cannot have CI bands with type = 'line' output.")
+
     mean_to_plot <- vals_to_plot[, 1]
     ki_upp       <- vals_to_plot[, 2]
     ki_low       <- vals_to_plot[, 3]
+
     plot(mean_to_plot, type = "l",
-         ylim = c(min_y, max_y),
-         main = settings$title)
+         ylim = c(min_max[1], min_max[2]),
+         main = title,
+         ylab = y_lab,
+         xlab = x_lab)
     lines(ki_upp, col = "blue", lty = "dashed")
     lines(ki_low, col = "blue", lty = "dashed")
   } else {
-    min_y <- min(vals_to_plot[, 1])
-    max_y <- max(vals_to_plot[, 1])
-    plot(vals_to_plot[, 1],
-         type = "l",
-         ylim = c(min_y, max_y),
-         main = settings$title)
+    
+    if (type == "plot") {
+      plot(vals_to_plot[, 1],
+           type = "l",
+           ylim = c(min_max[1], min_max[2]),
+           main = title,
+           ylab = y_lab,
+           xlab = x_lab)
+    } else if (type == "line") {
+      lines(vals_to_plot[, 1])
+    }
   }
+  return(invisible(NULL))
+}
+get_min_max_y_scale <- function(x) {
+  min_y <- min(x)
+  max_y <- max(x)
+  return(c(min_y, max_y))
 }
