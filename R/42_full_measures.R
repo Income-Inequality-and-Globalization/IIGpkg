@@ -1,4 +1,4 @@
-#' Computes various a-posterior measures after estimation
+#' Precomputes large container that allow to get-posterior measures
 #'
 #' @param out_gibbs the Gibbs output as an object of class `GibbsOutputIIG`
 #' @param transformation_infos the centering and standardizing vectors for the
@@ -8,16 +8,15 @@
 #' @param const_num_para numeric value giving the number of parameters in the
 #'    model
 #'
-#' @return a named list of computed measures
+#' @return a named list of precomputed container and regressors/regressor grids
+#'   used to get them
 #' @export
-generate_measures_me <- function(out_gibbs,
-                                 transformation_infos,
-                                 const_num_para = 3) {
+precompute_measures_me <- function(out_gibbs,
+                                   transformation_infos,
+                                   const_num_para = 3) {
   if (missing(transformation_infos)) stop("Arg. missing.")
   validate_GibbsOutputIIG(out_gibbs)
 
-  scale_vals  <- transformation_infos$y_settings$scaling
-  centr_vals  <- transformation_infos$y_settings$centering
   names_regs  <- transformation_infos$x_settings$names_regs
   cut_off_num <- transformation_infos$x_settings$cut_off_num
 
@@ -49,43 +48,73 @@ generate_measures_me <- function(out_gibbs,
     }
     progress_any(mm, MM)
   }
+  return(list(par_post_estim = par_post_estim,
+              post_me = post_me,
+              regressor_grid_transformed = WR,
+              regressor_grid_original = NULL))
+}
+#' Generates various posterior measures from precomputed results
+#' 
+#' Precomputed results are obtained from [precompute_measures_me]
+#'
+#' @param par_post_estim estimated posterior fitted values container
+#' @param post_me estimated posterior fitted values container additionally
+#'    generated on a grid and per regressor
+#' @param regs_to_use a vector of regressors to compute ME measures for
+#' @inheritParams precompute_measures_me 
+#'
+#' @return a named list of measures
+#'
+#' @export
+generate_measures_me <- function(par_post_estim,
+                                 post_me,
+                                 regs_to_use,
+                                 transformation_infos,
+                                 const_num_para = 3) {
+  stopifnot(dim(post_me) != 5)
+  dim_last <- 5
+  dim_post <- 3
+  dim_me   <- 4
+
+  scale_vals  <- transformation_infos$y_settings$scaling
+  centr_vals  <- transformation_infos$y_settings$centering
+  names_regs  <- transformation_infos$x_settings$names_regs
+
+
   par_post_estim_bt <- f_bt_par(par_post_estim, centr_vals, scale_vals)
-
-  dim_out <- length(dim(par_post_estim_bt))
-
-  a_post_bt    <- get_subset_par(par_post_estim_bt, par_name = "a", dim_out)
-  q_post_bt    <- get_subset_par(par_post_estim_bt, par_name = "q", dim_out)
-  mu_post_bt   <- get_subset_par(par_post_estim_bt, par_name = "mu", dim_out)
+  a_post_bt    <- get_subset_par(par_post_estim_bt, par_name = "a", dim_post)
+  q_post_bt    <- get_subset_par(par_post_estim_bt, par_name = "q", dim_post)
+  mu_post_bt   <- get_subset_par(par_post_estim_bt, par_name = "mu", dim_post)
   mu_info_TT   <- compute_mu_info(mu_post_bt)
   gini_info_TT <- compute_gini_info(a_post_bt, q_post_bt)
 
-  mu_info_KK   <- get_cnt_info_KK(KK, names_regs)
-  gini_info_KK <- get_cnt_info_KK(KK, names_regs)
-  
+  KK <- length(regs_to_use)
+  mu_info_KK   <- get_cnt_info_KK(KK, regs_to_use)
+  gini_info_KK <- get_cnt_info_KK(KK, regs_to_use)
+
+  regs_to_use_id <- which(names_regs %in% regs_to_use)
+  post_me <- post_me[, , , , regs_to_use_id, drop = FALSE]
   for (kk in 1:KK) {
-    post_me_kk <- abind::adrop(post_me[, , , , kk, drop = FALSE], 5)
+    post_me_kk <- abind::adrop(post_me[, , , , kk, drop = FALSE], dim_last)
     tmp_me_bt <- f_bt_me(post_me_kk, centr_vals, scale_vals)
 
-    dim_out   <- length(dim(tmp_me_bt))
+    a_post_bt <- get_subset_par(tmp_me_bt, par_name = "a", dim_me)
+    q_post_bt <- get_subset_par(tmp_me_bt, par_name = "q", dim_me)
+    m_post_bt <- get_subset_par(tmp_me_bt, par_name = "mu", dim_me)
 
-    a_post_bt <- get_subset_par(tmp_me_bt, par_name = "a", dim_out)
-    q_post_bt <- get_subset_par(tmp_me_bt, par_name = "q", dim_out)
-    m_post_bt <- get_subset_par(tmp_me_bt, par_name = "mu", dim_out)
-
-    mu_info_KK[[kk]]   <- compute_mu_info(m_post_bt)
-    gini_info_KK[[kk]] <- compute_gini_info(a_post_bt, q_post_bt)
+    mu_info_KK[[regs_to_use[kk]]]   <- compute_mu_info(m_post_bt)
+    gini_info_KK[[regs_to_use[kk]]] <- compute_gini_info(a_post_bt, q_post_bt)
   }
   return(list(mu_info_TT = mu_info_TT,
               gini_info_TT = gini_info_TT,
               mu_info_KK = mu_info_KK,
-              gini_info_KK = gini_info_KK,
-              regressor_grid_transformed = WR,
-              regressor_grid_original = NULL))
+              gini_info_KK = gini_info_KK))
 }
 f_bt_par <- function(post_estim, values_centering, values_scaling) {
   MM <- dim(post_estim)[3]
   for (mm in seq_len(MM)) {
     post_estim[, , mm] <- post_estim[, , mm] * values_scaling + values_centering
+    progress_any(mm, MM)
   }
   return(exp(post_estim))
 }
@@ -96,6 +125,7 @@ f_bt_me <- function(post_me, values_centering, values_scaling) {
     for (gg in seq_len(GG)) {
       post_me[, , gg, mm] <- post_me[, , gg, mm] * values_scaling + values_centering
     }
+  progress_any(mm, MM)
   }
   return(exp(post_me))
 }
