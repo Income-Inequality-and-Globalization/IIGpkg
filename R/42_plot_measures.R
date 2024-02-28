@@ -41,7 +41,9 @@ generate_country_plots <- function(pth_data,
 
   unique_countries <- unique(data_to_plot$country)
   list_plots_per_country <- list()
-  for (cntry in unique_countries[-c(length(unique_countries))]) {
+  # for (cntry in unique_countries[-c(length(unique_countries))]) {
+  unique_countries <- unique_countries[-c(length(unique_countries))]
+  for (cntry in unique_countries) {
     list_plots_per_country[[cntry]] <- create_single_country_plot(
       data_long = data_to_plot,
       name_country = cntry,
@@ -60,10 +62,19 @@ generate_country_plots <- function(pth_data,
     )
   }
   if (PLOT) {
-    gridExtra::grid.arrange(grobs = list_plots_per_country, as.table = FALSE)
+    layout_tkn <- get_layout_grid_from_sttgs(settings$grid_dim)
+    gridExtra::grid.arrange(grobs = list_plots_per_country,
+                            layout_matrix = layout_tkn,
+                            as.table = FALSE)
   }
   return(list(data_long = data_to_plot,
               plot_objects = invisible(list_plots_per_country)))
+}
+get_layout_grid_from_sttgs <- function(sttgs_mfrow) {
+  matrix(seq_len(sttgs_mfrow[1] * sttgs_mfrow[2]),
+         nrow = sttgs_mfrow[1],
+         ncol = sttgs_mfrow[2],
+         byrow = TRUE)
 }
 #' Read and Preprocess Data
 #'
