@@ -42,3 +42,13 @@ compute_thin_mcmc <- function(x, thin_freq = NULL) {
 
   return(new_GibbsOutputIIG(x))
 }
+# check_unique_vals <- function(array_to_check, dimension) {
+#   dim_tmp <- dim(array_to_check)
+#   
+# }
+quantile <- function(x, probs) {
+  ki_int <- compute_ki_upper_lower(ki_prob = probs)
+  ki_upp <- ki_int[1]
+  ki_low <- ki_int[2]
+  stats::quantile(x, probs = c(ki_upp, ki_low))
+}
