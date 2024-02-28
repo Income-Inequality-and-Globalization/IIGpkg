@@ -117,23 +117,54 @@ get_single_reg_grid <- function(vals, grid_length, cutoff_num) {
   TT <- length(vals)
   out_reg_grid <- matrix(0, nrow = TT, ncol = grid_length)
   for (tt in seq_len(TT)) {
-    out_reg_grid[tt, ] <- get_grid_vals(vals, grid_length, cutoff_num)
+    out_reg_grid[tt, ] <- get_grid_vals(vals, grid_length, cutoff_num, tt)
   }
   return(out_reg_grid)
 }
-get_grid_vals <- function(value, grid_length, cutoff) {
-  if (grid_length == 1) return(value)
-  vals_srt <- sort(value)
-  if (!is.null(cutoff)) {
-    from_low <- 1:cutoff
-    from_upp <- length(vals_srt):(length(vals_srt) - cutoff + 1)
-    vals_tkn <- vals_srt[-c(from_low, from_upp)]
+get_grid_vals <- function(values, grid_length, cutoff, tt) {
+  # if (values[tt] == 0) values[tt] <- 0.0001
+  # out_grid_vals <- rep(values[tt], times = grid_length)
+  out_grid_vals <- get_grid_vals_small_large_cutoff(values, grid_length, cutoff)
+  # out_grid_vals <- get_grid_vals_around_mean(values, grid_length, tt)
+  return(out_grid_vals)
+}
+get_grid_vals_around_mean <- function(values, grid_length, tt) {
+  cntr_val <- values[tt]
+  around_upp_low <- c(cntr_val + c(-0.1, 0.1) * sd(values))
+  out_grid_vals <- seq(from = around_upp_low[1],
+                       to = around_upp_low[2],
+                       length.out = grid_length)
+  if (any(out_grid_vals == 0)) stop("Grid values should not be zero.")
+  return(out_grid_vals)
+}
+get_grid_vals_small_large_cutoff <- function(x, grid_length, cutoff) {
+  x <- sort(x)
+  x <- get_vals_to_use(x, cutoff)
+  v_max <- max(x)
+  v_min <- min(x)
+  out_grid_vals <- seq(from = v_min, to = v_max, length.out = grid_length)
+  out_grid_vals <- set_zero_to_closest_nonzero(out_grid_vals)
+  if (any(out_grid_vals == 0)) stop("Grid values should not be zero.")
+  return(out_grid_vals)
+}
+get_vals_to_use <- function(vals_to_cut, cutoff) {
+  if (cutoff == 0 || is.null(cutoff)) {
+    from_low <- 0
+    from_upp <- 0
   } else {
-    vals_tkn <- vals_srt
+    from_low <- seq_len(cutoff)
+    from_upp <- length(vals_to_cut):(length(vals_to_cut) - cutoff + 1)
   }
-  v_max <- max(vals_tkn)
-  v_min <- min(vals_tkn)
-  seq(from = v_min, to = v_max, length.out = grid_length)
+  id_to_use <- setdiff(seq_along(vals_to_cut), c(from_low, from_upp))
+  vals_to_use <- vals_to_cut[id_to_use]
+  return(vals_to_use)
+}
+set_zero_to_closest_nonzero <- function(vec) {
+  id_replace <- vec == 0
+  vec_check <- vec[vec != 0]
+  id_cl_friend <- which(abs(0 - vec_check) == min(abs(0 - vec_check)))
+  vec[id_replace] <- vec_check[id_cl_friend] / 2
+  return(vec)
 }
 get_cnt_info_KK <- function(KK, names_regs) {
   out_mu_info_KK <- vector("list", length = KK)
