@@ -346,7 +346,7 @@ create_single_country_plot <- function(data_long,
 create_me_plots_individual <- function(out_measures_info_KK,
                                        reg_names,
                                        settings = list(
-                                         name_measure = "Gini",
+                                         name_measure = "",
                                          mfrow = c(4, 5),
                                          WITH_CI = TRUE)) {
   num_regs_me  <- length(reg_names)
