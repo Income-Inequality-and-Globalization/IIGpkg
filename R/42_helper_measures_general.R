@@ -38,3 +38,17 @@ get_names_measures <- function(nm_measure = NULL) {
        ki_low = paste0(nm_measure, "ki_low"),
        ki_upp = paste0(nm_measure, "ki_upp"))
 }
+get_vec_tmp <- function(x, rnd = 0.7) {
+  # ct  <- floor((length(x) - length(x) * rnd) / 2)
+  # out <- setdiff(x, c(head(x, n = ct), tail(x, n = ct)))
+  # if (length(out) == 0) browser()
+  # return(out)
+  return(x)
+}
+get_name_rows_measure_out <- function(rownames, suffix) {
+  clean_strng <- paste0(sub("^a_", "", rownames))
+  clean_strng <- paste0(sub("^b_", "", clean_strng))
+  clean_strng <- paste0(sub("^q_", "", clean_strng))
+  clean_strng <- paste0(sub("^mu_", "", clean_strng))
+  paste0(clean_strng, suffix)
+}
