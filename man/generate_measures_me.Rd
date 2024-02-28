@@ -2,12 +2,23 @@
 % Please edit documentation in R/42_full_measures.R
 \name{generate_measures_me}
 \alias{generate_measures_me}
-\title{Computes various a-posterior measures after estimation}
+\title{Generates various posterior measures from precomputed results}
 \usage{
-generate_measures_me(out_gibbs, transformation_infos, const_num_para = 3)
+generate_measures_me(
+  par_post_estim,
+  post_me,
+  regs_to_use,
+  transformation_infos,
+  const_num_para = 3
+)
 }
 \arguments{
-\item{out_gibbs}{the Gibbs output as an object of class `GibbsOutputIIG`}
+\item{par_post_estim}{estimated posterior fitted values container}
+
+\item{post_me}{estimated posterior fitted values container additionally
+generated on a grid and per regressor}
+
+\item{regs_to_use}{a vector of regressors to compute ME measures for}
 
 \item{transformation_infos}{the centering and standardizing vectors for the
 `y-measurement` data as a vector for all countries (long index) and all
@@ -18,8 +29,8 @@ countries)}
 model}
 }
 \value{
-a named list of computed measures
+a named list of measures
 }
 \description{
-Computes various a-posterior measures after estimation
+Precomputed results are obtained from [precompute_measures_me]
 }
