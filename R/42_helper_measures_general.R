@@ -39,10 +39,10 @@ get_names_measures <- function(nm_measure = NULL) {
        ki_upp = paste0(nm_measure, "ki_upp"))
 }
 get_vec_tmp <- function(x, rnd = 0.7) {
-  # ct  <- floor((length(x) - length(x) * rnd) / 2)
-  # out <- setdiff(x, c(head(x, n = ct), tail(x, n = ct)))
-  # if (length(out) == 0) browser()
-  # return(out)
+  ct  <- floor((length(x) - length(x) * rnd) / 2)
+  out <- setdiff(x, c(head(x, n = ct), tail(x, n = ct)))
+  if (length(out) == 0) browser()
+  return(out)
   return(x)
 }
 get_name_rows_measure_out <- function(rownames, suffix) {
