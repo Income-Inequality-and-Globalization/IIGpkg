@@ -28,9 +28,9 @@ compute_gini <- function(out_a, out_q, NN, TT, GG, ki_prob) {
                                c("mean", "ki_upp", "ki_low"))
   } else {
     out_gini <- array(0, dim = c(NN, TT, GG, 3))
-    for (gg in seq_len(GG)) {
-      for (nn in seq_len(NN)) {
-        for (tt in seq_len(TT)) {
+    for (nn in seq_len(NN)) {
+      for (tt in seq_len(TT)) {
+        for (gg in seq_len(GG)) {
           vec_tmp <- compute_gini_sm(out_a[nn, tt, gg, ], out_q[nn, tt, gg, ])
           vec_tmp <- get_vec_tmp(vec_tmp)
           out_gini[nn, tt, gg, 1]  <- mean(vec_tmp)
