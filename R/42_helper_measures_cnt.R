@@ -143,38 +143,97 @@ get_grid_vals_around_mean <- function(values, grid_length, tt) {
   if (any(out_grid_vals == 0)) stop("Grid values should not be zero.")
   return(out_grid_vals)
 }
-get_grid_vals_small_large_nonzero <- function(x, grid_length) {
-  num_vals <- length(x)
-  stopifnot(grid_length == num_vals - 1)
+get_grid_vals_remove_intervall <- function(x, grid_length, cutoff) {
+  grid_vals <- sort(x)
+  grid_vals <- get_vals_nozero_intervall(grid_vals)
+  # grid_vals <- get_vals_cutoff(grid_vals, cutoff)
+  if (any(grid_vals == 0)) stop("Grid values should not be zero.")
+  grid_vals_neg <- grid_vals[grid_vals < 0]
+  grid_vals_pos <- grid_vals[grid_vals > 0]
+  num_neg <- length(grid_vals_neg)
+  num_pos <- length(grid_vals_pos)
+  if (num_neg >= 2) {
+    len_out   <- floor(num_neg / length(grid_vals) * grid_length)
+    min_start <- min(grid_vals_neg)
+    max_end   <- max(grid_vals_neg)
+    if (min_start == max_end) max_end <- max_end - 0.1
+    grid_vals_neg <- seq(from = min_start, to = max_end, length.out = len_out)
+    if (length(grid_vals_neg) != len_out) {
+      browser()
+    }
+  } else {
+    len_out <- num_neg
+  }
+  if (num_pos >= 1) {
+    len_out <- grid_length - len_out
+    # if (num_pos == 1 && len_out > 2) browser()
+    min_start <- min(grid_vals_pos)
+    max_end   <- max(grid_vals_pos)
+    if (min_start == max_end) max_end <- max_end + 0.1 * (len_out - 1)
+    grid_vals_pos <- seq(from = min_start, to = max_end, length.out = len_out)
+  } else {
+    len_out <- grid_length - len_out
+    if (len_out != num_pos) {
+      grid_vals_pos <- c(grid_vals_pos, grid_vals_pos + 0.1)
+    }
+  }
+  out_grid_vals <- c(grid_vals_neg, grid_vals_pos)
+  if (length(out_grid_vals) != grid_length) browser()
+  return(unname(out_grid_vals))
+}
+get_vals_nozero_intervall <- function(vals_to_trim, trim_config = 2) {
+  id_to_trim <- which(vals_to_trim == 0)
+  if (length(id_to_trim) == 0) {
+    id_to_trim <- which(min(vals_to_trim))
+  }
+  if (length(id_to_trim) > 1) id_to_trim <- id_to_trim[1]
+
+  b_low <- vals_to_trim[id_to_trim] - sd(vals_to_trim) / trim_config
+  b_upp <- vals_to_trim[id_to_trim] + sd(vals_to_trim) / trim_config
+  out_vals <- vals_to_trim[!(vals_to_trim >= b_low & vals_to_trim <= b_upp)]
+
+  return(out_vals)
+}
+get_grid_vals_small_large_nonzero <- function(x, grid_length, cutoff) {
   stopifnot(`Something is wrong; there must be zero regs vals.` = any(x == 0))
   out_grid_vals <- sort(x[x != 0])
+  if (cutoff != 0 || is.null(cutoff)) {
+    out_grid_vals <- out_grid_vals[-c(1:cutoff)]
+  }
   if (grid_length != length(out_grid_vals)) {
     out_grid_vals <- append_to_vector(out_grid_vals,
                                       mean(diff(out_grid_vals)),
-                                      grid_length)
+                                      grid_length,
+                                      from = "top")
   }
   if (any(out_grid_vals == 0)) stop("Grid values should not be zero.")
   return(out_grid_vals)
 }
-append_to_vector <- function(vec, increment, final_length) {
+append_to_vector <- function(vec, increment, final_length, from = "bottom") {
   if (length(vec) >= final_length) {
     warning("Initial vector is already of the required length or longer.")
     return(vec)
   }
   while (length(vec) < final_length) {
-    if (length(vec) %% 2 == 0) {
+    if (length(vec) %% 2 == 0 && from == "both") {
       # Add to the bottom
       vec <- c(vec[1] - increment, vec)
-    } else {
+    } else if (from == "both") {
+      # Add to the top
+      vec <- c(vec, tail(vec, 1) + increment)
+    } else if (from == "bottom") {
+      # Add to the bottom
+      vec <- c(vec[1] - increment, vec)
+    } else if (from == "top") {
       # Add to the top
       vec <- c(vec, tail(vec, 1) + increment)
     }
   }
-  return(vec)
+  return(unname(vec))
 }
 get_grid_vals_small_large_cutoff <- function(x, grid_length, cutoff) {
   x <- sort(x)
-  x <- get_vals_to_use(x, cutoff)
+  x <- get_vals_cutoff(x, cutoff)
   v_max <- max(x)
   v_min <- min(x)
   out_grid_vals <- seq(from = v_min, to = v_max, length.out = grid_length)
@@ -182,7 +241,8 @@ get_grid_vals_small_large_cutoff <- function(x, grid_length, cutoff) {
   if (any(out_grid_vals == 0)) stop("Grid values should not be zero.")
   return(out_grid_vals)
 }
-get_vals_to_use <- function(vals_to_cut, cutoff) {
+get_vals_cutoff <- function(vals_to_cut, cutoff) {
+  browser()
   if (cutoff == 0 || is.null(cutoff)) {
     from_low <- 0
     from_upp <- 0
