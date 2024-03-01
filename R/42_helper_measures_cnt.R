@@ -122,9 +122,15 @@ get_single_reg_grid <- function(vals, grid_length, cutoff_num) {
   return(out_reg_grid)
 }
 get_grid_vals <- function(values, grid_length, cutoff, tt) {
+  ##############################################################################
+  # THIS IS JUST TESTING
   # if (values[tt] == 0) values[tt] <- 0.0001
   # out_grid_vals <- rep(values[tt], times = grid_length)
-  out_grid_vals <- get_grid_vals_small_large_cutoff(values, grid_length, cutoff)
+  # THIS IS JUST TESTING
+  ##############################################################################
+
+  # out_grid_vals <- get_grid_vals_small_large_cutoff(values, grid_length, cutoff)
+  out_grid_vals <- get_grid_vals_small_large_nonzero(values, grid_length)
   # out_grid_vals <- get_grid_vals_around_mean(values, grid_length, tt)
   return(out_grid_vals)
 }
@@ -136,6 +142,35 @@ get_grid_vals_around_mean <- function(values, grid_length, tt) {
                        length.out = grid_length)
   if (any(out_grid_vals == 0)) stop("Grid values should not be zero.")
   return(out_grid_vals)
+}
+get_grid_vals_small_large_nonzero <- function(x, grid_length) {
+  num_vals <- length(x)
+  stopifnot(grid_length == num_vals - 1)
+  stopifnot(`Something is wrong; there must be zero regs vals.` = any(x == 0))
+  out_grid_vals <- sort(x[x != 0])
+  if (grid_length != length(out_grid_vals)) {
+    out_grid_vals <- append_to_vector(out_grid_vals,
+                                      mean(diff(out_grid_vals)),
+                                      grid_length)
+  }
+  if (any(out_grid_vals == 0)) stop("Grid values should not be zero.")
+  return(out_grid_vals)
+}
+append_to_vector <- function(vec, increment, final_length) {
+  if (length(vec) >= final_length) {
+    warning("Initial vector is already of the required length or longer.")
+    return(vec)
+  }
+  while (length(vec) < final_length) {
+    if (length(vec) %% 2 == 0) {
+      # Add to the bottom
+      vec <- c(vec[1] - increment, vec)
+    } else {
+      # Add to the top
+      vec <- c(vec, tail(vec, 1) + increment)
+    }
+  }
+  return(vec)
 }
 get_grid_vals_small_large_cutoff <- function(x, grid_length, cutoff) {
   x <- sort(x)
