@@ -182,7 +182,7 @@ get_tibble_regs_grid <- function(regs_grid,
                         values_to = reg_name_trns)
   regs_out <- regs_out %>%
     dplyr::select("country", "year", reg_name_trns) %>%
-    dplyr::arrange(country, year)
+    dplyr::arrange(.data$country, .data$year)
 
   return(regs_out)
 }
