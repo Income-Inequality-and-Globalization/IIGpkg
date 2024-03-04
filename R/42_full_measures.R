@@ -33,7 +33,7 @@ precompute_measures_me <- function(out_gibbs,
   D_unc <- get_cnt_me_D_uncertainty(D, names_regs, KK, MM)
   wRegs <- get_cnt_me_wRegs(out_gibbs$initials$wReg, names_regs)
   WR    <- get_cnt_me_WR(wRegs, names_regs, GG, cut_off_num)
-  
+
   B_m <- apply(B, c(1, 2), mean)
   f_m <- apply(f, c(1, 2), mean)
 
@@ -54,14 +54,14 @@ precompute_measures_me <- function(out_gibbs,
               regressor_grid_original = NULL))
 }
 #' Generates various posterior measures from precomputed results
-#' 
+#'
 #' Precomputed results are obtained from [precompute_measures_me]
 #'
 #' @param par_post_estim estimated posterior fitted values container
 #' @param post_me estimated posterior fitted values container additionally
 #'    generated on a grid and per regressor
 #' @param regs_to_use a vector of regressors to compute ME measures for
-#' @inheritParams precompute_measures_me 
+#' @inheritParams precompute_measures_me
 #'
 #' @return a named list of measures
 #'
