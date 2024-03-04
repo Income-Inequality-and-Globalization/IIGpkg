@@ -456,7 +456,9 @@ create_me_plots_time_series <- function(out_measures_info_KK,
   TT <- length(info_on_plot[[2]])
   title_nn <- substr(info_on_plot[[1]], 1, 5)
 
-
+  col_offset <- 5
+  color_palette <- scales::col_numeric(palette = "Blues",
+                                       domain = c(1, TT + col_offset))
   y_lab     <- settings$name_measure
   plot_grid <- settings$plot_grid
 
@@ -472,14 +474,18 @@ create_me_plots_time_series <- function(out_measures_info_KK,
                            y_lab = y_lab,
                            x_lab = reg_names[kk],
                            title = title_nn[nn],
-                           min_max = min_max
+                           min_max = min_max,
+                           line_col = color_palette(1 + col_offset)
                          ))
       for (tt in 2:TT) {
+        # Compute color based on time point
+        line_color_tkn <- color_palette(tt + col_offset)
         get_single_plot_me(vals_to_plot[tt, , ],
                            settings = list(
                              WITH_CI = FALSE,
                              type = "line",
-                             title = NULL
+                             title = NULL,
+                             line_col = line_color_tkn
                              )
                            )
       }
@@ -529,6 +535,7 @@ get_single_plot_me <- function(vals_to_plot,
                                  y_lab = "",
                                  x_lab = "",
                                  title = "",
+                                 line_col = "black",
                                  min_max = NULL,
                                  type = "")
                                ) {
@@ -538,6 +545,7 @@ get_single_plot_me <- function(vals_to_plot,
   y_lab   <- settings$y_lab
   x_lab   <- settings$x_lab
   min_max <- settings$min_max
+  line_col <- settings$line_col
   stopifnot(`Arg. type must be valid character.` = type %in% c("plot", "line"))
   if (isTRUE(WITH_CI)) {
     if (type == "line") stop("Cannot have CI bands with type = 'line' output.")
