@@ -131,13 +131,13 @@ data_plot_processing <- function(out_measures,
                                     country_list,
                                     year_list)
 
-  vars_required <- c(unlist(names_measures, use.names = FALSE), 
+  vars_required <- c(unlist(names_measures, use.names = FALSE),
                      vars_to_use,
                      reg_name_tkn)
   data_raw <- data_raw %>%
     dplyr::select("country", "year", tidyr::all_of(vars_required))
   if (!is.null(data_regs)) {
-    data_raw <- data_raw %>% 
+    data_raw <- data_raw %>%
       get_sorted_reg("country", reg_name_tkn) %>%
       dplyr::full_join(data_regs, by = c("country", "year"))
     data_raw$year <- NULL
@@ -176,14 +176,14 @@ get_tibble_regs_grid <- function(regs_grid,
   colnames(regs_out) <- country_list
   regs_out$year <- year_list
   reg_name_trns <- paste0(reg_name, "_transformed")
-  regs_out <- regs_out %>% 
+  regs_out <- regs_out %>%
     tidyr::pivot_longer(cols = !"year",
                         names_to = "country",
                         values_to = reg_name_trns)
-  regs_out <- regs_out %>% 
+  regs_out <- regs_out %>%
     dplyr::select("country", "year", reg_name_trns) %>%
     dplyr::arrange(country, year)
-    
+
   return(regs_out)
 }
 #' Reshape Data to Long Format
@@ -313,13 +313,13 @@ create_single_country_plot <- function(data_long,
     ggplot2::geom_line(ggplot2::aes_string(y = estim_infos$mean),
                                            color = measure_color)
   if (isTRUE(plot_info$ADD_KI)) {
-    out_plot <- out_plot + 
+    out_plot <- out_plot +
       ggplot2::geom_ribbon(ggplot2::aes_string(ymax = estim_infos$ki_upp,
                                                ymin = estim_infos$ki_low),
                            fill = ribbon_color,
                            alpha = 0.25)
   }
-  out_plot <- out_plot + 
+  out_plot <- out_plot +
     ggplot2::labs(title = name_country,
                   y = plot_info$y_lab) +
     ggthemes::theme_tufte() +
@@ -428,12 +428,12 @@ create_me_plots_time_series <- function(out_measures_info_KK,
                                           plot_grid = c(3, 5))) {
   num_regs_me  <- length(reg_names)
   info_on_plot <- dimnames(out_measures_info_KK[[reg_names[1]]])
-  
+
   NN <- length(info_on_plot[[1]])
   TT <- length(info_on_plot[[2]])
   title_nn <- substr(info_on_plot[[1]], 1, 5)
 
-  
+
   y_lab     <- settings$name_measure
   plot_grid <- settings$plot_grid
 
@@ -466,7 +466,7 @@ create_me_plots_time_series <- function(out_measures_info_KK,
                    settings$name_measure),
             side = 3,
             line = -1.5,
-            outer = TRUE) 
+            outer = TRUE)
     }
   }
   par(mfrow = c(1, 1))
@@ -518,7 +518,6 @@ get_single_plot_me <- function(vals_to_plot,
   stopifnot(`Arg. type must be valid character.` = type %in% c("plot", "line"))
   if (isTRUE(WITH_CI)) {
     if (type == "line") stop("Cannot have CI bands with type = 'line' output.")
-
     mean_to_plot <- vals_to_plot[, 1]
     ki_upp       <- vals_to_plot[, 2]
     ki_low       <- vals_to_plot[, 3]
@@ -531,7 +530,7 @@ get_single_plot_me <- function(vals_to_plot,
     lines(ki_upp, col = "blue", lty = "dashed")
     lines(ki_low, col = "blue", lty = "dashed")
   } else {
-    
+
     if (type == "plot") {
       plot(vals_to_plot[, 1],
            type = "l",
