@@ -377,6 +377,14 @@ create_me_plots_individual <- function(out_measures_info_KK,
   par(mfrow = plot_grid)
   for (nn in seq_len(NN)) {
     for (kk in seq_len(num_regs_me)) {
+      pdf_file_name <- paste0("03_",
+                              info_on_plot[[1]][nn],
+                              "_", kk, "_",
+                              reg_names[kk],
+                              ".pdf")
+      pdf(pdf_file_name, width = 11, height = 8.5)
+
+      par(mfrow = plot_grid)
       for (tt in 2:TT) {
         vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, tt, , ]
         min_max <- get_min_max_y_scale(vals_to_plot)
@@ -385,6 +393,7 @@ create_me_plots_individual <- function(out_measures_info_KK,
                              WITH_CI = WITH_CI,
                              title = paste0("year: ", info_on_plot[[2]][tt]),
                              type = "plot",
+                             line_col = "black",
                              y_lab = y_lab,
                              min_max = min_max)
                            )
@@ -396,6 +405,8 @@ create_me_plots_individual <- function(out_measures_info_KK,
             side = 3,
             line = -1.5,
             outer = TRUE)
+      # Close PDF device to save the plot
+      dev.off()
     }
   }
   par(mfrow = c(1, 1))
