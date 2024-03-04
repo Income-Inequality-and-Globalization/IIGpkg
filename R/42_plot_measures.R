@@ -358,23 +358,31 @@ create_me_plots_individual <- function(out_measures_info_KK,
                                        reg_names,
                                        settings = list(
                                          name_measure = "",
-                                         mfrow = c(4, 5),
+                                         plot_grid = c(4, 5),
                                          WITH_CI = TRUE)) {
   num_regs_me  <- length(reg_names)
   info_on_plot <- dimnames(out_measures_info_KK[[reg_names[1]]])
-  
+
   NN <- length(info_on_plot[[1]])
   TT <- length(info_on_plot[[2]])
-  par(mfrow = settings$mfrow)
+
+  y_lab     <- settings$name_measure
+  WITH_CI   <- settings$WITH_CI
+  plot_grid <- settings$plot_grid
+
+  par(mfrow = plot_grid)
   for (nn in seq_len(NN)) {
     for (kk in seq_len(num_regs_me)) {
       for (tt in 2:TT) {
         vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, tt, , ]
+        min_max <- get_min_max_y_scale(vals_to_plot)
         get_single_plot_me(vals_to_plot,
                            settings = list(
-                             WITH_CI = settings$WITH_CI,
-                             title = paste0("year: ", info_on_plot[[2]][tt])
-                             )
+                             WITH_CI = WITH_CI,
+                             title = paste0("year: ", info_on_plot[[2]][tt]),
+                             type = "plot",
+                             y_lab = y_lab,
+                             min_max = min_max)
                            )
       }
       mtext(paste0("Country: ",
@@ -506,7 +514,7 @@ get_single_plot_me <- function(vals_to_plot,
                                  y_lab = "",
                                  x_lab = "",
                                  title = "",
-                                 min_max = c(0, 1),
+                                 min_max = NULL,
                                  type = "")
                                ) {
   WITH_CI <- settings$WITH_CI
