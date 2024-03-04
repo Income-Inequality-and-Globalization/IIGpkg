@@ -557,9 +557,10 @@ get_single_plot_me <- function(vals_to_plot,
          ylim = c(min_max[1], min_max[2]),
          main = title,
          ylab = y_lab,
-         xlab = x_lab)
-    lines(ki_upp, col = "blue", lty = "dashed")
-    lines(ki_low, col = "blue", lty = "dashed")
+         xlab = x_lab,
+         col = line_col)
+    lines(ki_upp, col = "darkred", lty = "dashed")
+    lines(ki_low, col = "darkred", lty = "dashed")
   } else {
 
     if (type == "plot") {
@@ -568,9 +569,10 @@ get_single_plot_me <- function(vals_to_plot,
            ylim = c(min_max[1], min_max[2]),
            main = title,
            ylab = y_lab,
-           xlab = x_lab)
+           xlab = x_lab,
+           col = line_col)
     } else if (type == "line") {
-      lines(vals_to_plot[, 1])
+      lines(vals_to_plot[, 1], col = line_col)
     }
   }
   return(invisible(NULL))
