@@ -18,7 +18,7 @@ compute_iw_moments <- function(psi, nu, p = 3) {
 #' @param nu_taken Vector of degrees of freedom
 #' @param p Dimension of the Inverse Wishart (default = 3)
 #' @return A list containing matrices of means and variances for each psi and nu
-#' 
+#'
 #' @export
 #' @examples
 #' psi_taken <- c(7, 17, 27, 57)
@@ -33,7 +33,7 @@ iw_moments <- function(psi_taken, nu_taken, p = 3) {
   }
   colnames(out_var) <- paste0("nu_", nu_taken)
   colnames(out_mean) <- paste0("nu_", nu_taken)
-  
+
   rownames(out_var) <- paste0("Psi_", psi_taken)
   rownames(out_mean) <- paste0("Psi_", psi_taken)
   return(list(mean = out_mean, var = out_var))
@@ -51,7 +51,7 @@ compute_ig_moments <- function(alpha, beta) {
 }
 #' Compute Mean and Variance of Inverse Gamma for Multiple Parameters
 #'
-#' @param alpha_taken Vector of shape parameters of the Inverse Gamma 
+#' @param alpha_taken Vector of shape parameters of the Inverse Gamma
 #'    distribution
 #' @param beta_taken Vector of scale parameters
 #' @return A list containing matrices of means and variances for each alpha and
@@ -74,7 +74,7 @@ ig_moments <- function(alpha_taken, beta_taken) {
   }
   colnames(out_var) <- paste0("Beta_", beta_taken)
   colnames(out_mean) <- paste0("Beta_", beta_taken)
-  
+
   rownames(out_var) <- paste0("Alpha_", alpha_taken)
   rownames(out_mean) <- paste0("Alpha_", alpha_taken)
   return(list(mean = out_mean, variance = out_var))
@@ -84,7 +84,7 @@ progress_any <- function(iter,
                          settings = list(digits = 0,
                                          repeat_every = 10)) {
   percentage_progress <- iter / iter_max * 100
-  
+
   chunck_to_print  <- floor(iter_max / settings$repeat_every)
   repeat_every_seq <- seq(from = chunck_to_print,
                           to = iter_max,
