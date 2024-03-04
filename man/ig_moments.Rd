@@ -7,7 +7,7 @@
 ig_moments(alpha_taken, beta_taken)
 }
 \arguments{
-\item{alpha_taken}{Vector of shape parameters of the Inverse Gamma 
+\item{alpha_taken}{Vector of shape parameters of the Inverse Gamma
 distribution}
 
 \item{beta_taken}{Vector of scale parameters}
