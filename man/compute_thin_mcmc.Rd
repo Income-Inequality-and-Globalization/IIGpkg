@@ -21,7 +21,7 @@ Returns a new GibbsOutputIIG object with thinned samples. The
   variable is thinned according to the specified frequency.
 }
 \description{
-This function applies thinning to Monte Carlo samples specifically from a 
+This function applies thinning to Monte Carlo samples specifically from a
 GibbsOutputIIG class output. Thinning is performed by selecting every nth
 sample from the Monte Carlo output, where n is defined by the thinning
 frequency. This method can reduce autocorrelation in the samples and decrease
