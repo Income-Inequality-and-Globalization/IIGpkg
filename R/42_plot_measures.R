@@ -302,11 +302,15 @@ create_single_country_plot <- function(data_long,
                                        estim_infos) {
   data_long2 <- data_long[data_long$country == name_country, ]
   measure_color <- "blue"
-  ribbon_color <- "grey"
+  ribbon_color <- "darkgrey"
 
   x_reg <- plot_info$x_var
   if (is.null(x_reg)) x_reg <- "year"
-  if (!is.null(x_reg)) {if (isTRUE(plot_info$X_TRN)) paste0(x_reg, "_transformed")}
+  if (!is.null(x_reg)) {
+    if (isTRUE(plot_info$X_TRN)) {
+      paste0(x_reg, "_transformed")
+    }
+  }
   out_plot <- ggplot2::ggplot(data_long2, ggplot2::aes_string(x = x_reg)) +
     ggplot2::geom_point(ggplot2::aes_string(y = measure_info$vals,
                                             color = measure_info$types)) +
@@ -317,7 +321,7 @@ create_single_country_plot <- function(data_long,
       ggplot2::geom_ribbon(ggplot2::aes_string(ymax = estim_infos$ki_upp,
                                                ymin = estim_infos$ki_low),
                            fill = ribbon_color,
-                           alpha = 0.25)
+                           alpha = 0.5)
   }
   out_plot <- out_plot +
     ggplot2::labs(title = name_country,
