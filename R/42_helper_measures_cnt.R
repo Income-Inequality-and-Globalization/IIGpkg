@@ -129,14 +129,11 @@ get_grid_vals <- function(values, grid_length, cutoff, tt) {
   # out_grid_vals <- rep(values[tt], times = grid_length)
   # THIS IS JUST TESTING
   ##############################################################################
-
-  # out_grid_vals <- get_grid_vals_small_large_cutoff(values,
-  #                                                   grid_length,
-  #                                                   cutoff)
-  # out_grid_vals <- get_grid_vals_small_large_nonzero(values,
+  out_grid_vals <- get_grid_vals_small_large_cutoff(values, grid_length, cutoff)
+  # out_grid_vals <- get_grid_vals_small_large_truevals(values,
   #                                                    grid_length,
   #                                                    cutoff)
-  out_grid_vals <- get_grid_vals_remove_intervall(values, grid_length, cutoff)
+  # out_grid_vals <- get_grid_vals_remove_intervall(values, grid_length, cutoff)
   # out_grid_vals <- get_grid_vals_around_mean(values, grid_length, tt)
   return(out_grid_vals)
 }
