@@ -94,9 +94,10 @@ get_cnt_me_WR  <- function(wRegs, names_regs = NULL, grid_length, cutoff_num) {
   TT <- ncol(wRegs)
   # out_WR <- array(wRegs, dim = c(NN_num_par, TT, GG, KK))
   # get mean values for each row
-  wRegs_means <- apply(wRegs, 1, mean)
+  # wRegs_means <- apply(wRegs, 1, mean)
+  # out_WR <- array(wRegs_means, dim = c(NN_num_par, TT, GG, KK))
+  out_WR <- array(wRegs, dim = c(NN_num_par, TT, GG, KK))
   # fill output array with mean values
-  out_WR <- array(wRegs_means, dim = c(NN_num_par, TT, GG, KK))
   # fill output array with sorted values at specific rows to get a baseline grid
   for (kk in seq_len(KK)) {
     id_row_kk <- get_col_reg_name(rownames(wRegs), names_regs[kk])
