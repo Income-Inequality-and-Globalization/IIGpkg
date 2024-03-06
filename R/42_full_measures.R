@@ -43,7 +43,8 @@ precompute_measures_me <- function(out_gibbs,
     par_post_estim[, , mm] <- B[, , mm] %*% f[, , mm] + D[, , mm] %*% wRegs
     for (kk in seq_len(KK)) {
       for (gg in seq_len(GG)) {
-        post_me[, , gg,  mm, kk] <- B_m %*% f_m + D_unc[ , , mm, kk] %*% WR[, , gg, kk]
+        post_me[, , gg,  mm, kk] <- B[, , mm] %*% f[, , mm] + D_unc[ , , mm, kk] %*% WR[, , gg, kk]
+        # post_me[, , gg,  mm, kk] <- B_m %*% f_m + D_unc[ , , mm, kk] %*% WR[, , gg, kk]
       }
     }
     progress_any(mm, MM)
