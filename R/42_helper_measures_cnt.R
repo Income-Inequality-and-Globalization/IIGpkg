@@ -197,7 +197,7 @@ get_vals_nozero_intervall <- function(vals_to_trim, trim_config = 2) {
 
   return(out_vals)
 }
-get_grid_vals_small_large_nonzero <- function(x, grid_length, cutoff) {
+get_grid_vals_small_large_truevals <- function(x, grid_length, cutoff) {
   stopifnot(`Something is wrong; there must be zero regs vals.` = any(x == 0))
   out_grid_vals <- sort(x[x != 0])
   if (cutoff != 0 || is.null(cutoff)) {
@@ -207,7 +207,7 @@ get_grid_vals_small_large_nonzero <- function(x, grid_length, cutoff) {
     out_grid_vals <- append_to_vector(out_grid_vals,
                                       mean(diff(out_grid_vals)),
                                       grid_length,
-                                      from = "top")
+                                      from = "both")
   }
   if (any(out_grid_vals == 0)) stop("Grid values should not be zero.")
   return(out_grid_vals)
@@ -245,7 +245,6 @@ get_grid_vals_small_large_cutoff <- function(x, grid_length, cutoff) {
   return(out_grid_vals)
 }
 get_vals_cutoff <- function(vals_to_cut, cutoff) {
-  browser()
   if (cutoff == 0 || is.null(cutoff)) {
     from_low <- 0
     from_upp <- 0
