@@ -6,8 +6,8 @@
 \usage{
 get_single_plot_me(
   vals_to_plot,
-  settings = list(WITH_CI = FALSE, y_lab = "", x_lab = "", title = "", min_max = NULL,
-    type = "")
+  settings = list(WITH_CI = FALSE, y_lab = "", x_lab = "", title = "", line_col =
+    "black", min_max = NULL, type = "")
 )
 }
 \arguments{
