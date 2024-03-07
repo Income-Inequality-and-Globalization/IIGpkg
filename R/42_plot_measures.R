@@ -89,36 +89,47 @@ get_layout_grid_from_sttgs <- function(sttgs_mfrow, transpose = TRUE) {
                       byrow = transpose)
   return(out_grid)
 }
-#' Read and Preprocess Data
+#' Read and Preprocess Data for Plotting
 #'
-#' Reads data from a specified `path` and `filename`, and preprocesses it by
-#' removing specified variables, and adding output measures from a suitable
-#' array (`out_measures`).
+#' This function reads data from a specified path, preprocesses it by scaling
+#' measure-coefficient values, and optionally merges it with regression data.
+#' The processed data is then ready for plotting or further analysis. This
+#' includes scaling the measure values, merging additional regression data, and
+#' selecting relevant variables for visualization.
 #'
-#' @param out_measures an array of estimated measure-coefficient values:
-#'   rownmaes give the country (in the same order as the dataset), colnames the
-#'   time, and the third dimension has the Bayesian a-posteriori mean, lower and
-#'   upper confidence band values. The measure values can be Ginis, or the
-#'   expectaion as estimated from the Bayesian parameter samples a-posteriori.
-#' @param pth_data The path to the data file which appended by content of the
-#'   of the first argument (ie. transform the arrary to the data format and
-#'   add its content as new variables)
+#' @param out_measures A three-dimensional array of estimated measure-coefficient values.
+#'   The dimensions are expected to correspond to entities (e.g., countries),
+#'   time periods, and measure statistics (mean, lower confidence band, upper
+#'   confidence band). This data is used to append new variables to the dataset.
+#' @param out_regs An optional data frame or matrix containing regression data
+#'   to be merged with the measure data. Each row should correspond to an
+#'   observation, and columns should include the regression variables of interest.
+#'   If NULL, no regression data is merged.
+#' @param pth_data Path to the CSV data file containing the raw data set. The
+#'   file is read into R and processed according to the specified parameters.
+#' @param vars_to_use A vector of variable names from the raw data set that should
+#'   be retained for analysis and plotting. This allows for the inclusion of
+#'   specific variables of interest beyond the generated measure variables.
 #' @param names_measures A named list or vector specifying the column names to
-#'   be created in the dataset for each type of measure. It must include names
-#'   for "mean", "ki_low", and "ki_upp", corresponding to the Bayesian
-#'   a-posteriori mean, lower confidence band, and upper confidence band values,
-#'   respectively. The names are used to dynamically create and assign these
-#'   measures to the appropriate columns in the dataset. For example,
-#'   names_measures could be set as `list(mean = "gini_mean", ki_low =
-#'   "gini_ki_low", ki_upp = "gini_ki_upp")`.
-#' @param scale_values A numeric value used to scale the measure values
-#'   extracted from `out_measures`. This scaling factor is applied to the mean,
-#'   lower, and upper confidence band values. It allows for adjusting the
-#'   measure values according to the desired scale (e.g., converting proportions
-#'   to percentages). Default is 1 (no scaling).
+#'   be created in the dataset for each type of measure (mean, lower confidence
+#'   band, upper confidence band). These names are dynamically used to assign
+#'   measure values to the appropriate columns in the processed dataset.
+#' @param settings A list of settings for data processing, including:
+#'   \itemize{
+#'     \item{\code{scale_measure}:}{ A numeric value used to scale the measure
+#'     values. Defaults to 1 if not specified, indicating no scaling. This is
+#'     applied uniformly to mean, lower, and upper confidence band values.}
+#'     \item{\code{x_var}:}{ The name of the variable used for regression data
+#'     merging and/or plotting. This should correspond to a variable in both the
+#'     raw data and the regression data (if provided).}
+#'     \item Other settings as required for processing, such as transformation
+#'     flags or additional variable names to include.
+#'   }
 #'
-#' @return A tibble with the specified variable removed, and the output measure
-#'   variables added
+#' @return A tibble containing the processed data. This includes the original
+#'   variables specified by `vars_to_use`, new measure variables as named by
+#'   `names_measures`, and optionally merged regression data. Variables not
+#'   specified for retention or addition are omitted from the returned tibble.
 data_plot_processing <- function(out_measures,
                                  out_regs,
                                  pth_data,
