@@ -34,8 +34,8 @@ precompute_measures_me <- function(out_gibbs,
   wRegs <- get_cnt_me_wRegs(out_gibbs$initials$wReg, names_regs)
   WR    <- get_cnt_me_WR(wRegs, names_regs, GG, cut_off_num)
 
-  B_m <- apply(B, c(1, 2), mean)
-  f_m <- apply(f, c(1, 2), mean)
+  # B_m <- apply(B, c(1, 2), mean)
+  # f_m <- apply(f, c(1, 2), mean)
 
   par_post_estim <- get_cnt_par_post_estim(NN = NN, TT = TT, MM = MM)
   post_me <- get_cnt_par_me_estim(NN, TT, GG, MM, names_regs)
@@ -43,8 +43,10 @@ precompute_measures_me <- function(out_gibbs,
     par_post_estim[, , mm] <- B[, , mm] %*% f[, , mm] + D[, , mm] %*% wRegs
     for (kk in seq_len(KK)) {
       for (gg in seq_len(GG)) {
-        post_me[, , gg,  mm, kk] <- B[, , mm] %*% f[, , mm] + D_unc[ , , mm, kk] %*% WR[, , gg, kk]
-        # post_me[, , gg,  mm, kk] <- B_m %*% f_m + D_unc[ , , mm, kk] %*% WR[, , gg, kk]
+        post_me[, , gg,  mm, kk] <- (B[, , mm] %*% f[, , mm] +
+                                       D_unc[, , mm, kk] %*% WR[, , gg, kk])
+        # post_me[, , gg,  mm, kk] <- (B_m %*% f_m +
+        #  D_unc[ , , mm, kk] %*% WR[, , gg, kk])
       }
     }
     progress_any(mm, MM)
@@ -124,9 +126,10 @@ f_bt_me <- function(post_me, values_centering, values_scaling) {
   MM <- dim(post_me)[4]
   for (mm in seq_len(MM)) {
     for (gg in seq_len(GG)) {
-      post_me[, , gg, mm] <- post_me[, , gg, mm] * values_scaling + values_centering
+      post_me[, , gg, mm] <- (post_me[, , gg, mm] * values_scaling +
+                                values_centering)
     }
-  progress_any(mm, MM)
+    progress_any(mm, MM)
   }
   return(exp(post_me))
 }
