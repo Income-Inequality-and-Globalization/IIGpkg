@@ -7,7 +7,7 @@
 create_me_plots_time_series(
   out_measures_info_KK,
   reg_names,
-  settings = list(name_measure = "", plot_grid = c(3, 5))
+  settings = list(name_measure = "", plot_type = "base", plot_grid = c(3, 5))
 )
 }
 \arguments{
