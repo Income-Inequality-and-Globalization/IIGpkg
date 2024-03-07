@@ -442,53 +442,68 @@ create_me_plots_individual <- function(
 #'   specified regressors.
 #' @export
 
-create_me_plots_time_series <- function(out_measures_info_KK,
-                                        reg_names,
-                                        settings = list(
-                                          name_measure = "",
-                                          plot_grid = c(3, 5))) {
+create_me_plots_time_series <- function(
+    out_measures_info_KK,
+    reg_names,
+    settings =
+        list(name_measure = "",
+             plot_type = "base",
+             plot_grid = c(3, 5))) {
   num_regs_me  <- length(reg_names)
   info_on_plot <- dimnames(out_measures_info_KK[[reg_names[1]]])
 
   NN <- length(info_on_plot[[1]])
   TT <- length(info_on_plot[[2]])
   title_nn <- substr(info_on_plot[[1]], 1, 5)
+  plot_type <- settings$plot_type
 
-  col_offset <- 5
+  col_off <- 5
   color_palette <- scales::col_numeric(palette = "Blues",
-                                       domain = c(1, TT + col_offset))
+                                       domain = c(1, TT + col_off))
   y_lab     <- settings$name_measure
   plot_grid <- settings$plot_grid
+  out_plot  <- NULL
+  out_plot_list <- list()
+  iter_plot <- 1
 
-  par(mfcol = settings$plot_grid)
+  if (plot_type == "base") {
+    par(mfcol = settings$plot_grid)
+    ggplot <- FALSE
+  } else if (plot_type == "ggplot") {
+    ggplot <- TRUE
+  }
   for (nn in seq_len(NN)) {
     for (kk in seq_len(num_regs_me)) {
+      base_ggplot <- NULL
       vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, , , ]
       min_max <- get_min_max_y_scale(vals_to_plot[, , 1])
-      get_single_plot_me(vals_to_plot[1, , ],
-                         settings = list(
-                           WITH_CI = FALSE,
-                           type = "plot",
-                           y_lab = y_lab,
-                           x_lab = reg_names[kk],
-                           title = title_nn[nn],
-                           min_max = min_max,
-                           line_col = color_palette(1 + col_offset)
-                         ))
+      base_ggplot <- get_single_plot_me(vals_to_plot[1, , ],
+                                        settings = list(
+                                          WITH_CI = FALSE,
+                                          type = "plot",
+                                          ggplot = ggplot,
+                                          y_lab = y_lab,
+                                          x_lab = reg_names[kk],
+                                          title = title_nn[nn],
+                                          min_max = min_max,
+                                          line_col = color_palette(1 + col_off))
+                                        )
       for (tt in 2:TT) {
         # Compute color based on time point
-        line_color_tkn <- color_palette(tt + col_offset)
-        get_single_plot_me(vals_to_plot[tt, , ],
-                           settings = list(
-                             WITH_CI = FALSE,
-                             type = "line",
-                             title = NULL,
-                             line_col = line_color_tkn
-                             )
-                           )
+        line_color_tkn <- color_palette(tt + col_off)
+        base_ggplot <- get_single_plot_me(vals_to_plot[tt, , ],
+                                          settings = list(
+                                            WITH_CI = FALSE,
+                                            type = "line",
+                                            ggplot = ggplot,
+                                            base_ggplot = base_ggplot,
+                                            line_col = line_color_tkn)
+                                          )
       }
+      out_plot_list[[iter_plot]] <- base_ggplot
+      iter_plot <- iter_plot + 1
     }
-    if (nn %% plot_grid[2] == 0) {
+    if (plot_type == "base" && nn %% plot_grid[2] == 0) {
       mtext(paste0("Marginal effect on: ",
                    settings$name_measure),
             side = 3,
@@ -496,15 +511,27 @@ create_me_plots_time_series <- function(out_measures_info_KK,
             outer = TRUE)
     }
   }
-  par(mfrow = c(1, 1))
+  if (plot_type == "base") {
+    par(mfrow = c(1, 1))
+  }
+  if (plot_type == "ggplot") {
+    layout_tkn <- get_layout_grid_from_sttgs(plot_grid, transpose = TRUE)
+    out_plot <- gridExtra::marrangeGrob(
+      grobs = out_plot_list,
+      layout_matrix = layout_tkn,
+      as.table = FALSE)
+  }
+  return(invisible(list(out_plot_list = out_plot_list, out_plot = out_plot)))
 }
-#' Plot Single Measure with Optional Confidence Intervals, Custom Title, and Type
+#' Plot Single Measure with Optional Confidence Intervals, Custom Title, and
+#' Type
 #'
 #' This function generates a plot for a single measure, with the option to
-#' include confidence intervals for a detailed analysis, and allows customization
-#' of the plot type. It visualizes the measure across a specified dimension, such
-#' as time. The function supports customization including plot titles, the decision
-#' to include confidence intervals, and the type of plot (line or plot).
+#' include confidence intervals for a detailed analysis, and allows
+#' customization of the plot type. It visualizes the measure across a specified
+#' dimension, such as time. The function supports customization including plot
+#' titles, the decision to include confidence intervals, and the type of plot
+#' (line or plot).
 #'
 #' @param vals_to_plot Matrix where the first column contains the measure values
 #'   to be plotted. If `WITH_CI` is TRUE within the settings list, the second
@@ -512,9 +539,10 @@ create_me_plots_time_series <- function(out_measures_info_KK,
 #'   respectively.
 #' @param settings A list of settings for the plot, including:
 #'   \itemize{
-#'     \item `WITH_CI`: Logical indicating whether to include confidence intervals.
-#'     If FALSE, only the measure values are plotted. If TRUE, dashed lines
-#'     represent the confidence intervals. Cannot be TRUE when type is "line".
+#'     \item `WITH_CI`: Logical indicating whether to include confidence
+#'     intervals. If FALSE, only the measure values are plotted. If TRUE, dashed
+#'     lines represent the confidence intervals. Cannot be TRUE when type is
+#'     "line".
 #'     \item `title`: The title of the plot. A string that will be displayed as
 #'     the main title of the plot.
 #'     \item `type`: Character indicating the type of plot. Accepts "plot" for a
