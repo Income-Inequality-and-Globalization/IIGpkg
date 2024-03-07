@@ -2,12 +2,13 @@
 % Please edit documentation in R/42_plot_measures.R
 \name{get_single_plot_me}
 \alias{get_single_plot_me}
-\title{Plot Single Measure with Optional Confidence Intervals, Custom Title, and Type}
+\title{Plot Single Measure with Optional Confidence Intervals, Custom Title, and
+Type}
 \usage{
 get_single_plot_me(
   vals_to_plot,
   settings = list(WITH_CI = FALSE, y_lab = "", x_lab = "", title = "", line_col =
-    "black", min_max = NULL, type = "")
+    "black", min_max = NULL, type = "", ggplot = FALSE, base_ggplot = NULL)
 )
 }
 \arguments{
@@ -18,9 +19,10 @@ respectively.}
 
 \item{settings}{A list of settings for the plot, including:
 \itemize{
-  \item `WITH_CI`: Logical indicating whether to include confidence intervals.
-  If FALSE, only the measure values are plotted. If TRUE, dashed lines
-  represent the confidence intervals. Cannot be TRUE when type is "line".
+  \item `WITH_CI`: Logical indicating whether to include confidence
+  intervals. If FALSE, only the measure values are plotted. If TRUE, dashed
+  lines represent the confidence intervals. Cannot be TRUE when type is
+  "line".
   \item `title`: The title of the plot. A string that will be displayed as
   the main title of the plot.
   \item `type`: Character indicating the type of plot. Accepts "plot" for a
@@ -35,8 +37,9 @@ A plot is generated with the specified parameters but not explicitly
 }
 \description{
 This function generates a plot for a single measure, with the option to
-include confidence intervals for a detailed analysis, and allows customization
-of the plot type. It visualizes the measure across a specified dimension, such
-as time. The function supports customization including plot titles, the decision
-to include confidence intervals, and the type of plot (line or plot).
+include confidence intervals for a detailed analysis, and allows
+customization of the plot type. It visualizes the measure across a specified
+dimension, such as time. The function supports customization including plot
+titles, the decision to include confidence intervals, and the type of plot
+(line or plot).
 }
