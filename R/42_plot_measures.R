@@ -70,11 +70,12 @@ generate_country_plots <- function(pth_data,
   return(list(data_long = data_to_plot,
               plot_objects = invisible(list_plots_per_country)))
 }
-get_layout_grid_from_sttgs <- function(sttgs_mfrow) {
-  matrix(seq_len(sttgs_mfrow[1] * sttgs_mfrow[2]),
-         nrow = sttgs_mfrow[1],
-         ncol = sttgs_mfrow[2],
-         byrow = TRUE)
+get_layout_grid_from_sttgs <- function(sttgs_mfrow, transpose = TRUE) {
+  out_grid <- matrix(seq_len(sttgs_mfrow[1] * sttgs_mfrow[2]),
+                      nrow = sttgs_mfrow[1],
+                      ncol = sttgs_mfrow[2],
+                      byrow = transpose)
+  return(out_grid)
 }
 #' Read and Preprocess Data
 #'
