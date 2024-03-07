@@ -4,25 +4,37 @@
 #' coefficient data. It processes and reshapes the data, then creates and
 #' arranges plots for each country.
 #'
-#' @param pth_data path to the data file containing relevant data.
+#' @param pth_data Path to the data file containing relevant data.
 #' @param output_measure Array of estimated measure coefficient values as
 #'   returned via [generate_measures_me()].
-#' @param names_measures character giving the name of the measure; can be left
-#'   `NULL` in which case the internal data set is getting a default placeholder
-#'   for the variable names
+#' @param output_regs_grid Optional. A grid of regression outputs associated
+#'   with measures, to be used for additional data points in the plots.
+#'   Default is NULL, indicating no regression grid is used.
 #' @param vars_to_use Vector of variable names to add as `geom_points` for
 #'    comparison with a-posteriori estimation.
-#' @param settings List of settings for data processing, including:alpha
+#' @param settings List of settings for data processing, including:
 #' \itemize{
-#' \item{scale_transform}{Numeric value used to scale the measure values}
-#' \item{y_lab}{Label for the y-axis}
+#' \item{\code{scale_transform}}{ Numeric value used to scale the measure values}
+#' \item{\code{y_lab}}{ Label for the y-axis}
+#' \item{\code{x_lab}}{ Label for the x-axis (optional)}
+#' \item{\code{X_TRANSFORMED}}{ Boolean indicating whether to transform the x-axis
+#'    values (optional)}
+#' \item{\code{ADD_KI}}{ Boolean indicating whether to add confidence intervals
+#'    to the plots (optional)}
 #' }
+#' @param name_measure Optional. Character string providing a name for the
+#'   measure being plotted. This is used for naming within the plots if
+#'   provided. Default is NULL.
+#' @param PLOT Boolean indicating whether to actually plot the graphs or just
+#'   return the data for plotting. Useful for non-interactive environments.
+#'   Default is `TRUE`.
 #'
-#' @return A named list of three elements:
-#'    \itemize{
-#'       \item{`data_long`}{long format data}
-#'       \item{`plot_objects`}{grid of plots, one for each country}
-#'      }
+#' @return A named list of two elements:
+#'   \itemize{
+#'     \item{\code{data_long}}{ Data in long format suitable for plotting}
+#'     \item{\code{plot_objects}}{ A list of plot objects, one for each country,
+#'        which can be rendered directly if PLOT is TRUE}
+#'   }
 #' @export
 generate_country_plots <- function(pth_data,
                                    output_measure,
