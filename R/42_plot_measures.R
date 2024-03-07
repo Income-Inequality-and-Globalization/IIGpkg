@@ -139,7 +139,8 @@ data_plot_processing <- function(out_measures,
                                  names_measures,
                                  settings) {
   data_raw <- read.csv(file.path(pth_data)) %>% tibble::as_tibble()
-  
+  data_raw$est_mean <- data_raw$est_mean * 100
+
   scale_values <- get_default_scale_measre(settings$scale_measure)
   reg_name_tkn <- settings$x_var
 
@@ -466,37 +467,33 @@ create_me_plots_individual <- function(
 }
 #' Generate Time Series Plots for Multiple Regressors
 #'
-#' This function creates time series plots for each regressor across all
-#' entities within the specified measures. Unlike `create_me_plots_individual`,
-#' which generates plots for each time period separately, this function
-#' integrates time periods into a single plot per entity, facilitating a
-#' continuous time series visualization. Confidence intervals are not included
-#' in this visualization, focusing instead on the trend over time.
+#' Creates time series plots for each regressor across all entities within the
+#' specified measures, facilitating a continuous time series visualization.
+#' Unlike `create_me_plots_individual`, this function integrates time periods
+#' into a single plot per entity, and confidence intervals are not included.
 #'
 #' @param out_measures_info_KK A list where each element is a three-dimensional
 #'   array of measure values for a specific regressor. The dimensions should
 #'   correspond to different entities (e.g., countries), time periods, and
-#'   measure statistics (mean values only, as confidence intervals are not
-#'   displayed).
-#' @param reg_names Vector of character strings specifying the names of the
+#'   measure statistics (mean values only).
+#' @param reg_names A vector of character strings specifying the names of the
 #'   regressors for which plots will be generated. These names must correspond
 #'   to keys in `out_measures_info_KK`.
-#' @param settings List of settings for plot generation, including:
+#' @param settings A list of settings for plot generation, including:
 #'   \itemize{
-#'     \item `mfrow`: A vector specifying the layout of plots in terms of rows
-#'     and columns. This controls the arrangement of time series plots for
-#'     multiple entities.
-#'     \item `WITH_CI`: Logical indicating whether to include confidence
-#'     intervals in the plots. In this function, it is effectively ignored as
-#'     confidence intervals are not supported.
+#'     \item{\code{name_measure}: }{The measure's name, used for labeling.}
+#'     \item{\code{plot_type}: }{Specifies the plot's type ("base" or "ggplot")
+#'     .}
+#'     \item{\code{plot_grid}: }{A vector specifying the layout of plots in
+#'     terms of rows and columns.}
+#'     \item{\code{WITH_CI}: }{This parameter is ignored in this function as
+#'     confidence intervals are not included in the visualization.}
 #'   }
 #'
-#' @return Generates time series plots for each specified regressor and entity
-#'   combination but does not explicitly return any value. The function
-#'   emphasizes trend visualization over time for each entity across all
-#'   specified regressors.
+#' @return Implicitly returns a list of plot objects or a composite graphic,
+#'   depending on the `plot_type`. Primarily used for its side effect of
+#'   plotting.
 #' @export
-
 create_me_plots_time_series <- function(
     out_measures_info_KK,
     reg_names,
