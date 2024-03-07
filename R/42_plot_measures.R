@@ -527,53 +527,91 @@ create_me_plots_time_series <- function(out_measures_info_KK,
 #'   intervals, along with a custom title and specified plot type.
 #'
 #' @export
-get_single_plot_me <- function(vals_to_plot,
-                               settings = list(
-                                 WITH_CI = FALSE,
-                                 y_lab = "",
-                                 x_lab = "",
-                                 title = "",
-                                 line_col = "black",
-                                 min_max = NULL,
-                                 type = "")
-                               ) {
+get_single_plot_me <- function(
+  vals_to_plot,
+  settings =
+    list(WITH_CI = FALSE,
+         y_lab = "",
+         x_lab = "",
+         title = "",
+         line_col = "black",
+         min_max = NULL,
+         type = "",
+         ggplot = FALSE,
+         base_ggplot = NULL)
+) {
   WITH_CI <- settings$WITH_CI
   title   <- settings$title
   type    <- settings$type
+  ggplot  <- settings$ggplot
+  base_p  <- settings$base_ggplot
   y_lab   <- settings$y_lab
   x_lab   <- settings$x_lab
   min_max <- settings$min_max
   line_col <- settings$line_col
-  stopifnot(`Arg. type must be valid character.` = type %in% c("plot", "line"))
-  if (isTRUE(WITH_CI)) {
-    if (type == "line") stop("Cannot have CI bands with type = 'line' output.")
-    mean_to_plot <- vals_to_plot[, 1]
-    ki_upp       <- vals_to_plot[, 2]
-    ki_low       <- vals_to_plot[, 3]
-
-    plot(mean_to_plot, type = "l",
-         ylim = c(min_max[1], min_max[2]),
-         main = title,
-         ylab = y_lab,
-         xlab = x_lab,
-         col = line_col)
-    lines(ki_upp, col = "darkred", lty = "dashed")
-    lines(ki_low, col = "darkred", lty = "dashed")
-  } else {
-
+  stopifnot(`Argument 'type' must unknown.` = type %in% c("plot", "line"))
+  stopifnot(`Arg. 'ggplot' is not logical.` = is.logical(ggplot))
+  if (ggplot) {
+    plot_data <- data.frame(x = seq_along(vals_to_plot[, 1]),
+                            y = vals_to_plot[, 1],
+                            upper = vals_to_plot[, 2],
+                            lower = vals_to_plot[, 3])
     if (type == "plot") {
-      plot(vals_to_plot[, 1],
-           type = "l",
+      me_plot <- plot_data %>%
+        ggplot2::ggplot(ggplot2::aes(x = .data$x, y = .data$y)) +
+        ggplot2::geom_line(color = line_col) +
+        # ggplot2::scale_color_manual(values = "#DEEBF7") +
+        ggplot2::labs(title = settings$title,
+                      y = settings$y_lab,
+                      x = settings$x_lab) +
+        ggplot2::theme_minimal()
+    } else if (type == "line") {
+      stopifnot("Arg. 'base_plot' must be a ggplot object." = !is.null(base_p))
+      me_plot <- base_p + ggplot2::geom_line(ggplot2::aes(y =  plot_data$y),
+                                             color = line_col)
+    }
+    # Conditionally add CIs with ribbon if WITH_CI is TRUE
+    if (settings$WITH_CI) {
+      if (type == "line") stop("Cannot have CI bands with type = 'line'.")
+      me_plot <- me_plot +
+        ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$lower,
+                                          ymax = .data$upper),
+                                          fill = "grey80",
+                                          col = "darkred",
+                                          alpha = 0.5)
+    }
+    return(me_plot)
+  } else {
+    if (isTRUE(WITH_CI)) {
+      if (type == "line") stop("Cannot have CI bands with type = 'line'.")
+      mean_to_plot <- vals_to_plot[, 1]
+      ki_upp       <- vals_to_plot[, 2]
+      ki_low       <- vals_to_plot[, 3]
+
+      plot(mean_to_plot, type = "l",
            ylim = c(min_max[1], min_max[2]),
            main = title,
            ylab = y_lab,
            xlab = x_lab,
            col = line_col)
-    } else if (type == "line") {
-      lines(vals_to_plot[, 1], col = line_col)
+      lines(ki_upp, col = "darkred", lty = "dashed")
+      lines(ki_low, col = "darkred", lty = "dashed")
+    } else {
+      if (type == "plot") {
+        plot(vals_to_plot[, 1],
+             type = "l",
+             ylim = c(min_max[1], min_max[2]),
+             main = title,
+             ylab = y_lab,
+             xlab = x_lab,
+             col = line_col)
+      } else if (type == "line") {
+        lines(vals_to_plot[, 1], col = line_col)
+      }
     }
+  me_plot <- NULL
+  return(invisible(me_plot))
   }
-  return(invisible(NULL))
 }
 get_min_max_y_scale <- function(x) {
   min_y <- min(x)
