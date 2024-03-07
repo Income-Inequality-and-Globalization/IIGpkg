@@ -359,12 +359,13 @@ create_single_country_plot <- function(data_long,
 #' @return Generates plots for each specified regressor and measure combination
 #'   but does not explicitly return any value.
 #' @export
-create_me_plots_individual <- function(out_measures_info_KK,
-                                       reg_names,
-                                       settings = list(
-                                         name_measure = "",
-                                         plot_grid = c(4, 5),
-                                         WITH_CI = TRUE)) {
+create_me_plots_individual <- function(
+    out_measures_info_KK,
+    reg_names,
+    settings =
+        list(name_measure = "",
+             plot_grid = c(4, 5),
+             WITH_CI = TRUE)) {
   num_regs_me  <- length(reg_names)
   info_on_plot <- dimnames(out_measures_info_KK[[reg_names[1]]])
 
