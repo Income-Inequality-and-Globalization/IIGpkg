@@ -376,6 +376,7 @@ create_me_plots_individual <- function(
     reg_names,
     settings =
         list(name_measure = "",
+             plot_type = "base",
              plot_grid = c(4, 5),
              WITH_CI = TRUE)) {
   num_regs_me  <- length(reg_names)
@@ -386,41 +387,52 @@ create_me_plots_individual <- function(
 
   y_lab     <- settings$name_measure
   WITH_CI   <- settings$WITH_CI
+  plot_type <- settings$plot_type
   plot_grid <- settings$plot_grid
+  out_plot  <- NULL
+  out_plot_list <- list()
+  iter_plot <- 1
 
   pdf_file_name <- paste0("03_",settings$name_measure, "_CI_", ".pdf")
   pdf(pdf_file_name, width = 11, height = 8.5)
-  par(mfrow = plot_grid)
+  if (plot_type == "base") {
+    par(mfcol = plot_grid)
+    ggplot <- FALSE
+  } else if (plot_type == "ggplot") {
+    ggplot <- TRUE
+  }
   for (nn in seq_len(NN)) {
     for (kk in seq_len(num_regs_me)) {
-
-      par(mfrow = plot_grid)
       for (tt in 2:TT) {
         vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, tt, , ]
         min_max <- get_min_max_y_scale(vals_to_plot)
-        get_single_plot_me(
+        out_plot_list[[iter_plot]] <- get_single_plot_me(
           vals_to_plot,
           settings = list(WITH_CI = WITH_CI,
                           title = paste0("year: ", info_on_plot[[2]][tt]),
                           type = "plot",
-                          ggplot = TRUE,
+                          ggplot = ggplot,
                           line_col = "black",
                           y_lab = y_lab,
                           min_max = min_max)
         )
+        iter_plot <- iter_plot + 1
       }
-      mtext(paste0("Country: ",
-                   info_on_plot[[1]][nn],
-                   " -- reg: ",
-                   reg_names[kk]),
-            side = 3,
-            line = -1.5,
-            outer = TRUE)
-      # Close PDF device to save the plot
+      if (plot_type == "base") {
+        mtext(paste0("Country: ",
+                     info_on_plot[[1]][nn],
+                     " -- reg: ",
+                     reg_names[kk]),
+              side = 3,
+              line = -1.5,
+              outer = TRUE)
+      }
     }
   }
+  # Close PDF device to save the plot
   dev.off()
   par(mfrow = c(1, 1))
+  return(invisible(list(out_plot_list = out_plot_list, out_plot = out_plot)))
 }
 #' Generate Time Series Plots for Multiple Regressors
 #'

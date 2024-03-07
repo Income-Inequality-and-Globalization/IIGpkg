@@ -7,7 +7,8 @@
 create_me_plots_individual(
   out_measures_info_KK,
   reg_names,
-  settings = list(name_measure = "", plot_grid = c(4, 5), WITH_CI = TRUE)
+  settings = list(name_measure = "", plot_type = "base", plot_grid = c(4, 5), WITH_CI =
+    TRUE)
 )
 }
 \arguments{
