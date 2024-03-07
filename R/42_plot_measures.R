@@ -374,15 +374,11 @@ create_me_plots_individual <- function(out_measures_info_KK,
   WITH_CI   <- settings$WITH_CI
   plot_grid <- settings$plot_grid
 
+  pdf_file_name <- paste0("03_",settings$name_measure, "_CI_", ".pdf")
+  pdf(pdf_file_name, width = 11, height = 8.5)
   par(mfrow = plot_grid)
   for (nn in seq_len(NN)) {
     for (kk in seq_len(num_regs_me)) {
-      pdf_file_name <- paste0("03_",
-                              info_on_plot[[1]][nn],
-                              "_", kk, "_",
-                              reg_names[kk],
-                              ".pdf")
-      pdf(pdf_file_name, width = 11, height = 8.5)
 
       par(mfrow = plot_grid)
       for (tt in 2:TT) {
@@ -406,9 +402,9 @@ create_me_plots_individual <- function(out_measures_info_KK,
             line = -1.5,
             outer = TRUE)
       # Close PDF device to save the plot
-      dev.off()
     }
   }
+  dev.off()
   par(mfrow = c(1, 1))
 }
 #' Generate Time Series Plots for Multiple Regressors
