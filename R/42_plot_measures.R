@@ -14,11 +14,12 @@
 #'    comparison with a-posteriori estimation.
 #' @param settings List of settings for data processing, including:
 #' \itemize{
-#' \item{\code{scale_transform}}{ Numeric value used to scale the measure values}
+#' \item{\code{scale_transform}}{ Numeric value used to scale the measure
+#' values}
 #' \item{\code{y_lab}}{ Label for the y-axis}
 #' \item{\code{x_lab}}{ Label for the x-axis (optional)}
-#' \item{\code{X_TRANSFORMED}}{ Boolean indicating whether to transform the x-axis
-#'    values (optional)}
+#' \item{\code{X_TRANSFORMED}}{ Boolean indicating whether to transform the
+#' x-axis values (optional)}
 #' \item{\code{ADD_KI}}{ Boolean indicating whether to add confidence intervals
 #'    to the plots (optional)}
 #' }
@@ -97,19 +98,20 @@ get_layout_grid_from_sttgs <- function(sttgs_mfrow, transpose = TRUE) {
 #' includes scaling the measure values, merging additional regression data, and
 #' selecting relevant variables for visualization.
 #'
-#' @param out_measures A three-dimensional array of estimated measure-coefficient values.
-#'   The dimensions are expected to correspond to entities (e.g., countries),
-#'   time periods, and measure statistics (mean, lower confidence band, upper
-#'   confidence band). This data is used to append new variables to the dataset.
+#' @param out_measures A three-dimensional array of estimated
+#'   measure-coefficient values. The dimensions are expected to correspond to
+#'   entities (e.g., countries), time periods, and measure statistics (mean,
+#'   lower confidence band, upper confidence band). This data is used to append
+#'   new variables to the dataset.
 #' @param out_regs An optional data frame or matrix containing regression data
 #'   to be merged with the measure data. Each row should correspond to an
-#'   observation, and columns should include the regression variables of interest.
-#'   If NULL, no regression data is merged.
+#'   observation, and columns should include the regression variables of
+#'   interest. If NULL, no regression data is merged.
 #' @param pth_data Path to the CSV data file containing the raw data set. The
 #'   file is read into R and processed according to the specified parameters.
-#' @param vars_to_use A vector of variable names from the raw data set that should
-#'   be retained for analysis and plotting. This allows for the inclusion of
-#'   specific variables of interest beyond the generated measure variables.
+#' @param vars_to_use A vector of variable names from the raw data set that
+#'   should be retained for analysis and plotting. This allows for the inclusion
+#'   of specific variables of interest beyond the generated measure variables.
 #' @param names_measures A named list or vector specifying the column names to
 #'   be created in the dataset for each type of measure (mean, lower confidence
 #'   band, upper confidence band). These names are dynamically used to assign
@@ -286,38 +288,50 @@ get_data_measure_plots <- function(data_estim,
                                   "value")
   return(data_long)
 }
-
 #' Create Plot for a Given Country
 #'
-#' Creates a ggplot object for a given country, plotting specified measure
-#' values over years.
+#' This function generates a ggplot object for a specified country, plotting
+#' measure values across time. It visualizes the data in a way that highlights
+#' changes in measure values over the years, using points and lines, and
+#' optionally includes a confidence interval ribbon if specified.
 #'
-#' @param data_long The data in long format.
-#' @param name_country character giving the name of the country for the plot
-#' @param plot_info A list containing information about the data and plot:
+#' @param data_long The data in long format, containing variables such as
+#'   country, year, and the measures to be plotted.
+#' @param name_country A character string giving the name of the country for
+#'   which the plot will be generated. This specifies the subset of data to use
+#'   for the plot.
+#' @param plot_info A list containing settings for the plot, including:
 #'   \itemize{
-#'     \item \code{name_country}: character giving the name of the country for
-#'     which the plot will be generated.
-#'     \item \code{y_lab}: label for the y-axis.
+#'     \item{x_var}{The variable name from `data_long` to be used as the x-axis.
+#'     Typically, this would be the year or time variable.}
+#'     \item{y_lab}{Label for the y-axis, typically describing the measure being
+#'     plotted.}
+#'     \item{x_lab}{Label for the x-axis, typically "Year". Optional.}
+#'     \item{X_TRN}{Logical indicating whether the x-axis variable should be
+#'     transformed. Optional.}
+#'     \item{ADD_KI}{Logical indicating whether to add a confidence interval
+#'     ribbon to the plot.}
 #'   }
-#' @param measure_info A list containing information about the measure points:
+#' @param measure_info A list specifying the columns in `data_long` related to
+#'   the measures:
 #'   \itemize{
-#'     \item \code{vals}: The name(s) of the column(s) in \code{data_long}
-#'     containing the values of measure points.
-#'     \item \code{types}: The name(s) of the column(s) in \code{data_long}
-#'     containing the type information of measure points (for different point
-#'     color).
+#'     \item{vals}{The name of the column containing the values of the measure
+#'     points to be plotted.}
+#'     \item{types}{The name of the column indicating the type of measure point
+#'     (e.g., for differentiating points by color). Optional.}
 #'   }
-#' @param estim_infos A list containing information about the estimations:
+#' @param estim_infos A list detailing columns in `data_long` for estimation
+#'   information:
 #'   \itemize{
-#'     \item \code{mean}: The name of the column in \code{data_long}
-#'     representing the mean value estimate.
-#'     \item \code{ki_upp}: The name of the column in \code{data_long}
-#'     representing the upper confidence band estimate.
-#'     \item \code{ki_low}: The name of the column in \code{data_long}
-#'     representing the lower confidence band estimate.
+#'     \item{mean}{The column name representing the mean value estimate of the
+#'     measure.}
+#'     \item{ki_upp}{The column name for the upper confidence band estimate.
+#'     Required if `ADD_KI` is TRUE.}
+#'     \item{ki_low}{The column name for the lower confidence band estimate.
+#'     Required if `ADD_KI` is TRUE.}
 #'   }
-#' @return A ggplot object.
+#' @return A `ggplot` object representing the specified country's measure values
+#'   over time, with optional confidence intervals.
 #' @export
 create_single_country_plot <- function(data_long,
                                        name_country,
@@ -358,30 +372,35 @@ create_single_country_plot <- function(data_long,
 }
 #' Generate Individual Measure Plots for Multiple Regressors
 #'
-#' This function creates individual plots for each regressor within the
-#' specified measures. It iterates over each measure, generating plots for each
-#' point in the measure's dimension (e.g., time series data for multiple
-#' countries). The function supports the inclusion of confidence intervals
-#' based on the settings provided.
+#' Creates individual plots for each regressor within the specified measures
+#' across different entities (e.g., countries) and time periods. This function
+#' supports the inclusion of confidence intervals and allows customization of
+#' plot settings.
 #'
 #' @param out_measures_info_KK A list where each element is a three-dimensional
-#'   array of measure values for a specific regressor. The dimensions should
-#'   correspond to different entities (e.g., countries), time periods, and
-#'   measure statistics (mean, upper, and lower confidence intervals).
-#' @param reg_names Vector of character strings specifying the names of the
+#'   array containing measure values for a specific regressor. Dimensions should
+#'   correspond to entities, time periods, and measure statistics (mean, upper,
+#'   and lower confidence intervals).
+#' @param reg_names A vector of character strings specifying the names of
 #'   regressors for which plots will be generated. These names must correspond
 #'   to keys in `out_measures_info_KK`.
-#' @param settings List of settings for plot generation, including:
+#' @param settings A list of settings for plot generation, which includes:
 #'   \itemize{
-#'     \item `mfrow`: A vector specifying the layout of plots in terms of rows
-#'     and columns.
-#'     \item `WITH_CI`: Logical indicating whether to include confidence
-#'     intervals in the plots. Defaults to TRUE.
+#'     \item{\code{name_measure}: }{The name of the measure being plotted, used
+#'     for labeling.}
+#'     \item{\code{plot_type}: }{Specifies the type of plot ("base" or "ggplot")
+#'     .}
+#'     \item{\code{plot_grid}: }{A vector specifying the layout of plots in
+#'     terms of rows and columns (e.g., c(4, 5)).}
+#'     \item{\code{WITH_CI}: }{Logical indicating whether to include confidence
+#'     intervals in the plots. Defaults to `TRUE`.}
 #'   }
 #'
-#' @return Generates plots for each specified regressor and measure combination
-#'   but does not explicitly return any value.
+#' @return The function implicitly returns a list of generated plot objects,
+#'   although it is primarily used for its side effect of creating and saving
+#'   plots.
 #' @export
+
 create_me_plots_individual <- function(
     out_measures_info_KK,
     reg_names,

@@ -13,40 +13,53 @@ create_single_country_plot(
 )
 }
 \arguments{
-\item{data_long}{The data in long format.}
+\item{data_long}{The data in long format, containing variables such as
+country, year, and the measures to be plotted.}
 
-\item{name_country}{character giving the name of the country for the plot}
+\item{name_country}{A character string giving the name of the country for
+which the plot will be generated. This specifies the subset of data to use
+for the plot.}
 
-\item{plot_info}{A list containing information about the data and plot:
+\item{plot_info}{A list containing settings for the plot, including:
 \itemize{
-  \item \code{name_country}: character giving the name of the country for
-  which the plot will be generated.
-  \item \code{y_lab}: label for the y-axis.
+  \item{x_var}{The variable name from `data_long` to be used as the x-axis.
+  Typically, this would be the year or time variable.}
+  \item{y_lab}{Label for the y-axis, typically describing the measure being
+  plotted.}
+  \item{x_lab}{Label for the x-axis, typically "Year". Optional.}
+  \item{X_TRN}{Logical indicating whether the x-axis variable should be
+  transformed. Optional.}
+  \item{ADD_KI}{Logical indicating whether to add a confidence interval
+  ribbon to the plot.}
 }}
 
-\item{measure_info}{A list containing information about the measure points:
+\item{measure_info}{A list specifying the columns in `data_long` related to
+the measures:
 \itemize{
-  \item \code{vals}: The name(s) of the column(s) in \code{data_long}
-  containing the values of measure points.
-  \item \code{types}: The name(s) of the column(s) in \code{data_long}
-  containing the type information of measure points (for different point
-  color).
+  \item{vals}{The name of the column containing the values of the measure
+  points to be plotted.}
+  \item{types}{The name of the column indicating the type of measure point
+  (e.g., for differentiating points by color). Optional.}
 }}
 
-\item{estim_infos}{A list containing information about the estimations:
+\item{estim_infos}{A list detailing columns in `data_long` for estimation
+information:
 \itemize{
-  \item \code{mean}: The name of the column in \code{data_long}
-  representing the mean value estimate.
-  \item \code{ki_upp}: The name of the column in \code{data_long}
-  representing the upper confidence band estimate.
-  \item \code{ki_low}: The name of the column in \code{data_long}
-  representing the lower confidence band estimate.
+  \item{mean}{The column name representing the mean value estimate of the
+  measure.}
+  \item{ki_upp}{The column name for the upper confidence band estimate.
+  Required if `ADD_KI` is TRUE.}
+  \item{ki_low}{The column name for the lower confidence band estimate.
+  Required if `ADD_KI` is TRUE.}
 }}
 }
 \value{
-A ggplot object.
+A `ggplot` object representing the specified country's measure values
+  over time, with optional confidence intervals.
 }
 \description{
-Creates a ggplot object for a given country, plotting specified measure
-values over years.
+This function generates a ggplot object for a specified country, plotting
+measure values across time. It visualizes the data in a way that highlights
+changes in measure values over the years, using points and lines, and
+optionally includes a confidence interval ribbon if specified.
 }

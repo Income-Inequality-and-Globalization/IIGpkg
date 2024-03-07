@@ -29,11 +29,12 @@ comparison with a-posteriori estimation.}
 
 \item{settings}{List of settings for data processing, including:
 \itemize{
-\item{\code{scale_transform}}{ Numeric value used to scale the measure values}
+\item{\code{scale_transform}}{ Numeric value used to scale the measure
+values}
 \item{\code{y_lab}}{ Label for the y-axis}
 \item{\code{x_lab}}{ Label for the x-axis (optional)}
-\item{\code{X_TRANSFORMED}}{ Boolean indicating whether to transform the x-axis
-   values (optional)}
+\item{\code{X_TRANSFORMED}}{ Boolean indicating whether to transform the
+x-axis values (optional)}
 \item{\code{ADD_KI}}{ Boolean indicating whether to add confidence intervals
    to the plots (optional)}
 }}

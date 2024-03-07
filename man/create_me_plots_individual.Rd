@@ -13,30 +13,34 @@ create_me_plots_individual(
 }
 \arguments{
 \item{out_measures_info_KK}{A list where each element is a three-dimensional
-array of measure values for a specific regressor. The dimensions should
-correspond to different entities (e.g., countries), time periods, and
-measure statistics (mean, upper, and lower confidence intervals).}
+array containing measure values for a specific regressor. Dimensions should
+correspond to entities, time periods, and measure statistics (mean, upper,
+and lower confidence intervals).}
 
-\item{reg_names}{Vector of character strings specifying the names of the
+\item{reg_names}{A vector of character strings specifying the names of
 regressors for which plots will be generated. These names must correspond
 to keys in `out_measures_info_KK`.}
 
-\item{settings}{List of settings for plot generation, including:
+\item{settings}{A list of settings for plot generation, which includes:
 \itemize{
-  \item `mfrow`: A vector specifying the layout of plots in terms of rows
-  and columns.
-  \item `WITH_CI`: Logical indicating whether to include confidence
-  intervals in the plots. Defaults to TRUE.
+  \item{\code{name_measure}: }{The name of the measure being plotted, used
+  for labeling.}
+  \item{\code{plot_type}: }{Specifies the type of plot ("base" or "ggplot")
+  .}
+  \item{\code{plot_grid}: }{A vector specifying the layout of plots in
+  terms of rows and columns (e.g., c(4, 5)).}
+  \item{\code{WITH_CI}: }{Logical indicating whether to include confidence
+  intervals in the plots. Defaults to `TRUE`.}
 }}
 }
 \value{
-Generates plots for each specified regressor and measure combination
-  but does not explicitly return any value.
+The function implicitly returns a list of generated plot objects,
+  although it is primarily used for its side effect of creating and saving
+  plots.
 }
 \description{
-This function creates individual plots for each regressor within the
-specified measures. It iterates over each measure, generating plots for each
-point in the measure's dimension (e.g., time series data for multiple
-countries). The function supports the inclusion of confidence intervals
-based on the settings provided.
+Creates individual plots for each regressor within the specified measures
+across different entities (e.g., countries) and time periods. This function
+supports the inclusion of confidence intervals and allows customization of
+plot settings.
 }

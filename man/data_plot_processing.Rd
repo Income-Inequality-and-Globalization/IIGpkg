@@ -14,22 +14,23 @@ data_plot_processing(
 )
 }
 \arguments{
-\item{out_measures}{A three-dimensional array of estimated measure-coefficient values.
-The dimensions are expected to correspond to entities (e.g., countries),
-time periods, and measure statistics (mean, lower confidence band, upper
-confidence band). This data is used to append new variables to the dataset.}
+\item{out_measures}{A three-dimensional array of estimated
+measure-coefficient values. The dimensions are expected to correspond to
+entities (e.g., countries), time periods, and measure statistics (mean,
+lower confidence band, upper confidence band). This data is used to append
+new variables to the dataset.}
 
 \item{out_regs}{An optional data frame or matrix containing regression data
 to be merged with the measure data. Each row should correspond to an
-observation, and columns should include the regression variables of interest.
-If NULL, no regression data is merged.}
+observation, and columns should include the regression variables of
+interest. If NULL, no regression data is merged.}
 
 \item{pth_data}{Path to the CSV data file containing the raw data set. The
 file is read into R and processed according to the specified parameters.}
 
-\item{vars_to_use}{A vector of variable names from the raw data set that should
-be retained for analysis and plotting. This allows for the inclusion of
-specific variables of interest beyond the generated measure variables.}
+\item{vars_to_use}{A vector of variable names from the raw data set that
+should be retained for analysis and plotting. This allows for the inclusion
+of specific variables of interest beyond the generated measure variables.}
 
 \item{names_measures}{A named list or vector specifying the column names to
 be created in the dataset for each type of measure (mean, lower confidence
