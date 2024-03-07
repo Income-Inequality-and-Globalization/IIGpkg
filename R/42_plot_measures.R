@@ -386,15 +386,16 @@ create_me_plots_individual <- function(
       for (tt in 2:TT) {
         vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, tt, , ]
         min_max <- get_min_max_y_scale(vals_to_plot)
-        get_single_plot_me(vals_to_plot,
-                           settings = list(
-                             WITH_CI = WITH_CI,
-                             title = paste0("year: ", info_on_plot[[2]][tt]),
-                             type = "plot",
-                             line_col = "black",
-                             y_lab = y_lab,
-                             min_max = min_max)
-                           )
+        get_single_plot_me(
+          vals_to_plot,
+          settings = list(WITH_CI = WITH_CI,
+                          title = paste0("year: ", info_on_plot[[2]][tt]),
+                          type = "plot",
+                          ggplot = TRUE,
+                          line_col = "black",
+                          y_lab = y_lab,
+                          min_max = min_max)
+        )
       }
       mtext(paste0("Country: ",
                    info_on_plot[[1]][nn],
