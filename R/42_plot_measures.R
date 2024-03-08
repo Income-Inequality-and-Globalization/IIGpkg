@@ -33,8 +33,8 @@
 #' @return A named list of two elements:
 #'   \itemize{
 #'     \item{\code{data_long}}{ Data in long format suitable for plotting}
-#'     \item{\code{plot_objects}}{ A list of plot objects, one for each country,
-#'        which can be rendered directly if PLOT is TRUE}
+#'     \item{\code{plot_objects}}{ A list of plot objects which can be rendered
+#'     directly if PLOT is TRUE}
 #'   }
 #' @export
 generate_country_plots <- function(pth_data,
@@ -44,8 +44,12 @@ generate_country_plots <- function(pth_data,
                                    settings,
                                    name_measure = NULL,
                                    PLOT = TRUE) {
+  nm_pdf   <- "01_fitted_mes.pdf"
+  grid_dim <- settings$grid_dim
+  out_TT <- output_measure$info_TT
+  out_KK <- output_measure$info_KK
   names_measures <- get_names_measures(name_measure)
-  data_to_plot <- get_data_measure_plots(output_measure,
+  data_to_plot <- get_data_measure_plots(out_TT,
                                          output_regs_grid,
                                          pth_data,
                                          vars_to_use,
@@ -54,8 +58,7 @@ generate_country_plots <- function(pth_data,
 
   unique_countries <- unique(data_to_plot$country)
   list_plots_per_country <- list()
-  # for (cntry in unique_countries[-c(length(unique_countries))]) {
-  unique_countries <- unique_countries[-c(length(unique_countries))]
+  # unique_countries <- unique_countries[-c(length(unique_countries))]
   for (cntry in unique_countries) {
     list_plots_per_country[[cntry]] <- create_single_country_plot(
       data_long = data_to_plot,
@@ -74,14 +77,32 @@ generate_country_plots <- function(pth_data,
       estim_infos = names_measures
     )
   }
+  list_plots_me <- create_me_plots_time_series(
+    out_KK,
+    output_regs_grid,
+    regs_to_use,
+    RENDER_PLOT = FALSE,
+    NO_TITLE = TRUE,
+    settings = list(name_measure = name_measure,
+                    plot_type = "ggplot"))[["out_plot_list"]]
+  list_plots <- get_sorted_plot_list_all(list_plots_per_country, list_plots_me)
   if (PLOT) {
-    layout_tkn <- get_layout_grid_from_sttgs(settings$grid_dim)
-    gridExtra::grid.arrange(grobs = list_plots_per_country,
-                            layout_matrix = layout_tkn,
-                            as.table = FALSE)
+    grid_dim_cnt <- c(1, grid_dim[2])
+    grid_dim_mes <- c(grid_dim[1] - 1, grid_dim[2])
+    lmat  <- rbind(
+      get_layout_grid_from_sttgs(grid_dim_cnt),
+      get_layout_grid_from_sttgs(grid_dim_mes, transpose = FALSE) + grid_dim_cnt[2])
+    glist <- lapply(list_plots, ggplot2::ggplotGrob)
+    ggplot2::ggsave(
+      nm_pdf,
+      gridExtra::marrangeGrob(glist,
+                              layout_matrix = lmat,
+                              nrow = grid_dim[1],
+                              ncol = grid_dim[2]),
+      width = 29.7, height = 21, units = "cm")
   }
   return(list(data_long = data_to_plot,
-              plot_objects = invisible(list_plots_per_country)))
+              plot_objects = list_plots))
 }
 get_layout_grid_from_sttgs <- function(sttgs_mfrow, transpose = TRUE) {
   out_grid <- matrix(seq_len(sttgs_mfrow[1] * sttgs_mfrow[2]),
@@ -89,6 +110,16 @@ get_layout_grid_from_sttgs <- function(sttgs_mfrow, transpose = TRUE) {
                       ncol = sttgs_mfrow[2],
                       byrow = transpose)
   return(out_grid)
+}
+get_sorted_plot_list_all <- function(plot_list_cnt, plot_list_mes) {
+  num_plot_cnt <- length(plot_list_cnt)
+  num_plot_mes <- length(plot_list_mes)
+  num_half_cnt <- num_plot_cnt / 2
+  num_half_mes <- num_plot_mes / 2
+  c(head(plot_list_cnt, num_half_cnt),
+    head(plot_list_mes, num_half_mes),
+    tail(plot_list_cnt, num_half_cnt),
+    tail(plot_list_mes, num_half_mes))
 }
 #' Read and Preprocess Data for Plotting
 #'
