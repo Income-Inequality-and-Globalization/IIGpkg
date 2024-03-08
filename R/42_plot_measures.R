@@ -499,9 +499,11 @@ create_me_plots_individual <- function(
 #' Generate Time Series Plots for Multiple Regressors
 #'
 #' Creates time series plots for each regressor across all entities within the
-#' specified measures, facilitating a continuous time series visualization.
-#' Unlike `create_me_plots_individual`, this function integrates time periods
-#' into a single plot per entity, and confidence intervals are not included.
+#' specified measures. This function facilitates a continuous time series
+#' visualization by integrating time periods into a single plot per entity.
+#' Unlike `create_me_plots_individual`, it focuses on trend visualization over
+#' time without including confidence intervals. The `RENDER_PLOT` flag controls
+#' whether plots are rendered.
 #'
 #' @param out_measures_info_KK A list where each element is a three-dimensional
 #'   array of measure values for a specific regressor. The dimensions should
@@ -510,6 +512,11 @@ create_me_plots_individual <- function(
 #' @param reg_names A vector of character strings specifying the names of the
 #'   regressors for which plots will be generated. These names must correspond
 #'   to keys in `out_measures_info_KK`.
+#' @param RENDER_PLOT Logical; if `TRUE` (default), plots are rendered and
+#'   displayed. If FALSE, plots are not rendered, allowing for programmatic
+#'   control over plot display or further customization.
+#' @param NO_TITLE  Logical; if `FALSE` then default title is generated per
+#'   sub-plot; otherwise not
 #' @param settings A list of settings for plot generation, including:
 #'   \itemize{
 #'     \item{\code{name_measure}: }{The measure's name, used for labeling.}
