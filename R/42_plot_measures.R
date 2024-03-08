@@ -522,12 +522,16 @@ create_me_plots_individual <- function(
 #'   }
 #'
 #' @return Implicitly returns a list of plot objects or a composite graphic,
-#'   depending on the `plot_type`. Primarily used for its side effect of
-#'   plotting.
+#'   depending on the `plot_type` and whether `RENDER_PLOT` is TRUE. The
+#'   function is primarily used for its side effect of plotting or preparing
+#'   plots for rendering.
 #' @export
 create_me_plots_time_series <- function(
     out_measures_info_KK,
+    grid_x_axis,
     reg_names,
+    RENDER_PLOT = TRUE,
+    NO_TITLE = FALSE,
     settings =
         list(name_measure = "",
              plot_type = "base",
@@ -537,7 +541,11 @@ create_me_plots_time_series <- function(
 
   NN <- length(info_on_plot[[1]])
   TT <- length(info_on_plot[[2]])
-  title_nn <- substr(info_on_plot[[1]], 1, 5)
+  if (NO_TITLE) {
+    title_nn <- NULL
+  } else {
+    title_nn <- substr(info_on_plot[[1]], 1, 5)
+  }
   plot_type <- settings$plot_type
 
   col_off <- 5
@@ -557,10 +565,12 @@ create_me_plots_time_series <- function(
   }
   for (nn in seq_len(NN)) {
     for (kk in seq_len(num_regs_me)) {
+      grid_x_axis_tkn <- get_grid_subset_x(grid_x_axis, reg_names, nn, kk)
       base_ggplot <- NULL
       vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, , , ]
       min_max <- get_min_max_y_scale(vals_to_plot[, , 1])
       base_ggplot <- get_single_plot_me(vals_to_plot[1, , ],
+                                        x_to_plot = grid_x_axis_tkn[1, ],
                                         settings = list(
                                           WITH_CI = FALSE,
                                           type = "plot",
@@ -575,6 +585,7 @@ create_me_plots_time_series <- function(
         # Compute color based on time point
         line_color_tkn <- color_palette(tt + col_off)
         base_ggplot <- get_single_plot_me(vals_to_plot[tt, , ],
+                                          x_to_plot = grid_x_axis_tkn[tt, ],
                                           settings = list(
                                             WITH_CI = FALSE,
                                             type = "line",
@@ -598,13 +609,21 @@ create_me_plots_time_series <- function(
     par(mfrow = c(1, 1))
   }
   if (plot_type == "ggplot") {
-    layout_tkn <- get_layout_grid_from_sttgs(plot_grid, transpose = TRUE)
-    out_plot <- gridExtra::marrangeGrob(
-      grobs = out_plot_list,
-      layout_matrix = layout_tkn,
-      as.table = FALSE)
+    if (RENDER_PLOT) {
+      layout_tkn <- get_layout_grid_from_sttgs(plot_grid, transpose = TRUE)
+      out_plot <- gridExtra::marrangeGrob(
+        grobs = out_plot_list,
+        layout_matrix = layout_tkn,
+        as.table = FALSE)
+    }
   }
   return(invisible(list(out_plot_list = out_plot_list, out_plot = out_plot)))
+}
+get_grid_subset_x <- function(grid, reg_names, nn, kk) {
+  nn_to_use <- paste0("NN_", formatC(nn, digits = 1, format = "d", flag = "0"))
+  nn_to_use <- paste0(nn_to_use, "_", reg_names[kk])
+  out_grid_vals <- grid[nn_to_use, , , kk]
+  return(out_grid_vals)
 }
 #' Plot Single Measure with Confidence Intervals, Custom Title, and Type
 #'
