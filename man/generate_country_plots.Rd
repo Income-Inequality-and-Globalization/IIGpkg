@@ -51,8 +51,8 @@ Default is `TRUE`.}
 A named list of two elements:
   \itemize{
     \item{\code{data_long}}{ Data in long format suitable for plotting}
-    \item{\code{plot_objects}}{ A list of plot objects, one for each country,
-       which can be rendered directly if PLOT is TRUE}
+    \item{\code{plot_objects}}{ A list of plot objects which can be rendered
+    directly if PLOT is TRUE}
   }
 }
 \description{
