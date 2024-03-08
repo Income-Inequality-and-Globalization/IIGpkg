@@ -23,6 +23,13 @@ measure statistics (mean values only).}
 regressors for which plots will be generated. These names must correspond
 to keys in `out_measures_info_KK`.}
 
+\item{RENDER_PLOT}{Logical; if `TRUE` (default), plots are rendered and
+displayed. If FALSE, plots are not rendered, allowing for programmatic
+control over plot display or further customization.}
+
+\item{NO_TITLE}{Logical; if `FALSE` then default title is generated per
+sub-plot; otherwise not}
+
 \item{settings}{A list of settings for plot generation, including:
 \itemize{
   \item{\code{name_measure}: }{The measure's name, used for labeling.}
