@@ -6,7 +6,10 @@
 \usage{
 create_me_plots_time_series(
   out_measures_info_KK,
+  grid_x_axis,
   reg_names,
+  RENDER_PLOT = TRUE,
+  NO_TITLE = FALSE,
   settings = list(name_measure = "", plot_type = "base", plot_grid = c(3, 5))
 )
 }
