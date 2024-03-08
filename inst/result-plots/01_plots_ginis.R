@@ -12,6 +12,8 @@ test_out <- subset_GibbsOutputIIG(test_out, 100000:200000)
 test_out <- compute_thin_mcmc(test_out, 10)
 y_standardization  <- test_dat$yObs_standardization
 y_centered_values  <- test_dat$yObs_centered_values
+x_standardization  <- test_dat$x_standardization
+x_centered_values  <- test_dat$x_centered_values
 regs_to_use <- c("cpi_change", "unemployment", "gdp_ppp")
 # regs_to_use <- c("gdp_ppp")
 transformation_infos <- list(
@@ -19,6 +21,8 @@ transformation_infos <- list(
     centering = y_centered_values,
     scaling = y_standardization),
   x_settings = list(
+    centering = x_centered_values,
+    scaling = x_standardization,
     grid_length = 30,
     cut_off_num = 0,
     names_regs = c("cpi_change", "unemployment", "gdp_ppp")
@@ -29,15 +33,20 @@ out_measures <- generate_measures_me(prc_measures$par_post_estim,
                                      prc_measures$post_me,
                                      regs_to_use,
                                      transformation_infos)
-
 out_ginis_TT <- out_measures$gini_info_TT
 out_ginis_KK <- out_measures$gini_info_KK
 out_mus_TT   <- out_measures$mu_info_TT
 out_mus_KK   <- out_measures$mu_info_KK
-
-create_me_plots_individual(out_ginis_KK, reg_names = regs_to_use)
-create_me_plots_individual(out_mus_KK, reg_names = regs_to_use)
-# out_reg_grid <- out_measures$regressor_gird_original
+out_reg_grid <- prc_measures$regressor_grid_transformed
+# create_me_plots_individual(out_ginis_KK, regs_to_use,
+#                            settings = list(name_measure = "Gini",
+#                                          	 plot_grid = c(4, 5),
+#                                          	 WITH_CI = TRUE))
+# testme <- create_me_plots_individual(out_mus_KK, regs_to_use,
+#                            settings = list(name_measure = "Expt_Inc_E[Y]",
+#                                            plot_grid = c(4, 5),
+#                                            plot_type = "ggplot",
+#                                            WITH_CI = TRUE))
 out_reg_grid <- prc_measures$regressor_grid_transformed
 
 pth_base <- "/home/iz/Dropbox/projects/IIG/IIGpkg/data/input/data-sm"
