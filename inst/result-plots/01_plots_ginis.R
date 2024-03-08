@@ -82,3 +82,4 @@ plot_mus_TT <- generate_country_plots(pth_data,
                                       output_regs_grid = out_reg_grid,
                                       vars_mu,
                                       settings_mu,
+                                      "Exp.Inc")
