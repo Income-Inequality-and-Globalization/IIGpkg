@@ -43,12 +43,15 @@ sub-plot; otherwise not}
 }
 \value{
 Implicitly returns a list of plot objects or a composite graphic,
-  depending on the `plot_type`. Primarily used for its side effect of
-  plotting.
+  depending on the `plot_type` and whether `RENDER_PLOT` is TRUE. The
+  function is primarily used for its side effect of plotting or preparing
+  plots for rendering.
 }
 \description{
 Creates time series plots for each regressor across all entities within the
-specified measures, facilitating a continuous time series visualization.
-Unlike `create_me_plots_individual`, this function integrates time periods
-into a single plot per entity, and confidence intervals are not included.
+specified measures. This function facilitates a continuous time series
+visualization by integrating time periods into a single plot per entity.
+Unlike `create_me_plots_individual`, it focuses on trend visualization over
+time without including confidence intervals. The `RENDER_PLOT` flag controls
+whether plots are rendered.
 }
