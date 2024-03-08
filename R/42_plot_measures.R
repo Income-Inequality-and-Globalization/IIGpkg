@@ -660,11 +660,12 @@ get_grid_subset_x <- function(grid, reg_names, nn, kk) {
 #' @export
 get_single_plot_me <- function(
   vals_to_plot,
+  x_to_plot = NULL,
   settings =
     list(WITH_CI = FALSE,
          y_lab = "",
          x_lab = "",
-         title = "",
+         title = NULL,
          line_col = "black",
          min_max = NULL,
          type = "",
@@ -682,8 +683,11 @@ get_single_plot_me <- function(
   line_col <- settings$line_col
   stopifnot(`Argument 'type' must unknown.` = type %in% c("plot", "line"))
   stopifnot(`Arg. 'ggplot' is not logical.` = is.logical(ggplot))
+  if (is.null(x_to_plot)) x_to_plot <- seq_along(vals_to_plot[, 1])
+  stopifnot(`Unequal length of y/x values` =
+              length(x_to_plot) == length(vals_to_plot[, 1]))
   if (ggplot) {
-    plot_data <- data.frame(x = seq_along(vals_to_plot[, 1]),
+    plot_data <- data.frame(x = x_to_plot,
                             y = vals_to_plot[, 1],
                             upper = vals_to_plot[, 2],
                             lower = vals_to_plot[, 3])
@@ -719,17 +723,20 @@ get_single_plot_me <- function(
       ki_upp       <- vals_to_plot[, 2]
       ki_low       <- vals_to_plot[, 3]
 
-      plot(mean_to_plot, type = "l",
+      plot(y = mean_to_plot,
+           x = x_to_plot,
+           type = "l",
            ylim = c(min_max[1], min_max[2]),
            main = title,
            ylab = y_lab,
            xlab = x_lab,
            col = line_col)
-      lines(ki_upp, col = "darkred", lty = "dashed")
-      lines(ki_low, col = "darkred", lty = "dashed")
+      lines(y = ki_upp, x = x_to_plot, col = "darkred", lty = "dashed")
+      lines(y = ki_low, x = x_to_plot, col = "darkred", lty = "dashed")
     } else {
       if (type == "plot") {
-        plot(vals_to_plot[, 1],
+        plot(y = vals_to_plot[, 1],
+             x = x_to_plot,
              type = "l",
              ylim = c(min_max[1], min_max[2]),
              main = title,
@@ -737,7 +744,7 @@ get_single_plot_me <- function(
              xlab = x_lab,
              col = line_col)
       } else if (type == "line") {
-        lines(vals_to_plot[, 1], col = line_col)
+        lines(y = vals_to_plot[, 1], x = x_to_plot, col = line_col)
       }
     }
   me_plot <- NULL
