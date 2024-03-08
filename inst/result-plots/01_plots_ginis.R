@@ -61,54 +61,24 @@ settings_gini <- list(scale_measure = 100,
                       x_lab = "time",
                       x_var = NULL,
                       ADD_KI = TRUE,
-                      grid_dim = c(2, 5))
+                      grid_dim = c(4, 5))
+out_measure_gini <- list(info_TT = out_ginis_TT, info_KK = out_ginis_KK)
 plot_ginis_TT <- generate_country_plots(pth_data,
-                                        out_ginis_TT,
-                                        NULL,
+                                        output_measure = out_measure_gini,
+                                        output_regs_grid = out_reg_grid,
                                         vars_gini,
                                         settings_gini,
-                                        "gini")
+                                        "Gini")
 vars_mu <- "est_mean"
 settings_mu <- list(scale_measure = 100,
-                    y_lab = "Expt. Income ( E[Y] )",
+                    y_lab = "Expt. Inc. E[Y]",
                     x_lab = "time",
                     x_var = NULL,
                     ADD_KI = TRUE,
-                    grid_dim = c(2, 5))
+                    grid_dim = c(4, 5))
+out_measure_mu <- list(info_TT = out_mus_TT, info_KK = out_mus_KK)
 plot_mus_TT <- generate_country_plots(pth_data,
-                                      out_mus_TT,
-                                      NULL,
+                                      output_measure = out_measure_mu,
+                                      output_regs_grid = out_reg_grid,
                                       vars_mu,
                                       settings_mu,
-                                      "mu")
-
-
-
-
-
-# settings_gini$ADD_KI <- FALSE
-# settings_gini$X_TRANSFORMED <- TRUE
-# settings_gini$x_lab <- "CPI change"
-# settings_gini$x_var <- "cpi_change"
-# plot_ginis_cpi_change <- generate_country_plots(pth_data,
-#                                                 out_ginis_KK[["cpi_change"]],
-#                                                 out_reg_grid,
-#                                                 vars_gini,
-#                                                 settings_gini,
-#                                                 "gini")
-# settings_gini$x_lab <- "Unemployment"
-# settings_gini$x_var <- "unemployment"
-# plot_ginis_unemployment <- generate_country_plots(pth_data,
-#                                                   out_ginis_KK[["unemployment"]],
-#                                                   out_reg_grid,
-#                                                   vars_gini,
-#                                                   settings_gini,
-#                                                   "gini")
-# settings_gini$x_lab <- "GDP"
-# settings_gini$x_var <- "gdp_ppp"
-# plot_ginis_gdp_ppp <- generate_country_plots(pth_data,
-#                                              out_ginis_KK[["gdp_ppp"]],
-#                                              out_reg_grid,
-#                                              vars_gini,
-#                                              settings_gini,
-#                                              "gini")
