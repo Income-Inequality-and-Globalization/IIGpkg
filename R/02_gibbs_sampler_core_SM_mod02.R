@@ -217,7 +217,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Wird nicht mehr benoetigt, nicht auskommentiert, da es unten auch noch drin
   # steht. War vom alten Sampler, um die identifizierenden Restriktionen
   # einzuhalten:
-  block_count <- 0 
+  block_count <- 0
   # Gibbs-Iteration:
   # load("kf_test2.RData")
   # load("kf_test.RData")
@@ -228,7 +228,12 @@ GibbsSSM_2 <- function(itermax = 15000,
   # A <- all_true_vals$A_means
   # A <- diag(nrow(A))
   # B <- all_true_vals$B_means
-  B[, 1] <- 1; diag(B[, 2:31]) <- 1; #B[which(B != 0)] <- 0.5 # 
+  if (p_joint == 1) {
+    B[, 1] <- 1; diag(B[, 2:31]) <- 1;
+  } else if (p_joint == 0) {
+    diag(B) <- 1;
+  }
+   #B[which(B != 0)] <- 0.5 #
   # D <- all_true_vals$D_means
   # D[which(D != 0)] <- 0.5
   for (iter in seq_len(itermax)) {
