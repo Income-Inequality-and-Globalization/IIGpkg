@@ -245,13 +245,12 @@ plot_Gibbs_seq <- function(Gibbs,
   B_Gibbs_mean <- apply(Gibbs$B[, , selecetedObs], c(1, 2), mean)
   yfit_mean <- apply(yfit_array[, , selecetedObs], c(1, 2), mean)
   if (predictionCI) {
-    yfit_uci <- apply(yfit_array[, , selecetedObs], c(1, 2), quantile, probs = 0.975)
-    yfit_lci <- apply(yfit_array[, , selecetedObs], c(1, 2), quantile, probs = 0.025)
+    yfit_uci <- apply(yfit_array[, , selecetedObs], c(1, 2), stats::quantile, probs = 0.975)
+    yfit_lci <- apply(yfit_array[, , selecetedObs], c(1, 2), stats::quantile, probs = 0.025)
   } else {
     yfit_uci <- NULL
     yfit_lci <- NULL
   }
-
 
   y_plot <- vector("list", npara * N)
   for (i in 1:(npara * N)) {
@@ -388,8 +387,8 @@ plot_Gibbs_seq <- function(Gibbs,
     })
     GibbsB <- Gibbs_B_nonzero
     GibbsB_mean <- apply(GibbsB, 1, mean)
-    GibbsB_uci <- apply(GibbsB, 1, quantile, probs = 0.975)
-    GibbsB_lci <- apply(GibbsB, 1, quantile, probs = 0.025)
+    GibbsB_uci <- apply(GibbsB, 1, stats::quantile, probs = 0.975)
+    GibbsB_lci <- apply(GibbsB, 1, stats::quantile, probs = 0.025)
 
 
     # B_plot <- vector("list", N * (npara + npara * p_joint))
@@ -451,8 +450,8 @@ plot_Gibbs_seq <- function(Gibbs,
       })
       GibbsD <- Gibbs_D_nonzero
       GibbsD_mean <- apply(GibbsD, 1, mean)
-      GibbsD_uci <- apply(GibbsD, 1, quantile, probs = 0.975)
-      GibbsD_lci <- apply(GibbsD, 1, quantile, probs = 0.025)
+      GibbsD_uci <- apply(GibbsD, 1, stats::quantile, probs = 0.975)
+      GibbsD_lci <- apply(GibbsD, 1, stats::quantile, probs = 0.025)
 
       D_plot <- vector("list", 2 * sum(selectR_D_complete))
       if (is.null(nameReg)) {
