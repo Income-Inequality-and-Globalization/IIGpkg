@@ -277,15 +277,15 @@ GibbsSSM_2 <- function(itermax = 15000,
       # fPost[2:31, ] <- fPost_true[2:31, ]
       # fPost[1, ] <- fPost_true[1, ]
       fSTORE[, , iter] <- fPost
-      plot_mcmc_ffbs(f_stored = fSTORE,
-                     mm = iter,
-                     f_trues = fPost_true,
-                     options_f = list(
-                             grid = c(4, 4),
-                             id_f = 1:16),
-                     options_p = list(
-                             break_mm = 10000,
-                             pause = 0.1))
+      # plot_mcmc_ffbs(f_stored = fSTORE,
+      #                mm = iter,
+      #                f_trues = fPost_true,
+      #                options_f = list(
+      #                        grid = c(4, 4),
+      #                        id_f = 1:16),
+      #                options_p = list(
+      #                        break_mm = 10000,
+      #                        pause = 0.1))
     } else {
       fPost <- fPost_true
       fSTORE[, , iter] <- fPost_true
