@@ -28,7 +28,7 @@
 #' @param incObsNew Gewuenschte / Korrigierte Anzahl der Beochbachtungen in der GMM-Schaetzung. Setze bspw. gleich 5000 oder 10000. Das ist realistischer als 100000.
 #' @param covScale Damit kann man die Kovarianzen aus Vhat skalieren. covScale = 0.5 heißt, dass die die Korrelationen(!) halbiert werden. War mal ein Experiment. covscale muss letztlich = 1 sein.
 #' @param VhatDiagScale (wahrscheinlich irrelevant) `= TRUE`, wenn fuer jedes
-#'    Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden 
+#'    Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden
 #'    soll. `Diag_VCOV = TRUE` muss in der top-level Function gesetzt werden,
 #'    damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn
 #'    `VhatDiagScale = TRUE` ist muss auch `sampleV = TRUE` sein.
@@ -131,13 +131,13 @@ GibbsSSM_2 <- function(itermax = 15000,
   # Laender mal Zeitpunkte
   NN_TT    <- NN * TT
   # Zeitpunkte mal y-measurement components:
-  TT_num_y <- TT * num_y 
+  TT_num_y <- TT * num_y
   # N *TT ohne die fehlenden Beobachtungen:
   NN_TT_avail <- sum(!is.na(yObs)) / num_y
   # Anzahl der Beobachtungen (ohne die NAs) fuer jedes Land:
   availableObs_crossSection <- t(
     apply(yObs[seq(1, N_num_y, 3), ],  1, \(x) !is.na(x))
-  ) 
+  )
 
   Omega0_legacy <- Omega0
   if (sampleH) {
@@ -166,7 +166,7 @@ GibbsSSM_2 <- function(itermax = 15000,
   if (is.null(DSTORE)) {W_REG_AVAIL <- TRUE} else {W_REG_AVAIL <- TRUE}
   if (W_REG_AVAIL) {
     id_w_reg <- get_id_wreg(nreg, NN)
-    w_reg_info = list(w_reg = wReg, 
+    w_reg_info = list(w_reg = wReg,
                       id_reg = id_w_reg,
                       nregs = nreg)
   } else {
@@ -176,7 +176,7 @@ GibbsSSM_2 <- function(itermax = 15000,
     w_reg_info <- NULL
   }
 
-  ASTORE <- set_A_out(countryA, num_y, itermax, NN) 
+  ASTORE <- set_A_out(countryA, num_y, itermax, NN)
   VSTORE <- set_V_out(sampleV, N_num_y, itermax)
   V_tmp  <- set_V_tmp(sampleV, VhatDiagScale,
                       Vhat, VhatDiagScale_start,
