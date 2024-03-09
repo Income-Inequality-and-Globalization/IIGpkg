@@ -8,13 +8,13 @@ get_cnt_par_post_estim <- function(NN,
                                    get_cnt_names_dimMM(MM))
   return(out_post_estim)
 }
-get_cnt_par_me_estim <- function(NN,
-                                 TT,
-                                 GG,
-                                 MM,
-                                 names_regs = NULL,
-                                 num_pars = 3,
-                                 names_para = c("a", "q", "mu")) {
+get_cnt_par_meas_estim <- function(NN,
+                                   TT,
+                                   GG,
+                                   MM,
+                                   names_regs = NULL,
+                                   num_pars = 3,
+                                   names_para = c("a", "q", "mu")) {
   if (is.null(names_regs)) stop("Arg. 'names_regs' missing.")
   KK <- length(names_regs)
   out_post_estim <- array(0, dim = c(NN * num_pars, TT, GG, MM, KK))
