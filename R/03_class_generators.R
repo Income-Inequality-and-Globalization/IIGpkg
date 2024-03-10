@@ -3,7 +3,7 @@
 #' @param x output object (a named list) as returned via
 #'   [IIGpkg::Gibbs2_SM_SA_sampler] and [IIGpkg::GibbsSSM_2]
 #'
-#' @return an object of type `GibbsOutputIIG` which is a named list; see the 
+#' @return an object of type `GibbsOutputIIG` which is a named list; see the
 #'   return value of [IIGpkg::GibbsSSM_2] for details.
 #' @export
 new_GibbsOutputIIG <- function(x = vector("list")) {
@@ -22,17 +22,17 @@ validate_GibbsOutputIIG <- function(x) {
 }
 #' Subset Gibbs output with smaller than total Monte Carlo size
 #'
-#' Some of the Gibbs outputs are very large and it is not always necessary to 
+#' Some of the Gibbs outputs are very large and it is not always necessary to
 #' use all of the Monte Carlo draws. Hence, by passing a numeric vector sequence
 #' number `MM_seq` in the range of total Monte Carlo draws, we can subset the
 #' output for all parameters thus making the object smaller in size and related
 #' computations (Bayesian averages or confidence bands) faster to compute.
 #'
 #' @inheritParams new_GibbsOutputIIG
-#' @param MM_seq numeric vector; vector of Monte Carlo indices to keep which 
+#' @param MM_seq numeric vector; vector of Monte Carlo indices to keep which
 #'   should be in the interval between 1 and the total number of draws (of the
 #'   container objects stored in  `x`)
-#' 
+#'
 #' @return same as `x` but with the Monte Carlo draws taken from the range in
 #'    `MM_seq`
 #' @export
@@ -53,7 +53,7 @@ subset_GibbsOutputIIG <- function(x, MM_seq = NULL) {
   return(new_GibbsOutputIIG(x))
 }
 #' Summary of Gibbs output
-#' 
+#'
 #' A table with true values (if they exist), Monte Carlo means, confidence
 #' bands, and an indicator if the true value lies in the CI.
 #'
@@ -64,7 +64,7 @@ subset_GibbsOutputIIG <- function(x, MM_seq = NULL) {
 #'   * `roundoff`: integer giving the digits to round values in summary
 #'   * `ci_val`: value of confidence band; default is 1.96 for 95\%
 #'
-#' @return pure side effect functions but returns invisibly a list of the 
+#' @return pure side effect functions but returns invisibly a list of the
 #'   different outputs that are printed to the screen
 #' @export
 summary.GibbsOutputIIG <- function(x, true_vals = NULL, burnin = NULL,
@@ -82,7 +82,7 @@ summary.GibbsOutputIIG <- function(x, true_vals = NULL, burnin = NULL,
   num_all_facs <- ncol(x$B)
   # num_regs    <- x$initials$nreg
   EXIST_JNT_FAC <- num_jnt_fac != 0
-  
+
   num_mcmc <- x$initials$itermax
   if (is.null(burnin)) {
     num_burn <- floor(num_mcmc / 2)
@@ -94,7 +94,7 @@ summary.GibbsOutputIIG <- function(x, true_vals = NULL, burnin = NULL,
   mean_il <- diag(apply(out, c(1,2), mean))
   if (!is.null(true_vals)) {
       CIs <- apply(out, 3, diag)
-      CIs <- apply(CIs, 1, quantile, probs = c(0.025, 0.975))
+      CIs <- apply(CIs, 1, stats::quantile, probs = c(0.025, 0.975))
       CI_lower <- CIs[1, ]
       CI_upper <- CIs[2, ]
       true_means <- diag(true_B_means[, (num_jnt_fac + 1):num_all_facs])
@@ -110,12 +110,12 @@ summary.GibbsOutputIIG <- function(x, true_vals = NULL, burnin = NULL,
                            `if in CI -> 1` = round(contained, digits = options$roundoff))
   message(crayon::yellow("Summary for idiosyncratic loadings: "))
   print(out_il, n = options$nrows_out)
-    
+
   if (EXIST_JNT_FAC) {
     out2 <- x$B[, 1:num_jnt_fac, (num_burn + 1):num_mcmc]
     mean_cl <- apply(out2, 1, mean)
     if (!is.null(true_vals)) {
-      CIs <- apply(out2, 1, quantile, probs = c(0.025, 0.975))
+      CIs <- apply(out2, 1, stats::quantile, probs = c(0.025, 0.975))
       CI_lower <- CIs[1, ]
       CI_upper <- CIs[2, ]
       true_means <- true_B_means[, 1:num_jnt_fac]
