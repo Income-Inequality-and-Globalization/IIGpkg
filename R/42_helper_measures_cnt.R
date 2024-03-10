@@ -71,7 +71,8 @@ get_cnt_me_f <- function(out_f,
                          NN = 10,
                          num_pars = 3,
                          names_para = c("a", "q", "mu")) {
-  nms_rw <- get_cnt_names_facs(names_para, num_pars, NN)
+  n_jntf <- nrow(out_f) - NN * 3
+  nms_rw <- get_cnt_names_facs(names_para, num_pars, NN, n_jntf)
   nms_cl <- get_cnt_names_TT(ncol(out_f))
   nms_mm <- get_cnt_names_dimMM(dim(out_f)[3])
 
