@@ -59,8 +59,9 @@ get_cnt_me_B <- function(out_B,
                          NN = 10,
                          num_pars = 3,
                          names_para = c("a", "q", "mu")) {
+  n_jntf <- dim(out_B)[2] - dim(out_B)[1]
   nms_rw <- get_cnt_names_NN(names_para, num_pars, NN)
-  nms_cl <- get_cnt_names_facs(names_para, num_pars, NN)
+  nms_cl <- get_cnt_names_facs(names_para, num_pars, NN, n_jntf)
   nms_mm <- get_cnt_names_dimMM(dim(out_B)[3])
 
   dimnames(out_B) <- list(nms_rw, nms_cl, nms_mm)
