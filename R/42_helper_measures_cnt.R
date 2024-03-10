@@ -107,7 +107,17 @@ get_cnt_me_D_uncertainty <- function(D_mat, names_regs, KK, MM) {
   dimnames(D_out) <- c(dn_from_D_mat, list(get_cnt_names_regs(names_regs, KK)))
   return(D_out)
 }
-get_cnt_me_wRegs <- function(out_wRegs,
+get_cnt_wRegs <- function(out_wRegs,
+                          names_regs = NULL,
+                          NN = 10,
+                          num_pars = 3,
+                          names_para = c("a", "q", "mu")) {
+  nms_rw <- get_cnt_names_regs_NN(names_regs, num_pars, NN)
+  nms_cl <- get_cnt_names_TT(ncol(out_wRegs))
+  rownames(out_wRegs) <- nms_rw
+  colnames(out_wRegs) <- nms_cl
+  return(out_wRegs)
+}
                              names_regs = NULL,
                              NN = 10,
                              num_pars = 3,
