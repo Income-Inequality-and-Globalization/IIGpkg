@@ -317,9 +317,19 @@ get_cnt_info_KK <- function(KK, names_regs) {
   names(out_mu_info_KK) <- names_regs
   return(out_mu_info_KK)
 }
-get_cnt_names_facs <- function(nms_pars, num_pars, NN) {
+get_cnt_names_facs <- function(nms_pars, num_pars, NN, num_jnt_fac) {
   seq_NN <- get_cnt_seq_NN(num_pars, NN)
-  c("jF", paste0(paste0("iF", "_", nms_pars), paste0("_NN_", seq_NN)))
+  if (num_jnt_fac > 0) {
+    jntf_part <- paste0("jF_", formatC(seq_len(num_jnt_fac),
+                                       digits = 1,
+                                       format = "d",
+                                       flag = "0"))
+    idio_part <- paste0(paste0("iF", "_", nms_pars), paste0("_NN_", seq_NN))
+    out_cnt_names <- c(jntf_part, idio_part)
+  } else {
+    out_cnt_names <- paste0(paste0("iF", "_", nms_pars), paste0("_NN_", seq_NN))
+  }
+  return(out_cnt_names)
 }
 get_cnt_names_NN <- function(nms_pars, num_pars, NN) {
   seq_NN <- get_cnt_seq_NN(num_pars, NN)
