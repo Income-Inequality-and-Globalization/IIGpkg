@@ -118,15 +118,22 @@ get_cnt_wRegs <- function(out_wRegs,
   colnames(out_wRegs) <- nms_cl
   return(out_wRegs)
 }
+get_cnt_fd_wRegs <- function(out_wRegs,
                              names_regs = NULL,
                              NN = 10,
                              num_pars = 3,
                              names_para = c("a", "q", "mu")) {
+  KK <- length(names_regs)
   nms_rw <- get_cnt_names_regs_NN(names_regs, num_pars, NN)
   nms_cl <- get_cnt_names_TT(ncol(out_wRegs))
-  rownames(out_wRegs) <- nms_rw
-  colnames(out_wRegs) <- nms_cl
-  return(out_wRegs)
+  out_fd_wRegs <- array(out_wRegs,
+                        dim = c(nrow(out_wRegs), ncol(out_wRegs), KK))
+  dimnames(out_fd_wRegs) <- list(nms_rw, nms_cl, names_regs)
+  for (kk in seq_len(KK)) {
+    id_add_sd <- seq(from = kk, to = (NN - 1) * KK + kk, by = KK)
+    out_fd_wRegs[id_add_sd, , kk] <- out_fd_wRegs[id_add_sd, , kk] + 1
+  }
+  return(out_fd_wRegs)
 }
 get_cnt_me_WR  <- function(wRegs, names_regs = NULL, grid_length, cutoff_num) {
   if (is.null(names_regs)) stop("Arg. 'names_regs' missing.")
