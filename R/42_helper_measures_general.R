@@ -38,9 +38,15 @@ get_names_measures <- function(nm_measure = NULL) {
        ki_low = paste0(nm_measure, "ki_low"),
        ki_upp = paste0(nm_measure, "ki_upp"))
 }
-get_vec_tmp <- function(x, rnd = 0.7) {
+get_vec_tmp <- function(x, rnd = 1.0) {
+  x2 <- sort(x)
   ct  <- floor((length(x) - length(x) * rnd) / 2)
-  out <- setdiff(x, c(head(x, n = ct), tail(x, n = ct)))
+  if (ct != 0) {
+    out <- x2[-c(1:ct, (length(x) - ct + 1):length(x))]
+  } else {
+    out <- x2
+  }
+  # out <- setdiff(x, c(head(x, n = ct), tail(x, n = ct)))
   if (length(out) == 0) browser()
   return(out)
   return(x)
