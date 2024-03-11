@@ -47,7 +47,7 @@ compute_thin_mcmc <- function(x, thin_freq = NULL) {
 #
 # }
 quantile <- function(x, probs) {
-  ki_int <- compute_ki_upper_lower(ki_prob = 0.8)
+  ki_int <- compute_ki_upper_lower(ki_prob = probs)
   ki_upp <- ki_int[1]
   ki_low <- ki_int[2]
   stats::quantile(x, probs = c(ki_upp, ki_low))
