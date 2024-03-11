@@ -135,7 +135,7 @@ get_cnt_fd_wRegs <- function(out_wRegs,
   }
   return(out_fd_wRegs)
 }
-get_cnt_me_WR  <- function(wRegs, names_regs = NULL, grid_length, cutoff_num) {
+get_cnt_WR  <- function(wRegs, names_regs = NULL, grid_length, cutoff_num) {
   if (is.null(names_regs)) stop("Arg. 'names_regs' missing.")
   KK <- length(names_regs)
   GG <- grid_length
