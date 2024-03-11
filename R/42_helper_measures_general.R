@@ -58,3 +58,17 @@ get_name_rows_measure_out <- function(rownames, suffix) {
   clean_strng <- paste0(sub("^mu_", "", clean_strng))
   paste0(clean_strng, suffix)
 }
+  num_regs <- length(names_regs)
+  NN <- dim(regs_grid_TT_used)[1] / num_regs
+  TT <- dim(regs_grid_TT_used)[2]
+  out_regs_array <- array(0, dim = c(NN, TT, num_regs))
+  dimnames(out_regs_array) <- list(
+    paste0("NN_", formatC(1:NN, digits = 1, format = "d", flag = "0")),
+    colnames(regs_grid_TT_used),
+    names_regs)
+  for (kk in seq_along(names_regs)) {
+    id_regs <- seq(from = kk, to = num_regs * (NN - 1) + kk, by = 3)
+    out_regs_array[, , kk] <- regs_grid_TT_used[id_regs, ]
+  }
+  return(out_regs_array)
+}
