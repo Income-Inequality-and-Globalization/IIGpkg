@@ -10,6 +10,12 @@ compute_gini_info <- function(out_a, out_q, ki_prob = 0.95) {
   out_gini <- compute_gini(out_a, out_q, NN, TT, GG, ki_prob = ki_prob)
   return(out_gini)
 }
+compute_gini_info_fd <- function(out_a_fd, out_a_tt, out_q_fd, out_q_tt, ki_prob = 0.95) {
+  NN <- dim(out_a_fd)[1]
+  TT <- dim(out_a_fd)[2]
+  out_gini <- compute_gini_fd(out_a_fd, out_a_tt, out_q_fd, out_q_tt, NN, TT, ki_prob = ki_prob)
+  return(out_gini)
+}
 compute_gini <- function(out_a, out_q, NN, TT, GG, ki_prob) {
   if (is.null(GG)) {
     out_gini <- array(0, dim = c(NN, TT, 3))
