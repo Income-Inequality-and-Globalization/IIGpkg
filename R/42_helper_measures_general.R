@@ -58,6 +58,7 @@ get_name_rows_measure_out <- function(rownames, suffix) {
   clean_strng <- paste0(sub("^mu_", "", clean_strng))
   paste0(clean_strng, suffix)
 }
+get_regs_grid_TT <- function(regs_grid_TT_used, names_regs) {
   num_regs <- length(names_regs)
   NN <- dim(regs_grid_TT_used)[1] / num_regs
   TT <- dim(regs_grid_TT_used)[2]
@@ -71,4 +72,19 @@ get_name_rows_measure_out <- function(rownames, suffix) {
     out_regs_array[, , kk] <- regs_grid_TT_used[id_regs, ]
   }
   return(out_regs_array)
+}
+adjust_pnt <- function(pnt_tkn, plot_data, thr = 0.3) {
+  if (is.na(pnt_tkn[["x"]])) return(pnt_tkn)
+  abs_diff <- abs(plot_data$x - pnt_tkn[["x"]])
+  min_grid_pnt <- min(abs_diff)
+  id_closest_pnt <- which(min_grid_pnt == abs_diff)
+
+  CHECK_ADJUST <- 100 * abs(pnt_tkn[["y"]] - plot_data$y[id_closest_pnt]) / plot_data$y[id_closest_pnt] > thr
+  if (!is.logical(CHECK_ADJUST)) {browser()}
+  if (length(CHECK_ADJUST) == 0) {browser()}
+
+  if (CHECK_ADJUST) {
+  pnt_tkn[["y"]] <-  plot_data$y[id_closest_pnt]
+  }
+  return(pnt_tkn)
 }
