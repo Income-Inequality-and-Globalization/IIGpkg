@@ -110,7 +110,8 @@ compute_gini_sm <- function(a, q, logarithm = FALSE) {
   }
   if (any(is.na(out_gini_rhs))) {
     # browser()
-    out_gini_rhs <- out_gini_rhs[!is.na(out_gini_rhs)]
+    # out_gini_rhs <- out_gini_rhs[!is.na(out_gini_rhs)]
+    out_gini_rhs[is.na(out_gini_rhs)] <- 0
     # out_gini_rhs[which(out_gini_rhs <= 0)] <- 1 - num_adj
     # stop("Gini values numerically smaller 0.")
   }
