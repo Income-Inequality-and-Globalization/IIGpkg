@@ -38,7 +38,7 @@ compute_gini <- function(out_a, out_q, NN, TT, GG, ki_prob) {
       for (tt in seq_len(TT)) {
         for (gg in seq_len(GG)) {
           vec_tmp <- compute_gini_sm(out_a[nn, tt, gg, ], out_q[nn, tt, gg, ])
-          vec_tmp <- get_vec_tmp(vec_tmp)
+          vec_tmp <- get_vec_tmp(vec_tmp, 0.7)
           out_gini[nn, tt, gg, 1]  <- mean(vec_tmp)
           out_gini[nn, tt, gg, c(2, 3)] <- quantile(vec_tmp, probs = ki_prob)
           if (any(is.na(out_gini))) browser()
