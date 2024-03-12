@@ -53,6 +53,41 @@ compute_gini <- function(out_a, out_q, NN, TT, GG, ki_prob) {
   }
   return(out_gini)
 }
+compute_gini_fd <- function(out_a_fd, out_a_tt,
+                            out_q_fd, out_q_tt,
+                            NN, TT, ki_prob) {
+  out_gini <- array(0, dim = c(NN, TT, 3))
+  for (nn in seq_len(NN)) {
+    for (tt in seq_len(TT)) {
+
+      # vec_tmp_fd <- compute_gini_sm(get_vec_tmp(out_a_fd[nn, tt, ]),
+      #                               get_vec_tmp(out_q_fd[nn, tt, ]))
+      vec_tmp_fd <- compute_gini_sm(out_a_fd[nn, tt, ], out_q_fd[nn, tt, ])
+      vec_tmp_fd <- get_vec_tmp(vec_tmp_fd)
+
+      # vec_tmp_tt <- compute_gini_sm(get_vec_tmp(out_a_tt[nn, tt, ]),
+      #                               get_vec_tmp(out_q_tt[nn, tt, ]))
+      vec_tmp_tt <- compute_gini_sm(out_a_tt[nn, tt, ], out_q_tt[nn, tt, ])
+      vec_tmp_tt <- get_vec_tmp(vec_tmp_tt)
+
+      if (length(vec_tmp_fd) != length(vec_tmp_tt)) {
+        browser()
+        # out_gini[nn, tt, 1]  <- mean(vec_tmp_fd) - mean(vec_tmp_tt)
+        # out_gini[nn, tt, c(2, 3)] <- quantile(vec_tmp_fd, probs = ki_prob) - quantile(vec_tmp_tt, probs = ki_prob)
+      } else {
+        vec_tmp <- vec_tmp_fd - vec_tmp_tt
+        out_gini[nn, tt, 1]  <- mean(vec_tmp)
+        out_gini[nn, tt, c(2, 3)] <- quantile(vec_tmp, probs = ki_prob)
+      }
+      if (any(is.na(out_gini))) browser()
+    }
+  }
+  new_rn <- get_name_rows_measure_out(rownames(out_a_tt), "_gini")
+  dimnames(out_gini) <- list(new_rn,
+                             colnames(out_a_tt),
+                             c("mean", "ki_upp", "ki_low"))
+  return(out_gini)
+}
 compute_gini_sm <- function(a, q, logarithm = FALSE) {
   num_adj <- 0.99999
   if (length(a) != length(q)) browser()
