@@ -12,6 +12,8 @@
 #'   Default is NULL, indicating no regression grid is used.
 #' @param vars_to_use Vector of variable names to add as `geom_points` for
 #'    comparison with a-posteriori estimation.
+#' @param regs_to_use a character vector of regressor names to use as x-axis and
+#'   related plot-labels
 #' @param settings List of settings for data processing, including:
 #' \itemize{
 #' \item{\code{scale_transform}}{ Numeric value used to scale the measure
@@ -29,6 +31,7 @@
 #' @param PLOT Boolean indicating whether to actually plot the graphs or just
 #'   return the data for plotting. Useful for non-interactive environments.
 #'   Default is `TRUE`.
+#' @param grid_dim
 #'
 #' @return A named list of two elements:
 #'   \itemize{
@@ -41,34 +44,49 @@ generate_country_plots <- function(pth_data,
                                    output_measure,
                                    output_regs_grid = NULL,
                                    vars_to_use,
+                                   regs_to_use,
                                    settings,
                                    name_measure = NULL,
+                                   grid_dim = NULL,
                                    PLOT = TRUE) {
-  nm_pdf   <- "01_fitted_mes.pdf"
-  grid_dim <- settings$grid_dim
+  nm_pdf_01   <- paste0("01_fitted_mes_", toupper(name_measure), "new.pdf")
+  # nm_pdf   <- paste0("01_fitted_mes_", toupper(name_measure), "_old.pdf")
+  nm_pdf_02   <- paste0("02_fitted_mes_", toupper(name_measure), "_bg_style.pdf")
+  KK <- length(regs_to_use)
+  names_measures <- get_names_measures(name_measure)
+
   out_TT <- output_measure$info_TT
   out_KK <- output_measure$info_KK
-  names_measures <- get_names_measures(name_measure)
-  data_to_plot <- get_data_measure_plots(out_TT,
-                                         output_regs_grid,
-                                         pth_data,
-                                         vars_to_use,
-                                         names_measures,
-                                         settings)
+  out_FD <- output_measure$info_FD
 
-  unique_countries <- unique(data_to_plot$country)
-  list_plots_per_country <- list()
+  regs_grid_KK <- output_regs_grid[["grid_KK"]]
+  regs_grid_TT <- get_regs_grid_TT(output_regs_grid[["grid_TT"]],
+                                   names_regs = regs_to_use)
+
+  sttgs_measure    <- settings$measure
+  sttgs_measure_me <- settings$measure_me
+
+  data_to_plot_tt <- get_data_measure_plots(out_TT,
+                                            regs_grid_KK,
+                                            pth_data,
+                                            vars_to_use,
+                                            names_measures,
+                                            sttgs_measure)
+  unique_countries <- unique(data_to_plot_tt$country)
+  list_plots_per_country_tt <- list()
+  list_plots_per_country_fd <- vector("list", length(unique_countries) * 3)
+  iter_plot_fd <- 1
   # unique_countries <- unique_countries[-c(length(unique_countries))]
   for (cntry in unique_countries) {
-    list_plots_per_country[[cntry]] <- create_single_country_plot(
-      data_long = data_to_plot,
+    list_plots_per_country_tt[[cntry]] <- create_single_country_plot(
+      data_long = data_to_plot_tt,
       name_country = cntry,
       plot_info = list(
-        x_var = settings$x_var,
-        y_lab = settings$y_lab,
-        x_lab = settings$x_lab,
-        X_TRN = settings$X_TRANSFORMED,
-        ADD_KI = settings$ADD_KI
+        x_var = sttgs_measure$x_var,
+        y_lab = sttgs_measure$y_lab,
+        x_lab = sttgs_measure$x_lab,
+        X_TRN = sttgs_measure$X_TRANSFORMED,
+        ADD_KI = sttgs_measure$ADD_KI
       ),
       measure_info = list(
         vals = "value",
@@ -76,33 +94,73 @@ generate_country_plots <- function(pth_data,
       ),
       estim_infos = names_measures
     )
+    for (kk in seq_len(KK)) {
+      data_to_plot_fd <- get_data_measure_plots(out_FD[[kk]],
+                                                regs_grid_KK,
+                                                pth_data,
+                                                vars_to_use,
+                                                names_measures,
+                                                sttgs_measure_me)
+      list_plots_per_country_fd[[iter_plot_fd]] <- create_single_country_plot(
+        data_long = data_to_plot_fd,
+        name_country = cntry,
+        plot_info = list(
+          title = regs_to_use[kk],
+          x_var = sttgs_measure_me$x_var,
+          y_lab = sttgs_measure_me$y_lab,
+          x_lab = sttgs_measure_me$x_lab,
+          X_TRN = sttgs_measure_me$X_TRANSFORMED,
+          ADD_KI = sttgs_measure_me$ADD_KI,
+          ADD_PB = TRUE
+        ),
+        measure_info = NULL,
+        estim_infos = names_measures
+      )
+      iter_plot_fd <- iter_plot_fd + 1
+    }
   }
   list_plots_me <- create_me_plots_time_series(
     out_KK,
-    output_regs_grid,
+    out_TT[, , 1],
+    regs_grid_KK,
+    regs_grid_TT,
     regs_to_use,
     RENDER_PLOT = FALSE,
     NO_TITLE = TRUE,
     settings = list(name_measure = name_measure,
                     plot_type = "ggplot"))[["out_plot_list"]]
-  list_plots <- get_sorted_plot_list_all(list_plots_per_country, list_plots_me)
+  list_plots_bg <- get_sorted_plot_list_all(list_plots_per_country_tt,
+                                            list_plots_per_country_fd)
+  list_plots_me <- get_sorted_plot_list_all(list_plots_per_country_tt,
+                                            list_plots_me)
   if (PLOT) {
     grid_dim_cnt <- c(1, grid_dim[2])
     grid_dim_mes <- c(grid_dim[1] - 1, grid_dim[2])
     lmat  <- rbind(
       get_layout_grid_from_sttgs(grid_dim_cnt),
       get_layout_grid_from_sttgs(grid_dim_mes, transpose = FALSE) + grid_dim_cnt[2])
-    glist <- lapply(list_plots, ggplot2::ggplotGrob)
+    # Get BG type plots
+    glist <- lapply(list_plots_bg, ggplot2::ggplotGrob)
     ggplot2::ggsave(
-      nm_pdf,
+      nm_pdf_02,
+      gridExtra::marrangeGrob(glist,
+                              layout_matrix = lmat,
+                              nrow = grid_dim[1],
+                              ncol = grid_dim[2]),
+      width = 29.7, height = 21, units = "cm")
+    # Get marginal effect line-type plots
+    glist <- lapply(list_plots_me, ggplot2::ggplotGrob)
+    ggplot2::ggsave(
+      nm_pdf_01,
       gridExtra::marrangeGrob(glist,
                               layout_matrix = lmat,
                               nrow = grid_dim[1],
                               ncol = grid_dim[2]),
       width = 29.7, height = 21, units = "cm")
   }
-  return(list(data_long = data_to_plot,
-              plot_objects = list_plots))
+  return(list(data_long = data_to_plot_tt,
+              plot_objects_me = list_plots_me,
+              plot_objects_bg = list_plots_bg))
 }
 get_layout_grid_from_sttgs <- function(sttgs_mfrow, transpose = TRUE) {
   out_grid <- matrix(seq_len(sttgs_mfrow[1] * sttgs_mfrow[2]),
