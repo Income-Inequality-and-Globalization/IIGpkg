@@ -187,6 +187,8 @@ get_sorted_plot_list_all <- function(plot_list_cnt, plot_list_mes) {
 #' includes scaling the measure values, merging additional regression data, and
 #' selecting relevant variables for visualization.
 #'
+#' @param pth_data Path to the CSV data file containing the raw data set. The
+#'   file is read into R and processed according to the specified parameters.
 #' @param out_measures A three-dimensional array of estimated
 #'   measure-coefficient values. The dimensions are expected to correspond to
 #'   entities (e.g., countries), time periods, and measure statistics (mean,
@@ -196,15 +198,13 @@ get_sorted_plot_list_all <- function(plot_list_cnt, plot_list_mes) {
 #'   to be merged with the measure data. Each row should correspond to an
 #'   observation, and columns should include the regression variables of
 #'   interest. If NULL, no regression data is merged.
-#' @param pth_data Path to the CSV data file containing the raw data set. The
-#'   file is read into R and processed according to the specified parameters.
 #' @param vars_to_use A vector of variable names from the raw data set that
 #'   should be retained for analysis and plotting. This allows for the inclusion
 #'   of specific variables of interest beyond the generated measure variables.
 #' @param names_measures A named list or vector specifying the column names to
-#'   be created in the dataset for each type of measure (mean, lower confidence
+#'   be created in the data set for each type of measure (mean, lower confidence
 #'   band, upper confidence band). These names are dynamically used to assign
-#'   measure values to the appropriate columns in the processed dataset.
+#'   measure values to the appropriate columns in the processed data set.
 #' @param settings A list of settings for data processing, including:
 #'   \itemize{
 #'     \item{\code{scale_measure}:}{ A numeric value used to scale the measure
@@ -221,14 +221,14 @@ get_sorted_plot_list_all <- function(plot_list_cnt, plot_list_mes) {
 #'   variables specified by `vars_to_use`, new measure variables as named by
 #'   `names_measures`, and optionally merged regression data. Variables not
 #'   specified for retention or addition are omitted from the returned tibble.
-data_plot_processing <- function(out_measures,
+data_plot_processing <- function(pth_data,
+                                 out_measures,
                                  out_regs,
-                                 pth_data,
                                  vars_to_use,
                                  names_measures,
                                  settings) {
   data_raw <- read.csv(file.path(pth_data)) %>% tibble::as_tibble()
-  data_raw$est_mean <- data_raw$est_mean * 100
+  # data_raw$est_mean <- data_raw$est_mean * 100
 
   scale_values <- get_default_scale_measre(settings$scale_measure)
   reg_name_tkn <- settings$x_var
@@ -340,7 +340,7 @@ get_data_plot_long <- function(data_raw, var_to_use, nms_to, vals_to) {
 #' @param data_estim An array of estimated measure-coefficient values,
 #' structured similarly to the `out_measures` parameter in
 #'   `data_plot_processing`. This array is used to add new variables to the
-#'   dataset based on the estimated measures.
+#'   data set based on the estimated measures.
 #' @param pth_data_gmm The path to the data file, which is used by the
 #'   `data_plot_processing` function to read and preprocess the data.
 #' @param data_regs_grid an array of dimension `(NN x num_par) x TT x KK` where
@@ -350,7 +350,7 @@ get_data_plot_long <- function(data_raw, var_to_use, nms_to, vals_to) {
 #'   included in the long format data. These are the variables that will be
 #'   reshaped and used for plotting.
 #' @param names_to_use A named list or vector specifying the column names to be
-#'   created in the dataset for each type of measure, used in the
+#'   created in the data set for each type of measure, used in the
 #'   `data_plot_processing` function.
 #' @param settings A list containing settings for data processing. This should
 #'   include at least `scale_transform`, a numeric value used to scale the
@@ -366,9 +366,9 @@ get_data_measure_plots <- function(data_estim,
                                    vars_to_use,
                                    names_to_use,
                                    settings) {
-  data_processed <- data_plot_processing(data_estim,
+  data_processed <- data_plot_processing(pth_data_gmm,
+                                         data_estim,
                                          output_regs_grid,
-                                         pth_data_gmm,
                                          vars_to_use,
                                          names_to_use,
                                          settings)
@@ -440,10 +440,18 @@ create_single_country_plot <- function(data_long,
     }
   }
   out_plot <- ggplot2::ggplot(data_long2, ggplot2::aes_string(x = x_reg)) +
-    ggplot2::geom_point(ggplot2::aes_string(y = measure_info$vals,
-                                            color = measure_info$types)) +
     ggplot2::geom_line(ggplot2::aes_string(y = estim_infos$mean),
                                            color = measure_color)
+  if (!is.null(plot_info$ADD_PB)) {
+    out_plot <- out_plot +
+      ggplot2::geom_point(ggplot2::aes_string(y = estim_infos$mean),
+                                              color = measure_color)
+  }
+  if (!is.null(measure_info)) {
+    out_plot <- out_plot +
+      ggplot2::geom_point(ggplot2::aes_string(y = measure_info$vals,
+                                             color = measure_info$types))
+  }
   if (isTRUE(plot_info$ADD_KI)) {
     out_plot <- out_plot +
       ggplot2::geom_ribbon(ggplot2::aes_string(ymax = estim_infos$ki_upp,
@@ -451,8 +459,9 @@ create_single_country_plot <- function(data_long,
                            fill = ribbon_color,
                            alpha = 0.5)
   }
+  if (is.null(plot_info$title)) plot_info$title <- name_country
   out_plot <- out_plot +
-    ggplot2::labs(title = name_country,
+    ggplot2::labs(title = plot_info$title,
                   y = plot_info$y_lab) +
     ggthemes::theme_tufte() +
     ggplot2::theme(legend.position = "none") +
@@ -563,13 +572,20 @@ create_me_plots_individual <- function(
 #' time without including confidence intervals. The `RENDER_PLOT` flag controls
 #' whether plots are rendered.
 #'
-#' @param out_measures_info_KK A list where each element is a three-dimensional
-#'   array of measure values for a specific regressor. The dimensions should
-#'   correspond to different entities (e.g., countries), time periods, and
-#'   measure statistics (mean values only).
+#' @param out_info_KK A list where each element is a three-dimensional array of
+#'   measure values for a specific regressor. The dimensions should correspond
+#'   to different entities (e.g., countries), time periods, and measure
+#'   statistics (mean values only).
+#' @param out_info_TT An optional array of dimension `(NN x TT) x KK` with time
+#'   related measure infomration to add to the grid-plots
+#' @param grid_x_axis_KK a four-dimensional array of dimension
+#'   \code{NN x TT x GG x KK} where the third dimension gives the number of grid
+#'   points and the 4'th dimension the number of regressors \code{KK}
+#' @param grid_x_axis_TT a 2-dimensional array of dimension
+#'   \code{(NNx3) x TT} with appropriate grid-points per parameter
 #' @param reg_names A vector of character strings specifying the names of the
 #'   regressors for which plots will be generated. These names must correspond
-#'   to keys in `out_measures_info_KK`.
+#'   to keys in `out_info_KK`.
 #' @param RENDER_PLOT Logical; if `TRUE` (default), plots are rendered and
 #'   displayed. If FALSE, plots are not rendered, allowing for programmatic
 #'   control over plot display or further customization.
@@ -592,8 +608,10 @@ create_me_plots_individual <- function(
 #'   plots for rendering.
 #' @export
 create_me_plots_time_series <- function(
-    out_measures_info_KK,
-    grid_x_axis,
+    out_info_KK,
+    out_info_TT = NULL,
+    grid_x_axis_KK,
+    grid_x_axis_TT,
     reg_names,
     RENDER_PLOT = TRUE,
     NO_TITLE = FALSE,
@@ -602,7 +620,7 @@ create_me_plots_time_series <- function(
              plot_type = "base",
              plot_grid = c(3, 5))) {
   num_regs_me  <- length(reg_names)
-  info_on_plot <- dimnames(out_measures_info_KK[[reg_names[1]]])
+  info_on_plot <- dimnames(out_info_KK[[reg_names[1]]])
 
   NN <- length(info_on_plot[[1]])
   TT <- length(info_on_plot[[2]])
@@ -630,12 +648,16 @@ create_me_plots_time_series <- function(
   }
   for (nn in seq_len(NN)) {
     for (kk in seq_len(num_regs_me)) {
-      grid_x_axis_tkn <- get_grid_subset_x(grid_x_axis, reg_names, nn, kk)
-      base_ggplot <- NULL
-      vals_to_plot <- out_measures_info_KK[[reg_names[kk]]][nn, , , ]
+      base_ggplot   <- NULL
+      vals_to_plot  <- out_info_KK[[reg_names[kk]]][nn, , , ]
+      x_to_plot_tkn <- get_grid_subset_x(grid_x_axis_KK, reg_names, nn, kk)
+      pnt_add_tkn   <- c(y = out_info_TT[nn, 1], x = grid_x_axis_TT[nn, 1, kk])
+
       min_max <- get_min_max_y_scale(vals_to_plot[, , 1])
+
       base_ggplot <- get_single_plot_me(vals_to_plot[1, , ],
-                                        x_to_plot = grid_x_axis_tkn[1, ],
+                                        x_to_plot = x_to_plot_tkn[1, ],
+                                        pnt_add = pnt_add_tkn,
                                         settings = list(
                                           WITH_CI = FALSE,
                                           type = "plot",
@@ -649,8 +671,11 @@ create_me_plots_time_series <- function(
       for (tt in 2:TT) {
         # Compute color based on time point
         line_color_tkn <- color_palette(tt + col_off)
+        pnt_add_tkn <- c(y = out_info_TT[nn, tt],
+                         x = grid_x_axis_TT[nn, tt, kk])
         base_ggplot <- get_single_plot_me(vals_to_plot[tt, , ],
-                                          x_to_plot = grid_x_axis_tkn[tt, ],
+                                          x_to_plot = x_to_plot_tkn[tt, ],
+                                          pnt_add = pnt_add_tkn,
                                           settings = list(
                                             WITH_CI = FALSE,
                                             type = "line",
@@ -700,6 +725,9 @@ get_grid_subset_x <- function(grid, reg_names, nn, kk) {
 #' @param vals_to_plot A matrix where columns represent the measure values to be
 #'   plotted, and, if `WITH_CI` is TRUE, the second and third columns must
 #'   contain the upper and lower confidence intervals, respectively.
+#' @param x_to_plot values for the x-axis; if `NULL` a default index sequence is
+#'   is used
+#' @param pnt_add a vector of x/y coordinates of the point to add
 #' @param settings A list of settings for the plot, which includes:
 #'   \itemize{
 #'     \item{\code{WITH_CI} :}{Logical indicating whether to include confidence
@@ -726,6 +754,7 @@ get_grid_subset_x <- function(grid, reg_names, nn, kk) {
 get_single_plot_me <- function(
   vals_to_plot,
   x_to_plot = NULL,
+  pnt_add = NULL,
   settings =
     list(WITH_CI = FALSE,
          y_lab = "",
@@ -765,10 +794,24 @@ get_single_plot_me <- function(
                       y = settings$y_lab,
                       x = settings$x_lab) +
         ggplot2::theme_minimal()
+      if (!is.null(pnt_add)) {
+        pnt_add <- adjust_pnt(pnt_add, plot_data)
+        me_plot <- me_plot +
+          ggplot2::geom_point(ggplot2::aes(x = pnt_add[["x"]],
+                                           y = pnt_add[["y"]]),
+                              color = "red")
+      }
     } else if (type == "line") {
       stopifnot("Arg. 'base_plot' must be a ggplot object." = !is.null(base_p))
       me_plot <- base_p + ggplot2::geom_line(ggplot2::aes(y =  plot_data$y),
                                              color = line_col)
+      if (!is.null(pnt_add)) {
+        pnt_add <- adjust_pnt(pnt_add, plot_data)
+        me_plot <- me_plot +
+          ggplot2::geom_point(ggplot2::aes(x = pnt_add[["x"]],
+                                           y = pnt_add[["y"]]),
+                              color = "red")
+      }
     }
     # Conditionally add CIs with ribbon if WITH_CI is TRUE
     if (settings$WITH_CI) {
