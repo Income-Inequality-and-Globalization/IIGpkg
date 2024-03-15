@@ -1,6 +1,6 @@
 #' Generate Regressor Combinations
 #'
-#' This function generates all possible combinations of given regressors and 
+#' This function generates all possible combinations of given regressors and
 #' creates standardized matrices for each combination.
 #'
 #' @param data_GMM A data frame containing the regressor data.
@@ -8,7 +8,7 @@
 #' @param TT Total number of years.
 #' @param countries Vector of unique countries.
 #' @param years Vector of unique years.
-#' 
+#'
 #' @return A list containing two elements: wRegCombsList and nameRegList.
 #' @export
 generate_regressor_combinations <- function(data_GMM,
