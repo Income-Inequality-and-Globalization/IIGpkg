@@ -20,33 +20,97 @@ generate_regressor_combinations <- function(data_GMM,
   reg_combs <- lapply(1:lregs, \(x) combn(regs, x, simplify = FALSE))
   ncombs <- sum(sapply(reg_combs, length))
 
+
   wRegCombsList <- vector("list", ncombs)
-  nameRegList <- vector("list", ncombs)
+  wRegRawList   <- vector("list", ncombs)
+  nameRegList   <- vector("list", ncombs)
+  val_trn    <- vector("list", ncombs)
+  val_trn    <- list(centering_vals = val_trn, standardz_vals = val_trn)
+
+  nms_cnt              <- get_name_reg_combs(reg_combs)
+  names(wRegCombsList) <- nms_cnt
+  names(wRegRawList)   <- nms_cnt
+  names(nameRegList)   <- nms_cnt
+  names(val_trn[[1]])  <- nms_cnt
+  names(val_trn[[2]])  <- nms_cnt
 
   ii <- 1
   for (i in 1:length(reg_combs)) {
     for (j in 1:length(reg_combs[[i]])) {
       selected_regressors <- reg_combs[[i]][[j]]
-      wReg <- matrix(t(data_GMM %>% 
+      wReg <- matrix(t(data_GMM %>%
                          dplyr::select(tidyselect::all_of(selected_regressors))),
                      ncol = TT)
+      wRegRawList[[ii]] <- wReg
+      wRegRawList[[ii]][is.na(wRegRawList[[ii]])] <- 0
+
+      val_trn$centering_vals[[ii]] <- apply(wReg, 1,firstObs_center_values)
+      val_trn$standardz_vals[[ii]] <- apply(wReg, 1, standardized_values)
       wReg_centered <- t(apply(wReg, 1, firstObs_center))
       wReg <- t(apply(wReg_centered, 1, standardize))
       wReg[is.na(wReg)] <- 0
       rownames(wReg) <- rep(countries, each = length(selected_regressors))
       colnames(wReg) <- years
-      nameRegList[[ii]] <- substr(selected_regressors, 1, 7)
+      rownames(wRegRawList[[ii]]) <- rownames(wReg)
+      colnames(wRegRawList[[ii]]) <- colnames(wReg)
+
+      nameRegList[[ii]]   <- substr(selected_regressors, 1, 7)
       wRegCombsList[[ii]] <- wReg
+
       ii <- ii + 1
     }
   }
-
-  return(list(wRegCombsList = wRegCombsList, nameRegList = nameRegList))
+  return(list(wRegCombsList = wRegCombsList,
+              wRegRawList = wRegRawList,
+              nameRegList = nameRegList,
+              values_transformation = val_trn))
+}
+#' Generate Names for Regressor Combinations
+#'
+#' This function constructs meaningful names for each combination of regressors
+#' provided. It assigns names based on the combination's complexity (e.g.,
+#' univariate, bivariate) and concatenates individual regressor names within
+#' each combination for easy identification.
+#'
+#' The function is designed to support the identification and tracking of
+#' regressor combinations throughout the data processing and analysis pipeline,
+#' particularly in the context of generating and analyzing multiple regression
+#' models with varying sets of predictors.
+#'
+#' @param reg_combs A nested list of regressor combinations, where each sublist
+#'   corresponds to a specific combination size (e.g., all univariate
+#'   combinations, all bivariate combinations, etc.), and contains vectors of
+#'   regressor names that form each specific combination.
+#'
+#' @return A list with two elements:
+#'   - `top_lvl_nms`: A vector of names indicating the level of combination
+#'   (univariate, bivariate, etc.) corresponding to the input list's structure.
+#'   - `sub_lvl_nms`: A nested list where each sublist contains names for each
+#'     combination within a level, constructed by concatenating the names of
+#'     regressors in the combination, separated by underscores.
+get_name_reg_combs <- function(reg_combs) {
+  num_top_lvl_combs <- length(reg_combs)
+  nms_top_lvl_combs <- c("univariate_comb",
+                         "bivariate_comb",
+                         "trivariate_comb",
+                         "quadrivariate_comb")[seq_len(num_top_lvl_combs)]
+  nms_sub_lvl_combs <- vector("list", num_top_lvl_combs)
+  nms_out <- vector("list", sum(sapply(reg_combs, length)))
+  ii <- 1
+  for (i in seq_len(num_top_lvl_combs)) {
+    num_sub_lvl <- length(reg_combs[[i]])
+    for (j in seq_len(num_sub_lvl)) {
+      nms_sub_lvl_combs <- paste0(reg_combs[[i]][[j]], collapse = "_")
+      nms_out[[ii]] <- paste0(nms_top_lvl_combs[[i]], "_", nms_sub_lvl_combs)
+      ii <- ii + 1
+    }
+  }
+  return(unlist(nms_out))
 }
 
 #' Adjust Covariance Matrix with Logarithmic Transformation
 #'
-#' This function adjusts a 3D array of covariance matrices using logarithmic 
+#' This function adjusts a 3D array of covariance matrices using logarithmic
 #' transformations of the observation data. It symmetrizes the adjusted
 #' matrices.
 #'
@@ -70,7 +134,7 @@ log_adj_VCOV <- function(VCOV_array, npara, N, TT, yObs_log) {
 
 #' Standardize Covariance Matrices
 #'
-#' This function standardizes a 3D array of covariance matrices using the 
+#' This function standardizes a 3D array of covariance matrices using the
 #' standard deviations of the logarithmically transformed observation data.
 #'
 #' @param VCOV_array A 3D array of covariance matrices to be standardized.
@@ -123,7 +187,7 @@ process_observation_data <- function(data_GMM, npara, TT, countries, years) {
                                       firstObs_center_values))
   yObs_log_centered_standardized <- t(apply(yObs_log_centered, 1,
                                             standardize))
-  yObs_standardized_values <- t(apply(yObs_log_centered, 1, 
+  yObs_standardized_values <- t(apply(yObs_log_centered, 1,
                                       standardized_values))
 
   # Standard deviation
@@ -133,12 +197,12 @@ process_observation_data <- function(data_GMM, npara, TT, countries, years) {
     list(
       data = list(
         yObs_unadj = yObs_unadj,
-        yObs_log = yObs_log, 
-        yObs_log_centered = yObs_log_centered, 
+        yObs_log = yObs_log,
+        yObs_log_centered = yObs_log_centered,
         yObs_log_centered_standardized = yObs_log_centered_standardized),
       data_values = list(
         yObs_log_centered_values = yObs_log_centered_values,
-        yObs_standardized_values = yObs_standardized_values, 
+        yObs_standardized_values = yObs_standardized_values,
         sd_yObs_log = sd_yObs_log)
       )
   )
@@ -146,8 +210,8 @@ process_observation_data <- function(data_GMM, npara, TT, countries, years) {
 
 #' Process Covariance Array
 #'
-#' This function processes a 3D array representing country-period specific 
-#' covariance matrices. It symmetrizes the matrices and optionally converts 
+#' This function processes a 3D array representing country-period specific
+#' covariance matrices. It symmetrizes the matrices and optionally converts
 #' them into diagonal matrices.
 #'
 #' @param VCOV_array Initial 3D array of covariance matrices.
@@ -170,7 +234,7 @@ process_covariance_array <- function(VCOV_array,
                          c(npara, npara, N * TT))
   # Convert to diagonal matrices if Diag_VCOV is TRUE
   if (Diag_VCOV) {
-    VCOV_array_pd <- array(apply(VCOV_array_pd, 3, 
+    VCOV_array_pd <- array(apply(VCOV_array_pd, 3,
                                  function(x) {
                                    diag(diag(x))
                                   }
@@ -182,12 +246,12 @@ process_covariance_array <- function(VCOV_array,
 
 #' Group Data Attributes
 #'
-#' This function calculates unique years and countries from a dataset and 
+#' This function calculates unique years and countries from a dataset and
 #' creates a matrix of country-parameter combinations.
 #'
 #' @param data_gmm A data frame containing at least the columns 'year' and
 #'   'country'.
-#' @return A list containing years, total number of years (TT), countries, 
+#' @return A list containing years, total number of years (TT), countries,
 #'         total number of countries (N), and a name matrix (nameMat).
 #' @export
 get_data_meta_attributes <- function(data_gmm) {
@@ -238,21 +302,21 @@ data_raw_remove_year_and_save <- function(
                                                     "../raw-sources-others",
                                                     "dataset_add_regs.csv")))
   data_full <- dplyr::full_join(results_GMM, results_gini)
-  data_GMM  <- results_GMM %>% 
-                  dplyr::arrange(year) %>% 
+  data_GMM  <- results_GMM %>%
+                  dplyr::arrange(year) %>%
                   dplyr::filter(year != year_to_remove)
-  data_full  <- data_full %>% 
-                  dplyr::arrange(country, year) %>% 
+  data_full  <- data_full %>%
+                  dplyr::arrange(country, year) %>%
                   dplyr::filter(year != year_to_remove) %>%
                   dplyr::mutate(gini_from_gmm = compute_gini_sm(a, q) * 100)
   saveRDS(data_GMM, file = file.path(pth_base_data, save_file_01))
-  write.csv(data_full, 
+  write.csv(data_full,
             file = file.path(pth_base_data, save_file_02),
             row.names = FALSE)
 }
 #' Center values by the first non-NA observation
 #'
-#' This function centers the values in a vector by subtracting the first non-NA 
+#' This function centers the values in a vector by subtracting the first non-NA
 #' observation from all elements.
 #' @param x A numeric vector.
 #' @return A numeric vector with values centered around the first non-NA
@@ -277,7 +341,7 @@ firstObs_center_values <- function(x){
 
 #' Standardize a numeric vector
 #'
-#' This function standardizes a numeric vector by dividing each element by the 
+#' This function standardizes a numeric vector by dividing each element by the
 #' standard deviation of the vector, ignoring NA values.
 #' @param x A numeric vector.
 #' @return A numeric vector with each element standardized.
@@ -289,7 +353,7 @@ standardize <- function(x){
 
 #' Compute the standard deviation of a numeric vector
 #'
-#' This function calculates the standard deviation of a numeric vector, 
+#' This function calculates the standard deviation of a numeric vector,
 #' excluding NA values.
 #' @param x A numeric vector.
 #' @return The standard deviation of the vector, excluding NA values.
