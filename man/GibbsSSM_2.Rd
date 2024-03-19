@@ -103,7 +103,7 @@ GibbsSSM_2(
 \item{covScale}{Damit kann man die Kovarianzen aus Vhat skalieren. covScale = 0.5 heißt, dass die die Korrelationen(!) halbiert werden. War mal ein Experiment. covscale muss letztlich = 1 sein.}
 
 \item{VhatDiagScale}{(wahrscheinlich irrelevant) `= TRUE`, wenn fuer jedes
-Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden 
+Diagonalelement der GMM- varianz ein Skalierungsfaktor geschaetzt werden
 soll. `Diag_VCOV = TRUE` muss in der top-level Function gesetzt werden,
 damit die Nebendiagonalelemente der GMM-Varianz = 0 gesetzt werden. Wenn
 `VhatDiagScale = TRUE` ist muss auch `sampleV = TRUE` sein.}
