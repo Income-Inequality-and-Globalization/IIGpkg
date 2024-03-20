@@ -5,8 +5,10 @@
 \title{Generate Time Series Plots for Multiple Regressors}
 \usage{
 create_me_plots_time_series(
-  out_measures_info_KK,
-  grid_x_axis,
+  out_info_KK,
+  out_info_TT = NULL,
+  grid_x_axis_KK,
+  grid_x_axis_TT,
   reg_names,
   RENDER_PLOT = TRUE,
   NO_TITLE = FALSE,
@@ -14,14 +16,24 @@ create_me_plots_time_series(
 )
 }
 \arguments{
-\item{out_measures_info_KK}{A list where each element is a three-dimensional
-array of measure values for a specific regressor. The dimensions should
-correspond to different entities (e.g., countries), time periods, and
-measure statistics (mean values only).}
+\item{out_info_KK}{A list where each element is a three-dimensional array of
+measure values for a specific regressor. The dimensions should correspond
+to different entities (e.g., countries), time periods, and measure
+statistics (mean values only).}
+
+\item{out_info_TT}{An optional array of dimension `(NN x TT) x KK` with time
+related measure infomration to add to the grid-plots}
+
+\item{grid_x_axis_KK}{a four-dimensional array of dimension
+\code{NN x TT x GG x KK} where the third dimension gives the number of grid
+points and the 4'th dimension the number of regressors \code{KK}}
+
+\item{grid_x_axis_TT}{a 2-dimensional array of dimension
+\code{(NNx3) x TT} with appropriate grid-points per parameter}
 
 \item{reg_names}{A vector of character strings specifying the names of the
 regressors for which plots will be generated. These names must correspond
-to keys in `out_measures_info_KK`.}
+to keys in `out_info_KK`.}
 
 \item{RENDER_PLOT}{Logical; if `TRUE` (default), plots are rendered and
 displayed. If FALSE, plots are not rendered, allowing for programmatic
