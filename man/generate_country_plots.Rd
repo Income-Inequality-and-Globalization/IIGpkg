@@ -9,8 +9,10 @@ generate_country_plots(
   output_measure,
   output_regs_grid = NULL,
   vars_to_use,
+  regs_to_use,
   settings,
   name_measure = NULL,
+  grid_dim = NULL,
   PLOT = TRUE
 )
 }
@@ -26,6 +28,9 @@ Default is NULL, indicating no regression grid is used.}
 
 \item{vars_to_use}{Vector of variable names to add as `geom_points` for
 comparison with a-posteriori estimation.}
+
+\item{regs_to_use}{a character vector of regressor names to use as x-axis and
+related plot-labels}
 
 \item{settings}{List of settings for data processing, including:
 \itemize{
