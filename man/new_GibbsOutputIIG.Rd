@@ -11,7 +11,7 @@ new_GibbsOutputIIG(x = vector("list"))
 [IIGpkg::Gibbs2_SM_SA_sampler] and [IIGpkg::GibbsSSM_2]}
 }
 \value{
-an object of type `GibbsOutputIIG` which is a named list; see the 
+an object of type `GibbsOutputIIG` which is a named list; see the
   return value of [IIGpkg::GibbsSSM_2] for details.
 }
 \description{
