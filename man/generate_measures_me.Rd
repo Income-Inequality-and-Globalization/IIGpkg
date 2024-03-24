@@ -6,6 +6,7 @@
 \usage{
 generate_measures_me(
   par_post_estim,
+  par_post_estim_fd,
   post_me,
   regs_to_use,
   transformation_infos,
