@@ -7,6 +7,7 @@
 get_single_plot_me(
   vals_to_plot,
   x_to_plot = NULL,
+  pnt_add = NULL,
   settings = list(WITH_CI = FALSE, y_lab = "", x_lab = "", title = NULL, line_col =
     "black", min_max = NULL, type = "", ggplot = FALSE, base_ggplot = NULL)
 )
@@ -15,6 +16,11 @@ get_single_plot_me(
 \item{vals_to_plot}{A matrix where columns represent the measure values to be
 plotted, and, if `WITH_CI` is TRUE, the second and third columns must
 contain the upper and lower confidence intervals, respectively.}
+
+\item{x_to_plot}{values for the x-axis; if `NULL` a default index sequence is
+is used}
+
+\item{pnt_add}{a vector of x/y coordinates of the point to add}
 
 \item{settings}{A list of settings for the plot, which includes:
 \itemize{
