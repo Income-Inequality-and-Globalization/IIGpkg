@@ -11,10 +11,10 @@ get_data_meta_attributes(data_gmm)
 'country'.}
 }
 \value{
-A list containing years, total number of years (TT), countries, 
+A list containing years, total number of years (TT), countries,
         total number of countries (N), and a name matrix (nameMat).
 }
 \description{
-This function calculates unique years and countries from a dataset and 
+This function calculates unique years and countries from a dataset and
 creates a matrix of country-parameter combinations.
 }
