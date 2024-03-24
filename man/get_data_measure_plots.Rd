@@ -17,7 +17,7 @@ get_data_measure_plots(
 \item{data_estim}{An array of estimated measure-coefficient values,
 structured similarly to the `out_measures` parameter in
   `data_plot_processing`. This array is used to add new variables to the
-  dataset based on the estimated measures.}
+  data set based on the estimated measures.}
 
 \item{pth_data_gmm}{The path to the data file, which is used by the
 `data_plot_processing` function to read and preprocess the data.}
@@ -27,7 +27,7 @@ included in the long format data. These are the variables that will be
 reshaped and used for plotting.}
 
 \item{names_to_use}{A named list or vector specifying the column names to be
-created in the dataset for each type of measure, used in the
+created in the data set for each type of measure, used in the
 `data_plot_processing` function.}
 
 \item{settings}{A list containing settings for data processing. This should
