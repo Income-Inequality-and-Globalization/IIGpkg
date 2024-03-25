@@ -22,7 +22,7 @@ process_covariance_array(VCOV_array, npara, N, TT, Diag_VCOV = FALSE)
 A processed 3D array of covariance matrices.
 }
 \description{
-This function processes a 3D array representing country-period specific 
-covariance matrices. It symmetrizes the matrices and optionally converts 
+This function processes a 3D array representing country-period specific
+covariance matrices. It symmetrizes the matrices and optionally converts
 them into diagonal matrices.
 }
