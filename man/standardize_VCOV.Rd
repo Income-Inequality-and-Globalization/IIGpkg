@@ -21,6 +21,6 @@ standardize_VCOV(VCOV_array, TT, N, sd_vec_y, npara)
 A 3D array of standardized covariance matrices.
 }
 \description{
-This function standardizes a 3D array of covariance matrices using the 
+This function standardizes a 3D array of covariance matrices using the
 standard deviations of the logarithmically transformed observation data.
 }
