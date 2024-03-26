@@ -13,6 +13,6 @@ standardize(x)
 A numeric vector with each element standardized.
 }
 \description{
-This function standardizes a numeric vector by dividing each element by the 
+This function standardizes a numeric vector by dividing each element by the
 standard deviation of the vector, ignoring NA values.
 }
