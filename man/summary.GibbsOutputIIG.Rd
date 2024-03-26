@@ -23,7 +23,7 @@
 * `ci_val`: value of confidence band; default is 1.96 for 95\%}
 }
 \value{
-pure side effect functions but returns invisibly a list of the 
+pure side effect functions but returns invisibly a list of the
   different outputs that are printed to the screen
 }
 \description{
