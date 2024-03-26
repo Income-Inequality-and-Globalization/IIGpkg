@@ -13,6 +13,6 @@ standardized_values(x)
 The standard deviation of the vector, excluding NA values.
 }
 \description{
-This function calculates the standard deviation of a numeric vector, 
+This function calculates the standard deviation of a numeric vector,
 excluding NA values.
 }
