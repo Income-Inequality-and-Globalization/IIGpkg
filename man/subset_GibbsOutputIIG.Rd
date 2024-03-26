@@ -10,7 +10,7 @@ subset_GibbsOutputIIG(x, MM_seq = NULL)
 \item{x}{output object (a named list) as returned via
 [IIGpkg::Gibbs2_SM_SA_sampler] and [IIGpkg::GibbsSSM_2]}
 
-\item{MM_seq}{numeric vector; vector of Monte Carlo indices to keep which 
+\item{MM_seq}{numeric vector; vector of Monte Carlo indices to keep which
 should be in the interval between 1 and the total number of draws (of the
 container objects stored in  `x`)}
 }
@@ -19,7 +19,7 @@ same as `x` but with the Monte Carlo draws taken from the range in
    `MM_seq`
 }
 \description{
-Some of the Gibbs outputs are very large and it is not always necessary to 
+Some of the Gibbs outputs are very large and it is not always necessary to
 use all of the Monte Carlo draws. Hence, by passing a numeric vector sequence
 number `MM_seq` in the range of total Monte Carlo draws, we can subset the
 output for all parameters thus making the object smaller in size and related
