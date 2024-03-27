@@ -28,12 +28,12 @@ VCOV_array_country_pd <- process_covariance_array(VCOV_array_country_2020,
                                                   npara,
                                                   N,
                                                   TT)
-tmplist_dt <- process_observation_data(GMM_by_year, 
+tmplist_dt <- process_observation_data(GMM_by_year,
                                        npara,
                                        TT,
                                        countries,
                                        years)
-# Get various data sets: un-adjusted version, in logs, in logs and centered, 
+# Get various data sets: un-adjusted version, in logs, in logs and centered,
 # and finally in logs, centered and standardized:
 yObs_unadj                     <- tmplist_dt$data$yObs_unadj
 yObs_log                       <- tmplist_dt$data$yObs_log
