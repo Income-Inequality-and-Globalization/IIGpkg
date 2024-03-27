@@ -48,16 +48,24 @@ VCOV_array_country_pd <- VCOV_array_country_pd %>%
   log_adj_VCOV(npara, N, TT, yObs_unadj) %>%
   standardize_VCOV(TT, N, sd_yObs_log, npara)
 
-regs <- c("cpi_change", "unemployment", "gdp_ppp")
+# regs <- c("cpi_change", "unemployment", "gdp_ppp")
+regs <- c("cpi_change", "unemployment", "gdp_ppp_pc")
+# regs <- c("cpi_change", "unemployment", "gdp_ppp_2017_grw")
+# GMM_by_year$gdp_ppp_pc <- GMM_by_year$gdp_ppp / GMM_by_year$population
+# GMM_by_year$gdp_ppp_pc[GMM_by_year$country == "Venezuela"] <- GMM_by_year$gdp_ppp[GMM_by_year$country == "Venezuela"]
 tmplist_rg <- generate_regressor_combinations(GMM_by_year,
                                               regs,
                                               TT,
                                               countries,
-                                              years) 
+                                              years)
 nameRegList   <- tmplist_rg$nameRegList
+wRegRawList   <- tmplist_rg$wRegRawList
 wRegCombsList <- tmplist_rg$wRegCombsList
+# wRegTransform <- tmplist_rg$values_transformation
 
-
+# id_tkn <- 30
+# plot(wRegCombsList[[7]][id_tkn, 1:12], type = "l")
+# lines(testme[id_tkn, 1:12], type = "l", col = "blue")
 
 n_cluster <- 12
 #B_par_values <- c(1, 2, 5, 10)
