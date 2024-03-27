@@ -283,24 +283,41 @@ out <- IIGpkg::Gibbs2_SM_SA_sampler(
       identification = TRUE,
       type = type)
 
-testme <- readRDS("./cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi27_nu7/mu_b0_0_Sigma_b0_100_alpha_b0_5_beta_b0_6_IO5000/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi27_nu7mu_b0_0_Sigma_b0_100_alpha_b0_5_beta_b0_6_IO5000.rds")
-test1 <- identical(out$Gibbs2_SM_SA$f, testme$f)
-test2 <- identical(out$Gibbs2_SM_SA$B, testme$B)
-test3 <- identical(out$Gibbs2_SM_SA$D, testme$D)
-test4 <- identical(out$Gibbs2_SM_SA$A, testme$A)
-test5 <- identical(out$Gibbs2_SM_SA$V, testme$V)
-test6 <- identical(out$Gibbs2_SM_SA$BD0STORE, testme$BD0STORE)
-test7 <- identical(out$Gibbs2_SM_SA$Omega0STORE, testme$Omega0STORE)
-stopifnot(all(c(test1, test2, test3, test4, test5, test6, test7)))
-rm(list = c("test1", "test2", "test3", "test4", "test5", "test6", "test7"))
-# IIGpkg::save_Gibbs_plots(
-#   Gibbs = out$Gibbs2_SM_SA,
-#   burnin = burnin,
-#   path = plotPath,
-#   nameMat = nameMat,
-#   nameReg = nameRegList[[out$Gibbs2_SM_SA$initials$wRegSpec]],
-#   njointfac = out$Gibbs2_SM_SA$initials$njointfac,
-#   type = type,
-#   predictionCI = TRUE,
-#   onlyY = FALSE,
-#   hierachPrior = TRUE)
+
+
+# spec_01 <-  list(
+#    prior_list = list(
+#       hyperpriors = list(
+#         mu_b0 = 0,
+#         Sigma_b0 = 100,
+#         alpha_b0 = 5, # 3, 5,  10, 255
+#         beta_b0 = 6 # 10, 6, 0.1, 256
+#       )
+#     ),
+#     OmegaLoad0Scale = 1000,
+#     OmegaReg0Scale = 1000,
+#     nu0 = 7, # 1000,
+#     Psi0 = diag(3) * 27 # diag(3) * 27, 57, 1000
+# )
+# testme <- readRDS("./cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi27_nu7/mu_b0_0_Sigma_b0_100_alpha_b0_5_beta_b0_6_IO5000/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi27_nu7mu_b0_0_Sigma_b0_100_alpha_b0_5_beta_b0_6_IO5000.rds")
+# test1 <- identical(out$Gibbs2_SM_SA$f, testme$f)
+# test2 <- identical(out$Gibbs2_SM_SA$B, testme$B)
+# test3 <- identical(out$Gibbs2_SM_SA$D, testme$D)
+# test4 <- identical(out$Gibbs2_SM_SA$A, testme$A)
+# test5 <- identical(out$Gibbs2_SM_SA$V, testme$V)
+# test6 <- identical(out$Gibbs2_SM_SA$BD0STORE, testme$BD0STORE)
+# test7 <- identical(out$Gibbs2_SM_SA$Omega0STORE, testme$Omega0STORE)
+# stopifnot(all(c(test1, test2, test3, test4, test5, test6, test7)))
+# rm(list = c("test1", "test2", "test3", "test4", "test5", "test6", "test7"))
+
+IIGpkg::save_Gibbs_plots(
+  Gibbs = out$Gibbs2_SM_SA,
+  burnin = burnin,
+  path = plotPath,
+  nameMat = nameMat,
+  nameReg = nameRegList[[out$Gibbs2_SM_SA$initials$wRegSpec]],
+  njointfac = out$Gibbs2_SM_SA$initials$njointfac,
+  type = type,
+  predictionCI = TRUE,
+  onlyY = FALSE,
+  hierachPrior = TRUE)
