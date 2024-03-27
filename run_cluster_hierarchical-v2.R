@@ -10,7 +10,8 @@ pth_base_data    <- "./data/input/data-sm"
 #                      save_file = "data_coef_covariates_2020.rds",
 #                      year_to_remove = 2021)
 # GMM Ergebnisse (Kovarianzen) nur bis 2020
-pth_data_covr           <- file.path(pth_base_data, "data_coef_covariates_2020.rds")
+# pth_data_covr           <- file.path(pth_base_data, "data_coef_covariates_2020.rds")
+pth_data_covr           <- file.path(pth_base_data, "data_coef_covariates_2020_grw.rds")
 pth_data_vcov           <- file.path(pth_base_data, "VarianceArray_by_country_2020.rds")
 GMM_by_year             <- readRDS(file = pth_data_covr)
 VCOV_array_country_2020 <- readRDS(pth_data_vcov)
