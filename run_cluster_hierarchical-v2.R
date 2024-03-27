@@ -87,10 +87,10 @@ wReg_values <- c(7)
 nu0 <- 7
 nu0_values <- c(7, 60, 500, 1000)
 Psi0 <- 2.5 * diag(3)
-Psi0_values <- c(1, 500, 1000) 
+Psi0_values <- c(1, 500, 1000)
 IncObsNew_values <- c(5000)
 
-# mu_b0_par <- 0 
+# mu_b0_par <- 0
 # Sigma_b0_par <- 1
 
 # beta_b0_par <- 5
@@ -126,10 +126,10 @@ grid <- expand.grid(Omega0LoadScale_values,
 index_grid <- matrix(1:dim(grid)[1], ncol = n_cluster,byrow = TRUE)
 
 
-itermax <- 20
-burnin <- 1
+itermax <- 200000
+burnin  <- 100000
 
-# storePath_vec <- c("D:/Gibbs_SM_SA_Tower/Results/Vhat_countryA_stand/Estimates", "D:/Gibbs_SM_SA_Tower/Results/Vhat_countryAdiag_stand/Estimates") 
+# storePath_vec <- c("D:/Gibbs_SM_SA_Tower/Results/Vhat_countryA_stand/Estimates", "D:/Gibbs_SM_SA_Tower/Results/Vhat_countryAdiag_stand/Estimates")
 # plotPath_vec <- c("D:/Gibbs_SM_SA_Tower/Results/Vhat_countryA_stand/Plots", "D:/Gibbs_SM_SA_Tower/Results/Vhat_countryAdiag_stand/Plots")
 
 # path <- "D:/Gibbs_SM_SA_Tower/Results/"
@@ -171,7 +171,7 @@ set.seed(123)
 jj <- 12
 # parallel::clusterExport(
 #   cl,
-#   c("yObs_log_centered_standardized", "wRegCombsList", "grid", "jj", "shape0", "rate0", 
+#   c("yObs_log_centered_standardized", "wRegCombsList", "grid", "jj", "shape0", "rate0",
 #     "VCOV_array_country_pd", "VhatDiagScale", "VdiagEst",
 #     "alpha0", "beta0",
 #     "N","TT",
@@ -249,7 +249,7 @@ spec_01 <-  list(
     Psi0 = diag(3) * 27 # diag(3) * 27, 57, 1000
 )
 out <- IIGpkg::Gibbs2_SM_SA_sampler(
-      p_joint = 1, #p_joint,
+      p_joint = 0, #p_joint,
       B_par = 0,
       D_par = 0, #grid[j, 6],
       prior_list = spec_01$prior_list,
@@ -275,7 +275,7 @@ out <- IIGpkg::Gibbs2_SM_SA_sampler(
       beta0 = beta0,
       N = N,
       TT = TT,
-      storePath = ".", #storePath,
+      storePath = storePath, #".", #storePath,
       itermax = itermax,
       scaleA = FALSE,
       diagA = FALSE,
