@@ -41,7 +41,7 @@ yObs_log_centered              <- tmplist_dt$data$yObs_log_centered
 yObs_log_centered_standardized <- tmplist_dt$data$yObs_log_centered_standardized
 # Get the values used for above transformations
 yObs_log_centered_values <- tmplist_dt$data_values$yObs_log_centered_values
-yObs_standardization     <- tmplist_dt$data_values$yObs_standardized_values 
+yObs_standardization     <- tmplist_dt$data_values$yObs_standardized_values
 sd_yObs_log              <- tmplist_dt$data_values$sd_yObs_log
 # Adjust the measurement VCOV matrix (`A`) to this log- and other transformation
 VCOV_array_country_pd <- VCOV_array_country_pd %>%
