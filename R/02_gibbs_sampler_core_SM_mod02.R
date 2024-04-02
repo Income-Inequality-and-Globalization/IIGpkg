@@ -311,24 +311,24 @@ GibbsSSM_2 <- function(itermax = 15000,
     DiSTORE          <- B_post_all$Dregs_i # if (sampleH)
     BSTORE[, , iter] <- B_post_all$Bfacs
     B   <- B_post_all$Bfacs
-    B_i <- B_post_all$Bfacs_i 
+    B_i <- B_post_all$Bfacs_i
     if (nreg != 0) D <- DSTORE[, , iter]
     #### GIBBS Part : Sampling of B0, D0, and Omega0
     if (sampleH) {
-      BD_0 <- mu_sampler(NN = NN, npara = num_y, nreg = nreg, 
+      BD_0 <- mu_sampler(NN = NN, npara = num_y, nreg = nreg,
                          njointfac = num_fac_jnt,
-                         B_i = B_i, 
+                         B_i = B_i,
                          D_i = DiSTORE,
-                         invOmega0 = invOmega0, mu_b0 = mu_b0, Sigma_b0 = Sigma_b0, 
+                         invOmega0 = invOmega0, mu_b0 = mu_b0, Sigma_b0 = Sigma_b0,
                          selectR = selectR, type = type)
       B0 <- BD_0$B0
       D0 <- BD_0$D0
       BD0STORE[, iter] <- selectR %*% c(B0[,,1], D0[,,1])
 
-      Omega0 <- omega_sampler(NN = NN, 
+      Omega0 <- omega_sampler(NN = NN,
                               B_i = B_i, D_i = DiSTORE,
-                              B0 = B0, D0 = D0, 
-                              alpha_b0 = alpha_b0, beta_b0 = beta_b0, 
+                              B0 = B0, D0 = D0,
+                              alpha_b0 = alpha_b0, beta_b0 = beta_b0,
                               selectR = selectR)
       Omega0STORE[, iter] <- diag(Omega0)
       invOmega0 <- solve(Omega0)
