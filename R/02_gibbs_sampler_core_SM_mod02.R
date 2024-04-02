@@ -297,7 +297,7 @@ GibbsSSM_2 <- function(itermax = 15000,
                                     Omega0 = Omega0, B0 = B0, D0 = D0,
                                     id_f, selectR, lower, upper,
                                     NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
-                                    type, 
+                                    type,
                                     B_trues = all_true_vals$B_means,
                                     D_trues = all_true_vals$D_means)
                                 # if (sampleH),)
