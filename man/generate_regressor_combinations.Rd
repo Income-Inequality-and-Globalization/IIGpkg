@@ -21,6 +21,6 @@ generate_regressor_combinations(data_GMM, regs, TT, countries, years)
 A list containing two elements: wRegCombsList and nameRegList.
 }
 \description{
-This function generates all possible combinations of given regressors and 
+This function generates all possible combinations of given regressors and
 creates standardized matrices for each combination.
 }
