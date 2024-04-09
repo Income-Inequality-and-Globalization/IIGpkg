@@ -21,6 +21,12 @@ test_dat <- readRDS(file.path(pth_dout, "output_gibbs_small.rds"))
 # test_out <- readRDS("./data/output/empirical/Estimates/cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi1000_nu1000/mu_b0_0_Sigma_b0_100_alpha_b0_3_beta_b0_10_IO5000/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi1000_nu1000mu_b0_0_Sigma_b0_100_alpha_b0_3_beta_b0_10_IO5000.rds")
 # test_out <- readRDS("./data/output/empirical/Estimates/cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi1000_nu1000/mu_b0_0_Sigma_b0_100_alpha_b0_10_beta_b0_0.1_IO5000/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi1000_nu1000mu_b0_0_Sigma_b0_100_alpha_b0_10_beta_b0_0.1_IO5000.rds")
 
+# 27-7 type models in three versions: 5/6, 10/3 and 10/0.1
+# test_out <- readRDS("./data/output/empirical/Estimates/cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi27_nu7/mu_b0_0_Sigma_b0_100_alpha_b0_255_beta_b0_256_IO5000/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi27_nu7mu_b0_0_Sigma_b0_100_alpha_b0_255_beta_b0_256_IO5000.rds")
+# test_out <- readRDS("./data/output/empirical/Estimates/cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi27_nu7/mu_b0_0_Sigma_b0_100_alpha_b0_5_beta_b0_6_IO5000/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi27_nu7mu_b0_0_Sigma_b0_100_alpha_b0_5_beta_b0_6_IO5000.rds")
+# test_out <- readRDS("./data/output/empirical/Estimates/cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi27_nu7/mu_b0_0_Sigma_b0_100_alpha_b0_3_beta_b0_10_IO5000/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi27_nu7mu_b0_0_Sigma_b0_100_alpha_b0_3_beta_b0_10_IO5000.rds")
+# test_out <- readRDS("./data/output/empirical/Estimates/cs1_pj1_Reg7_B0_Om1000_D0_OmD1000_A1_Psi27_nu7/mu_b0_0_Sigma_b0_100_alpha_b0_10_beta_b0_0.1_IO5000_backup/cs1_pj1_B0_Om_D0_OmD1000_A1_Psi27_nu7mu_b0_0_Sigma_b0_100_alpha_b0_10_beta_b0_0.1_IO5000.rds")
+
 test_out <- subset_GibbsOutputIIG(test_out, 100000:200000)
 test_out <- compute_thin_mcmc(test_out, 10)
 y_standardization  <- test_dat$yObs_standardization
