@@ -253,7 +253,7 @@ out <- IIGpkg::Gibbs2_SM_SA_sampler(
       B_par = 0,
       D_par = 0, #grid[j, 6],
       prior_list = spec_01$prior_list,
-      nreg = dim(wRegCombsList[[grid[jj, 5]]])[1]/N,
+      nreg = 0, #dim(wRegCombsList[[grid[jj, 5]]])[1]/N,
       OmegaLoad0Scale = spec_01$OmegaLoad0Scale, #grid[jj, 1],
       OmegaReg0Scale = spec_01$OmegaReg0Scale, #grid[jj, 2],
       countryA = FALSE,
