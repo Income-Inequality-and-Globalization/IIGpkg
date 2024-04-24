@@ -15,6 +15,7 @@
 ^\.nojekyll$
 ^include/
 ^docs/
+^data/
 ^.quarto/
 ^figures/
 ^tmp-dir/
