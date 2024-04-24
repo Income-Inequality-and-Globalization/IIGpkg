@@ -147,7 +147,7 @@ Gibbs2_SM_SA_sampler <- function(p_joint,
     prior_list$hyperpriors$alpha_b0 <- rep(prior_list$hyperpriors$alpha_b0, ncoef)
     prior_list$hyperpriors$beta_b0  <- rep(prior_list$hyperpriors$beta_b0, ncoef)
   }
-  
+
   identmax <- 1000
   itermax <- itermax
   storePath <- storePath

@@ -463,7 +463,11 @@ plot_Gibbs_seq <- function(Gibbs,
       } else {
         nameMatReg <- matrix(rep(nameMat, each = nreg), ncol = 2)
       }
-      nameMatReg_ext <- cbind(nameMatReg, nameReg)
+      para_names <- nameMat[1:npara, 2]
+      nameMatReg_adj <- cbind(nameMatReg[, 1], rep(para_names, N))
+      nameMatReg_ext <- cbind(nameMatReg_adj, rep(nameReg, N))
+      #nameMatReg_ext <- cbind(nameMatReg, nameReg)
+
 
       # for(i in 1:(N * (npara + npara * p_joint))){
       j <- 1
