@@ -11,11 +11,9 @@ sumffkronV(availableObs, fPost, w_regs, Viarray)
 
 \item{fPost}{backward sampled states (FFBS output)}
 
-\item{w_regs}{}
+\item{w_regs}{regressor values, typically a matrix}
 
 \item{Viarray}{VCOV array (npara x npara x TT) of cross-sectional unit i}
-
-\item{id_f}{`integer` (sequence); index for selection of correct factors}
 }
 \value{
 cronecker summation part

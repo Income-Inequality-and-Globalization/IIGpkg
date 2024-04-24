@@ -48,6 +48,8 @@ x-axis values (optional)}
 measure being plotted. This is used for naming within the plots if
 provided. Default is NULL.}
 
+\item{grid_dim}{}
+
 \item{PLOT}{Boolean indicating whether to actually plot the graphs or just
 return the data for plotting. Useful for non-interactive environments.
 Default is `TRUE`.}

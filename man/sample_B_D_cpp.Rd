@@ -37,7 +37,7 @@ sample_B_D_cpp(
 \item{invOmega0_B0_D0}{inverse prior matrix multiplied by B0,D0}
 }
 \value{
-a list of two elements, the first being the posterior mean and the 
+a list of two elements, the first being the posterior mean and the
    second the VCM matrix for sampling
 }
 \description{

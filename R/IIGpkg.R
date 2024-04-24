@@ -19,9 +19,9 @@
 #'  `--set-upstream`).}
 #' }
 #'
+#' @importFrom Rcpp sourceCpp
 #' @useDynLib IIGpkg, .registration = TRUE
 #' @importFrom magrittr `%>%`
 #' @importFrom rlang `.data`
-#' @docType package
 #' @name IIGpkg
 NULL

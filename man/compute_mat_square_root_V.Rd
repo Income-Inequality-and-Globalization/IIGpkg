@@ -11,7 +11,7 @@ compute_mat_square_root_V(v_mat, dim_v, NN_times_TT)
 
 \item{dim_v}{dimension of V-matrix}
 
-\item{NN_times_TT}{number of cross sectional units (`NN`) multiplied by time 
+\item{NN_times_TT}{number of cross sectional units (`NN`) multiplied by time
 periods (`TT`)}
 }
 \value{

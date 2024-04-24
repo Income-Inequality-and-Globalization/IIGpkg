@@ -3,15 +3,15 @@ VER=
 # Sets CCACHE as a plugin variable for the compiler to use
 CCACHE=ccache # CCACHE=g++
 # This compiler is now used in the following languages
-CC=$(CCACHE) gcc$(VER)
-CXX=$(CCACHE) g++$(VER)
-CXX11=$(CCACHE) g++$(VER)
-CXX14=$(CCACHE) g++$(VER)
-CXX17=$(CCACHE) g++$(VER)
-CXX20=$(CCACHE) g++$(VER)
-CXX23=$(CCACHE) g++$(VER)
-FC=$(CCACHE) gfortran$(VER)
-F77=$(CCACHE) gfortran$(VER)
+# CC=$(CCACHE) gcc$(VER)
+# CXX=$(CCACHE) g++$(VER)
+# CXX11=$(CCACHE) g++$(VER)
+# CXX14=$(CCACHE) g++$(VER)
+# CXX17=$(CCACHE) g++$(VER)
+# CXX20=$(CCACHE) g++$(VER)
+# CXX23=$(CCACHE) g++$(VER)
+# FC=$(CCACHE) gfortran$(VER)
+# F77=$(CCACHE) gfortran$(VER)
 
 # Now we set common flags for all above compilers (for ease)
 # I. Debugger friendly flags

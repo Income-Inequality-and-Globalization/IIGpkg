@@ -31,7 +31,7 @@ compute_B_post_full_cpp(
 \item{selectR}{selector matrix for missing y}
 }
 \value{
-a list of two elements, the first being the posterior mean and the 
+a list of two elements, the first being the posterior mean and the
    second the VCM matrix for sampling
 }
 \description{
