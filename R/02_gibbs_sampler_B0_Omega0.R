@@ -14,9 +14,9 @@
 #'
 #' @return a single posterior sample for hyperprior-parameter mu
 #' @export
-mu_sampler <- function(NN, npara, nreg, 
+mu_sampler <- function(NN, npara, nreg,
                        njointfac,
-                       B_i, D_i, 
+                       B_i, D_i,
                        invOmega0, mu_b0, Sigma_b0,
                        selectR, type) {
   BD <- sapply(1:NN, \(x) selectR %*% c(B_i[, , x], D_i[, , x]))
@@ -29,8 +29,14 @@ mu_sampler <- function(NN, npara, nreg,
   mu0_sim <- mvtnorm::rmvnorm(n = 1, mean = mu_b1, sigma = Sigma_b1)
 
   B0vec <- mu0_sim[1:((njointfac + 1) * npara)]
-  D0vec <- mu0_sim[-(1:((njointfac + 1) * npara))]
-  D0 <- replicate(NN, matrix(D0vec, nrow = npara, ncol = nreg))
+
+  if(nreg == 0){
+    D0 <- NULL
+  } else {
+    D0vec <- mu0_sim[-(1:((njointfac + 1) * npara))]
+    D0 <- replicate(NN, matrix(D0vec, nrow = npara, ncol = nreg))
+  }
+
 
   if (njointfac == 1) {
     idioFac <- B0vec[-(1:npara)]
@@ -45,7 +51,7 @@ mu_sampler <- function(NN, npara, nreg,
   } else {
     stop("Not yet implemented.")
   }
-  
+
   B0 <- replicate(NN, B0)
   return(list(B0 = B0, D0 = D0))
 }

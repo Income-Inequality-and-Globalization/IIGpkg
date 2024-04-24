@@ -163,7 +163,8 @@ GibbsSSM_2 <- function(itermax = 15000,
   Omega0STORE <- matrix(0, nrow = sum(selectR), ncol = itermax)
 
   # Availability of regressors
-  if (is.null(DSTORE)) {W_REG_AVAIL <- TRUE} else {W_REG_AVAIL <- TRUE}
+  #if (is.null(DSTORE)) {W_REG_AVAIL <- TRUE} else {W_REG_AVAIL <- TRUE}
+  if (is.null(DSTORE)) {W_REG_AVAIL <- FALSE} else {W_REG_AVAIL <- TRUE}  # PB 19.04.2024
   if (W_REG_AVAIL) {
     id_w_reg <- get_id_wreg(nreg, NN)
     w_reg_info = list(w_reg = wReg,
@@ -173,7 +174,10 @@ GibbsSSM_2 <- function(itermax = 15000,
     D <- matrix(0, nrow = N_num_y)
     wReg <- matrix(0, ncol = TT)
     D0 <- NULL
-    w_reg_info <- NULL
+    # w_reg_info <- NULL
+    w_reg_info <- list(w_reg = wReg,
+                      id_reg = NULL,
+                      nregs = nreg)
   }
 
   ASTORE <- set_A_out(countryA, num_y, itermax, NN)
@@ -228,9 +232,9 @@ GibbsSSM_2 <- function(itermax = 15000,
   # A <- all_true_vals$A_means
   # A <- diag(nrow(A))
   # B <- all_true_vals$B_means
-  if (p_joint == 1) {
+  if (njointfac == 1) {
     B[, 1] <- 1; diag(B[, 2:31]) <- 1;
-  } else if (p_joint == 0) {
+  } else if (njointfac == 0) {
     diag(B) <- 1;
   }
    #B[which(B != 0)] <- 0.5 #
@@ -258,7 +262,7 @@ GibbsSSM_2 <- function(itermax = 15000,
       #                        B = NULL, C = B, D = D, Q = Q,
       #                        initX = initX, initU = initU, initP = initP,
       #                        PDSTORE = FALSE,
-      #                        try_catch_errors = NULL) #,
+      #                        try_catch_errors = NULL)
       # try_catch_errors =
       #   list(storePath_adj = storePath_adj,
       #        store_count = store_count,
@@ -307,8 +311,10 @@ GibbsSSM_2 <- function(itermax = 15000,
     #                             id_f, selectR, lower, upper,
     #                             NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
     #                             type)
-    DSTORE[, , iter] <- B_post_all$Dregs
-    DiSTORE          <- B_post_all$Dregs_i # if (sampleH)
+    if(nreg != 0){
+      DSTORE[, , iter] <- B_post_all$Dregs
+      DiSTORE          <- B_post_all$Dregs_i # if (sampleH)
+    }
     BSTORE[, , iter] <- B_post_all$Bfacs
     B   <- B_post_all$Bfacs
     B_i <- B_post_all$Bfacs_i

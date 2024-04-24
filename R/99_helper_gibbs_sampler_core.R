@@ -1,9 +1,8 @@
 #' Sum in the inverse of the posterior variance for loadings/partial effects
 #'
 #' @param availableObs available observations
-#' @param id_f `integer` (sequence); index for selection of correct factors
 #' @param fPost backward sampled states (FFBS output)
-#' @param w_regs 
+#' @param w_regs regressor values, typically a matrix
 #' @param Viarray VCOV array (npara x npara x TT) of cross-sectional unit i
 #'
 #' @return  cronecker summation part
@@ -72,12 +71,12 @@ mat_sqrt <- function(V) {
   }
 }
 #' Matrix square root of V-matrix
-#' 
+#'
 #' Via helper [mat_sqrt()] using  spectral decomposition
 #'
 #' @param v_mat V-matrix
 #' @param dim_v dimension of V-matrix
-#' @param NN_times_TT number of cross sectional units (`NN`) multiplied by time 
+#' @param NN_times_TT number of cross sectional units (`NN`) multiplied by time
 #'    periods (`TT`)
 #'
 #' @return matrix square root of V
@@ -115,7 +114,7 @@ bdiagByTime <- function(VhatArray_A, npara, N, TT, Nnpara) {
 #' @export
 utuSum <- function(countryA, u, VhatSqrt, TT, NN, TT_num_y, npara) {
   uSplit <- lapply(
-    split(u, matrix(rep(1:NN, each = TT_num_y), ncol = TT, byrow = T)), 
+    split(u, matrix(rep(1:NN, each = TT_num_y), ncol = TT, byrow = T)),
     matrix, ncol = TT)
   sumUtu <- 0
   utildeSplit <- lapply(1:NN, matrix, data = NA, nrow = npara, ncol = TT)
@@ -131,7 +130,7 @@ utuSum <- function(countryA, u, VhatSqrt, TT, NN, TT_num_y, npara) {
     })
     sumUtu_i <- apply(utu, 1, sum, na.rm = TRUE)
     sumUtu <- sumUtu + sumUtu_i
-    
+
     if (isTRUE(countryA)) {
       sumUtu_i_mat <- matrix(sumUtu_i, ncol = npara)
       sumUtu_individ[[i]] <- (t(sumUtu_i_mat) + sumUtu_i_mat) / 2
@@ -248,7 +247,7 @@ set_D_out <- function(N_num_y, NN, nreg, itermax) {
 }
 set_A_out <- function(countryA, num_y, itermax, NN){
   if (countryA) {
-    array(0, dim = c(num_y, num_y, itermax, NN)) 
+    array(0, dim = c(num_y, num_y, itermax, NN))
   } else {
     array(0, dim = c(num_y, num_y, itermax))
   }
@@ -272,7 +271,7 @@ set_V_tmp <- function(V_DIAG_EST, V_HAT_DIAG_SCALE,
     out_list$Vstart <- Vhat[1, 1, 1]
     if (V_HAT_DIAG_SCALE) {
       # speichert Vhat Initialisierung
-      out_list$VhatFix <- Vhat 
+      out_list$VhatFix <- Vhat
       # Sortiert Vhat nach der Zeit: wie Vhat eine num_y x num_y x N*TT Array,
       # aber die Elemente [1:num_y, 1:num_y, 1:N] sind nun die
       # Messfehlervarianzen aller Laender zum ersten Zeitpunkt,
@@ -280,7 +279,7 @@ set_V_tmp <- function(V_DIAG_EST, V_HAT_DIAG_SCALE,
       out_list$VhatArrayBdiagByTimeFix <- bdiagByTime(out_list$VhatFix,
                                                       npara = num_y,
                                                       N = NN, TT = TT,
-                                                      Nnpara = N_num_y) 
+                                                      Nnpara = N_num_y)
       if (!missing(VhatDiagScale_start) && !is.null(VhatDiagScale_start)) {
         out_list$Vhat <- array(
           sapply(1:(NN_TT), \(x) VhatDiagScale_start[, , x] %*% Vhat[, , x]),
@@ -361,7 +360,7 @@ sample_A <- function(countryA, diagA, scaleA,
     }
     return(A_countryArray)
   } else {
-    utu <- utuSum(countryA = countryA, u = u, VhatSqrt = VhatSqrt, NN = NN, TT = TT, TT_num_y = TT_num_y, npara = num_y)  
+    utu <- utuSum(countryA = countryA, u = u, VhatSqrt = VhatSqrt, NN = NN, TT = TT, TT_num_y = TT_num_y, npara = num_y)
     utu <- (utu + t(utu)) / 2
     if (diagA) {
       # uSplitSqrt <- lapply(uSplit,\(x) x^2)
@@ -379,9 +378,9 @@ sample_A <- function(countryA, diagA, scaleA,
     return(A)
   }
 }
-compute_B_post_full <- function(availableObs, 
+compute_B_post_full <- function(availableObs,
                                 invOmega0, B0_D0,
-                                fPost, w_regs, 
+                                fPost, w_regs,
                                 Viarray, yiObs, selectR,
                                 try_catch_errors) {
   B_Omega <- compute_Omega1(invOmega0,
@@ -390,7 +389,7 @@ compute_B_post_full <- function(availableObs,
                             fPost,
                             w_regs,
                             Viarray,
-                            try_catch_errors) 
+                            try_catch_errors)
   B_mean <- compute_B_mean(B_Omega,
                            invOmega0,
                            B0_D0,
@@ -400,7 +399,7 @@ compute_B_post_full <- function(availableObs,
   B_Sigma <- compute_Sigma_adjust(B_Omega)
   return(list(B_mean = B_mean, B_Sigma = B_Sigma))
 }
-compute_B_mean <- function(Omega, 
+compute_B_mean <- function(Omega,
                            invOmega0,
                            B0_D0,
                            availableObs, selectR,
@@ -409,7 +408,7 @@ compute_B_mean <- function(Omega,
   beta1_mid <- sumfyV(availableObs,
                       fPost = fPost,
                       w_regs = w_regs,
-                      yiObs = yiObs, 
+                      yiObs = yiObs,
                       Viarray = Viarray)
   # drop(Omega %*% (selectR %*% (beta1_mid + invOmega_B0_D0)))
   drop(Omega %*% (selectR %*% beta1_mid + invOmega0 %*% selectR %*% B0_D0))
@@ -432,7 +431,7 @@ compute_Omega1 <- function(invOmega0 ,
 
   invOmega1 <- invOmega0 + selectR %*% invOmega1_part2  %*% t(selectR)
   # invOmega1 <- invOmega0 + invOmega1_part2
-  
+
   if (isFALSE(is.null(try_catch_errors))) {
     tryCatch(
       {
@@ -522,14 +521,14 @@ sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num
   # Bvec <- MASS::mvrnorm(n = 1, mu = selectR %*% beta1 + selectC, Sigma = selectR %*% Omega1 %*% t(selectR))
   # Bvec <- as.numeric(tmvtnorm::rtmvnorm(n = 1, mean = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma,
   #                          lower = lower, upper = upper))
-  
+
   # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(selectR %*% beta1 + selectC), sigma = Sigma )$samp
   # Bvec <- tmvnsim::tmvnsim(1,length(upper),lower = lower, upper = upper, means = as.numeric(beta1 + selectC), sigma = Sigma )$samp
   # browser()
   if (isTRUE(LEGACY)) {
     Bsamp_full <- tmvnsim::tmvnsim(1, length(upper), lower = lower, upper = upper,
                                    means = mean_B_full, sigma = sigma_B_full)$samp
-    
+
   } else {
     # Bsamp_full <- tmvtnorm::rtmvnorm(1, mean = mean_B_full,
     #                                  sigma = sigma_B_full,
@@ -542,7 +541,7 @@ sample_B_D <- function(mean_B_full, sigma_B_full, upper, lower, num_jnt_fac, num
                                                         init = matrix(0, ncol = ncol(sigma_B_full)),
                                                         burn = 10)
   }
-    
+
   get_BD_samp(Bsamp_full, num_jnt_fac, num_y)
 }
 get_BD_samp <- function(Bsamp_full, num_jnt_fac, num_y) {
@@ -566,7 +565,7 @@ get_BD_samp <- function(Bsamp_full, num_jnt_fac, num_y) {
   }
   # idioPos <- all(idioFac > 0)
   # gewekePos <- TRUE
-  
+
   # if(i == 1 & num_jnt_fac != 0){
   #   gewekeMatrix <- jointFac[1:num_jnt_fac, 1:num_jnt_fac] # muss verallgemeinert werden fuer num_y < num_jnt_fac
   #   gewekePos <- all(diag(gewekeMatrix, num_jnt_fac) > 0) # muss verallgemeinert werden fuer num_y < num_jnt_fac
@@ -577,7 +576,7 @@ get_BD_samp <- function(Bsamp_full, num_jnt_fac, num_y) {
   # valid <- TRUE
   # ident_control <- ident_control + 1
   # }
-  
+
   # if(ident_block){break}
   return(list(Bsamp_idi = idioFac, Bsamp_jnt = jointFac,
               Dsamp = Bsamp_full[-(1:((num_jnt_fac + 1) * num_y))]))
@@ -638,10 +637,10 @@ get_id_wreg <- function(num_w_reg, NN) {
   }
   out_id
 }
-sample_B_full_cpp <- function(yObs, availableObs_crossSection, 
+sample_B_full_cpp <- function(yObs, availableObs_crossSection,
                               fPost, VhatArray_A, w_reg_info,
                               Omega0, B0, D0,
-                              id_f, selectR, lower, upper, 
+                              id_f, selectR, lower, upper,
                               NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
                               type, B_trues, D_trues) {
   # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
@@ -649,8 +648,13 @@ sample_B_full_cpp <- function(yObs, availableObs_crossSection,
   # Ergebnis-Matrix fuer die idiosynkratischen Ladungen (wird spaeter befuellt)
   Bidio   <- matrix(rep(0, N_num_y), ncol = NN)
   nregs   <- w_reg_info$nregs
-  Dregs   <- matrix(0, N_num_y, NN * nregs)
-  Dregs_i <- array(0, dim = c(num_y, nregs, NN))
+  if(nregs == 0){
+    Dregs <- NULL
+    Dregs_i <- NULL
+  } else {
+    Dregs   <- matrix(0, N_num_y, NN * nregs)
+    Dregs_i <- array(0, dim = c(num_y, nregs, NN))
+  }
   invOmega0_i <- solve(Omega0)
   upper_taken <- upper
   lower_taken <- lower
@@ -672,13 +676,19 @@ sample_B_full_cpp <- function(yObs, availableObs_crossSection,
     f_post_i <- fPost[id_f[, i], ]
     # invOmega0_B0_D0_i <- invOmega0_B0_D0[[i]]
     B0_D0_i  <- c(B0[, , i], D0[, , i])
-    w_regs_i <- w_reg_info$w_reg[w_reg_info$id_reg[, i], ]
+    if(nregs == 0) {
+      w_regs_i <- matrix(0, 0, 0)
+    } else {
+      w_regs_i <- w_reg_info$w_reg[w_reg_info$id_reg[, i], ]
+    }
+
     B_D_samp <-  sample_B_D_cpp(availableObs, invOmega0_i, B0_D0_i,
                                 f_post_i, w_regs_i, Viarray, yiObs,
-                                selectR, 
+                                selectR,
                                 upper = upper_taken,
                                 lower = lower_taken,
                                 num_fac_jnt, num_y)
+
     Dsamp <- B_D_samp$Dsamp
     Bsamp_jnt <- B_D_samp$Bsamp_jnt
     Bsamp_idi <- B_D_samp$Bsamp_idi
@@ -702,13 +712,14 @@ sample_B_full_cpp <- function(yObs, availableObs_crossSection,
   Bfacs_i <- makeBi(npara = num_y, N = NN, p = num_par_all,
                     p_joint = num_fac_jnt, B_stack = Bfacs,
                     type = type)
-  return(list(Bfacs = Bfacs, Dregs = Dregs, 
+  return(list(Bfacs = Bfacs, Dregs = Dregs,
               Bfacs_i = Bfacs_i, Dregs_i = Dregs_i))
+
 }
-sample_B_full <- function(yObs, availableObs_crossSection, 
+sample_B_full <- function(yObs, availableObs_crossSection,
                           fPost, VhatArray_A, w_reg_info,
                           Omega0, B0, D0,
-                          id_f, selectR, lower, upper, 
+                          id_f, selectR, lower, upper,
                           NN, TT, N_num_y, num_y, num_fac_jnt, num_par_all,
                           type) {
   # Ergebnis-Matrix fuer die gemeinsamen Ladungen (wird spaeter befuellt)
@@ -736,7 +747,12 @@ sample_B_full <- function(yObs, availableObs_crossSection,
     f_post_i <- fPost[id_f[, i], ]
     # invOmega0_B0_D0_i <- invOmega0_B0_D0[[i]]
     B0_D0_i  <- c(B0[, , i], D0[, , i])
-    w_regs_i <- w_reg_info$w_reg[w_reg_info$id_reg[, i], ]
+    if(nregs == 0){
+      w_regs_i <- NULL
+    } else {
+      w_regs_i <- w_reg_info$w_reg[w_reg_info$id_reg[, i], ]
+    }
+
     B_post <- compute_B_post_full(availableObs = availableObs,
                                   invOmega0 = invOmega0_i,
                                   B0_D0 = B0_D0_i,
@@ -777,8 +793,9 @@ sample_B_full <- function(yObs, availableObs_crossSection,
   Bfacs_i <- makeBi(npara = num_y, N = NN, p = num_par_all,
                     p_joint = num_fac_jnt, B_stack = Bfacs,
                     type = type)
-  return(list(Bfacs = Bfacs, Dregs = Dregs, 
+  return(list(Bfacs = Bfacs, Dregs = Dregs,
               Bfacs_i = Bfacs_i, Dregs_i = Dregs_i))
+
 }
 get_outlist_Gibbs_sampler <- function(fSTORE, BSTORE, DSTORE,
                                       ASTORE, VSTORE, uSTORE,
