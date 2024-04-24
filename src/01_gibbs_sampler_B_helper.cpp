@@ -10,7 +10,7 @@
 //' @param yiObs matrix of obersevations
 //' @param selectR selector matrix for missing y
 //'
-//' @return a list of two elements, the first being the posterior mean and the 
+//' @return a list of two elements, the first being the posterior mean and the
 //'    second the VCM matrix for sampling
 //'
 //[[Rcpp::export]]
@@ -22,7 +22,7 @@ Rcpp::List sample_B_D_cpp(const Rcpp::IntegerVector& availableObs,
                           const arma::cube& Viarray,
                           const arma::mat& yiObs,
                           const arma::mat& selectR,
-                          const arma::rowvec& lower, 
+                          const arma::rowvec& lower,
                           const arma::rowvec& upper,
                           const int num_jnt_fac,
                           const int num_y) {
@@ -42,12 +42,15 @@ Rcpp::List sample_B_D_cpp(const Rcpp::IntegerVector& availableObs,
   arma::mat tmp_identity = arma::eye(arma::size(Sigma_ghk));
   arma::rowvec tmp_zeros(mean_ghk.size());
   arma::rowvec tmp_sample(mean_ghk.size());
-  
+
   // IIGpkg:::rtmvnormcpp(matrix(bmean, nrow = 1), Sigma, diag(ncol(Sigma)),
   //                      matrix(lower, nrow = 1), matrix(upper, nrow = 1),
   //                      init = matrix(0, ncol = ncol(Sigma)), burn = 10)
   tmp_sample = rtmvnormcpp(mean_ghk, Sigma_ghk, tmp_identity, lower, upper, tmp_zeros, 10);
   out_sample_list = get_BD_sample(tmp_sample, num_jnt_fac, num_y);
+  // out_sample_list = Rcpp::List::create(
+  //  Rcpp::Named("mean_ghk") = mean_ghk,
+  //  Rcpp::Named("Sigma_ghk") = Sigma_ghk);
   return(out_sample_list);
 }
 //' Helper to separate joint, idiosyncratic and regressor samples
@@ -61,22 +64,55 @@ Rcpp::List sample_B_D_cpp(const Rcpp::IntegerVector& availableObs,
 //'
 //[[Rcpp::export]]
 Rcpp::List get_BD_sample(const arma::rowvec& draw,
-                         int num_jnt_fac, 
+                         int num_jnt_fac,
                          int num_y) {
   Rcpp::List out;
   int separate_id_B_D = (num_jnt_fac + 1) * num_y;
   arma::rowvec Bvec = draw.subvec(0, separate_id_B_D - 1);
-  arma::rowvec Dvec = draw.subvec(separate_id_B_D, draw.size() - 1);
+
+  arma::rowvec Dvec;
+  bool REGRESSOR_PRESENT = true;
+  // out = Rcpp::List::create(
+  //   Rcpp::Named("draw_size") = draw.size(),
+  //   Rcpp::Named("sep_id_B_D") = separate_id_B_D);
+  // return(out);
+
+  if (separate_id_B_D != draw.size()) {
+    Dvec = draw.subvec(separate_id_B_D, draw.size() - 1);
+  } else {
+    REGRESSOR_PRESENT = false;
+    // Dvec = Rcpp::as< Rcpp::Nullable<arma::rowvec> >(Rcpp::wrap(Dvec));
+    // // Dvec = Rcpp::as< Rcpp::Nullable<arma::rowvec> >(Dvec);
+    // Dvec = R_NilValue;
+  }
   if (num_jnt_fac == 0) {
-    out = Rcpp::List::create(
-      Rcpp::Named("Bsamp_idi") = Bvec,
-      Rcpp::Named("Bsamp_jnt") = R_NilValue,
-      Rcpp::Named("Dsamp") = Dvec);
+    if (REGRESSOR_PRESENT) {
+      out = Rcpp::List::create(
+        Rcpp::Named("Bsamp_idi") = Bvec,
+        Rcpp::Named("Bsamp_jnt") = R_NilValue,
+        Rcpp::Named("Dsamp") = Dvec
+      );
+    } else {
+      out = Rcpp::List::create(
+        Rcpp::Named("Bsamp_idi") = Bvec,
+        Rcpp::Named("Bsamp_jnt") = R_NilValue,
+        Rcpp::Named("Dsamp") = R_NilValue
+      );
+    }
   } else if (num_jnt_fac == 1) {
-    out = Rcpp::List::create(
-      Rcpp::Named("Bsamp_idi") = Bvec.cols(num_jnt_fac * num_y, Bvec.size() - 1),
-      Rcpp::Named("Bsamp_jnt") = Bvec.cols(0, num_jnt_fac * num_y - 1),
-      Rcpp::Named("Dsamp") = Dvec);
+    if (REGRESSOR_PRESENT) {
+      out = Rcpp::List::create(
+        Rcpp::Named("Bsamp_idi") = Bvec.cols(num_jnt_fac * num_y, Bvec.size() - 1),
+        Rcpp::Named("Bsamp_jnt") = Bvec.cols(0, num_jnt_fac * num_y - 1),
+        Rcpp::Named("Dsamp") = Dvec
+      );
+    } else {
+      out = Rcpp::List::create(
+        Rcpp::Named("Bsamp_idi") = Bvec.cols(num_jnt_fac * num_y, Bvec.size() - 1),
+        Rcpp::Named("Bsamp_jnt") = Bvec.cols(0, num_jnt_fac * num_y - 1),
+        Rcpp::Named("Dsamp") = R_NilValue
+      );
+    }
   }
   return(out);
 }
@@ -84,7 +120,7 @@ Rcpp::List get_BD_sample(const arma::rowvec& draw,
 //'
 //' @inheritParams sample_B_D_cpp
 //'
-//' @return a list of two elements, the first being the posterior mean and the 
+//' @return a list of two elements, the first being the posterior mean and the
 //'    second the VCM matrix for sampling
 //'
 //[[Rcpp::export]]
@@ -111,7 +147,7 @@ Rcpp::List compute_B_post_full_cpp(const Rcpp::IntegerVector& availableObs,
                               fPost, w_regs,
                               yiObs,  Viarray);
   B_Omega = compute_sigma_adjust_cpp(B_Omega);
-  
+
   return(Rcpp::List::create(Rcpp::Named("B_mean") = B_mean,
                             Rcpp::Named("B_Sigma") = B_Omega));
 }
@@ -176,7 +212,7 @@ arma::mat sum_ff_kron_v(const Rcpp::IntegerVector& availableObs,
   int v_size = Viarray.n_rows;
   arma::mat f(f_size, tt_rng.length());
   f = arma::join_vert(fPost, w_regs);
-  
+
   arma::mat out_ffkonv(f_size * v_size, f_size * v_size);
   for (auto tt : tt_rng) {
     out_ffkonv += arma::kron(f.col(tt) * f.col(tt).t(), Viarray.slice(tt).i());
@@ -193,7 +229,7 @@ arma::mat sum_ff_kron_v(const Rcpp::IntegerVector& availableObs,
 arma::colvec sum_f_y_v(const Rcpp::IntegerVector& availableObs,
                        const arma::mat fPost,
                        const arma::mat w_regs,
-                       const arma::mat yiObs, 
+                       const arma::mat yiObs,
                        const arma::cube Viarray) {
 
 

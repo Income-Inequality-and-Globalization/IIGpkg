@@ -36,7 +36,7 @@ rtnormcpp <- function(mean, sd, lower, upper) {
 #' @param yiObs matrix of obersevations
 #' @param selectR selector matrix for missing y
 #'
-#' @return a list of two elements, the first being the posterior mean and the 
+#' @return a list of two elements, the first being the posterior mean and the
 #'    second the VCM matrix for sampling
 #'
 sample_B_D_cpp <- function(availableObs, invOmega0, B0_D0, fPost, w_regs, Viarray, yiObs, selectR, lower, upper, num_jnt_fac, num_y) {
@@ -60,7 +60,7 @@ get_BD_sample <- function(draw, num_jnt_fac, num_y) {
 #'
 #' @inheritParams sample_B_D_cpp
 #'
-#' @return a list of two elements, the first being the posterior mean and the 
+#' @return a list of two elements, the first being the posterior mean and the
 #'    second the VCM matrix for sampling
 #'
 compute_B_post_full_cpp <- function(availableObs, invOmega0, B0_D0, fPost, w_regs, Viarray, yiObs, selectR) {
